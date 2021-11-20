@@ -6,7 +6,7 @@
 ## Dependancies 
 Python3
 Fill in. 
-
+Python 3.7 - because using dataclasses. 
 
 ## Further Details
 
