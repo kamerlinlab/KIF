@@ -1,3 +1,7 @@
+"""
+Module to prepare and run machine learning in either a supervised or unsupervised fashion.
+"""
+
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import os
@@ -20,17 +24,6 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
 
 from key_interactions_finder.data_preperation import SupervisedFeatureData
-
-# Module prepares for and runs the machine learning in either a supervised or unsupervised fashion.
-
-
-# TODO:
-# 1. Train-test split.
-# 2. scale_features -TRAIN AND TEST BE DONE SEPERATE HERE YEP!
-# https://stackoverflow.com/questions/49444262/normalize-data-before-or-after-split-of-training-and-testing-data
-# 3. Define Models to use.
-# Make options to control the intensity of the training.
-# 4. Output
 
 
 @dataclass
@@ -68,15 +61,16 @@ class SupervisedModel(MachineLearnModel):
     cross_validation_repeats: int = 3
     search_approach: str = "moderate"   # quick, moderate, exhaustive allowed.
 
-    # Fields generated during initialiation below:
+    # Dynamically generated:
     model_params: dict = field(init=False)
     # SEEMS A BIT AWKWARD IS THIS THE RIGHT THING TO DO?
     cv: RepeatedStratifiedKFold = field(init=False)
     #cv: sklearn.model_selection._split.RepeatedStratifiedKFold = field(init=False)
-    train_data_scaled: np.ndarray = field(init=False)
-    y_train: pd.core.series.Series = field(init=False)
 
+    feat_names: np.ndarray = field(init=False)
+    train_data_scaled: np.ndarray = field(init=False)
     eval_data_scaled: np.ndarray = field(init=False)
+    y_train: pd.core.series.Series = field(init=False)
     y_eval: pd.core.series.Series = field(init=False)
 
     ml_models: dict = field(init=False)
@@ -97,6 +91,7 @@ class SupervisedModel(MachineLearnModel):
         # Train-test split.
         X = self.dataset.drop("Classes", axis=1)
         X_array = X.to_numpy()
+        self.feat_names = X.columns.values
         y = self.dataset["Classes"]
         X_array_train, X_array_eval, self.y_train, self.y_eval = train_test_split(
             X_array, y, test_size=self.evaluation_split_ratio)
@@ -105,13 +100,19 @@ class SupervisedModel(MachineLearnModel):
         self.train_data_scaled, self.eval_data_scaled = self._supervised_scale_features(
             X_array_train=X_array_train, X_array_eval=X_array_eval)
 
+        # Save the above to disk so can be read back in for feature importance analysis later.
+        np.save("temporary_files/feature_names.npy", self.feat_names)
+        np.save("temporary_files/y_train.npy", self.y_train)
+        np.save("temporary_files/y_eval.npy", self.y_eval)
+        np.save("temporary_files/train_data_scaled.npy", self.train_data_scaled)
+        np.save("temporary_files/eval_data_scaled.npy", self.eval_data_scaled)
+
         # Define ML Pipeline:
         self.cv = RepeatedStratifiedKFold(
             n_splits=self.cross_validation_splits, n_repeats=self.cross_validation_repeats)
-
         self.model_params = self._assign_model_params()
 
-        # Provide overview of what user has planned.
+        # Provide user an overview of what they have planned.
         return print(self._describe_ml_planned())
 
     def _supervised_scale_features(self, X_array_train, X_array_eval):
@@ -126,6 +127,7 @@ class SupervisedModel(MachineLearnModel):
         scaler.fit(X_array_train)
         train_data_scaled = scaler.transform(X_array_train)
         eval_data_scaled = scaler.transform(X_array_eval)
+
         return train_data_scaled, eval_data_scaled
 
     def build_models(self, save_models=True):
@@ -145,7 +147,9 @@ class SupervisedModel(MachineLearnModel):
             })
             self.ml_models[model_name] = clf
             if save_models == True:
-                out_path = self.out_dir + str(model_name) + "_Model.pickle"
+                # Note. I replaced user out_dir here so I could it read-back in later. # TODO.
+                out_path = "temporary_files" + "/" +  \
+                    str(model_name) + "_Model.pickle"
                 self._save_best_models(
                     best_model=clf.best_estimator_, out_path=out_path)
 
