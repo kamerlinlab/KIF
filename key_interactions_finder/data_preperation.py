@@ -1,9 +1,8 @@
 """
-DocString here.
+Add docstring here.
 """
-
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import pandas as pd
 
 
@@ -18,9 +17,11 @@ class FeatureData(ABC):
 @dataclass
 class UnsupervisedFeautureData(FeatureData):
     """FeatureData Class without any classification data."""
-    scaling_method: str = "minmax"  # If I put this here, I should be passing it when I make the class??
 
-    def filter_features(self, df, min_occupancy):
+    input_df: pd.core.frame.DataFrame
+    df_filtered: pd.core.frame.DataFrame = field(init=False)
+
+    def filter_features(self, min_occupancy):
         """
         Filter features such that only features with %occupancy >= the min_occupancy are included.
         (%occupancy is the percantage of frames that have a non-zero interaction value for a given feature).
@@ -40,29 +41,49 @@ class UnsupervisedFeautureData(FeatureData):
             Filtered dataframe.
 
         """
-        return df.loc[:, (df != 0).mean() > (min_occupancy/100)]
+        self.df_filtered = self.input_df.loc[:, (
+            self.input_df != 0).mean() > (min_occupancy/100)]
+        return self.df_filtered
 
 
 @dataclass
 class SupervisedFeatureData(FeatureData):
     """FeatureData Class with classification data included."""
 
-    def add_clasifications(self, df, classifications_file, header_present=True):
+    input_df: pd.core.frame.DataFrame
+    classifications_file: str
+    header_present: bool = True
+
+    df_feat_class: pd.core.frame.DataFrame = field(init=False)
+    df_filtered: pd.core.frame.DataFrame = field(init=False)
+
+    def __post_init__(self):
         """Merge per frame classification results to dataframe."""
-        if header_present:
-            df_class = pd.read_csv(classifications_file)
+        if self.header_present:
+            df_class = pd.read_csv(self.classifications_file)
         else:
-            df_class = pd.read_csv(classifications_file, header=None)
+            df_class = pd.read_csv(self.classifications_file, header=None)
 
         df_class = df_class.set_axis(["Classes"], axis=1)
-        df_feat_class = pd.concat([df_class, df], axis=1)
-        return df_feat_class
 
-    def filter_features(self, df, min_occupancy):
+        if len(df_class) == len(self.input_df):
+            self.df_feat_class = pd.concat([df_class, self.input_df], axis=1)
+            return print("All good.")
+        else:
+            print(f"Classifications file length: len(df_class)")
+            print(f"PyContact file length: len(self.input_df)")
+            raise Exception(
+                f"""The length of your classifications file ({len(df_class)})
+                doesn't match the length of your features file ({len(self.input_df)})!
+                If the difference is 1, check if you set the 'header_present' keyword correctly."""
+            )
+
+    def filter_features(self, min_occupancy):
         """
-        Filter features such that only features with %occupancy >= the min_occupancy are included.
-        (%occupancy is the percantage of frames that have a non-zero interaction value for a given feature).
-        In the supervised form %occupancy is determined for each class (so only 1 class has to meet the cut-off).
+        Filter features such that only features with %occupancy >= the min_occupancy are kept.
+        (%occupancy is the % of frames that have a non-zero interaction value).
+        In the supervised form %occupancy is determined for each class,
+        meaning only 1 class has to meet the cut-off.
 
         Parameters
         ----------
@@ -79,14 +100,16 @@ class SupervisedFeatureData(FeatureData):
 
         """
         keep_cols = ["Classes"]  # always want "Classes" present...
-        # add any feature that meets the cutoff to the "keep_cols" list.
-        for class_label in list(df["Classes"].unique()):
-            df_single_class = df[(df["Classes"] == class_label)]
+
+        for class_label in list(self.df_feat_class["Classes"].unique()):
+            df_single_class = self.df_feat_class[(
+                self.df_feat_class["Classes"] == class_label)]
             keep_cols_single_class = list(
                 (df_single_class.loc[:, (df_single_class !=
                                          0).mean() > (min_occupancy/100)]).columns
             )
             keep_cols.extend(keep_cols_single_class)
 
-        df_filtered = df[list(set(keep_cols))]
-        return df_filtered
+        self.df_filtered = self.df_feat_class[list(
+            sorted(set(keep_cols), reverse=True))]
+        return self.df_filtered
