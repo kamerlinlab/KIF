@@ -18,7 +18,6 @@ class PyContactInitializer():
     base_name: str
     multiple_files: bool = False
     remove_false_interactions: bool = False
-    out_dir: str = ""
     in_dir: str = ""
 
     # Generated later.
@@ -31,12 +30,6 @@ class PyContactInitializer():
         """Processes the provided PyContact files."""
         if self.in_dir[-1] != "/":
             self.in_dir += "/"
-
-        if self.out_dir != "":
-            if not os.path.exists(self.out_dir):
-                os.makedirs(self.out_dir)
-            if self.out_dir[-1] != "/":
-                self.out_dir += "/"
 
         if not self.multiple_files:
             self.full_df = self._load_pycontact_dataset(self.pycontact_files)
@@ -92,7 +85,7 @@ class PyContactInitializer():
         """
         Remove non-meaningful (too close to one another) or duplicate contacts/features...
         Required if in the PyContact job run a user sets the second residue selection...
-        group to be "self".
+        group to be something other than "self" but selections residues overlaps.
         """
         contacts_to_del = []
         contacts_to_keep = []
