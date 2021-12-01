@@ -4,7 +4,6 @@ Module to prepare and run machine learning in either a supervised or unsupervise
 
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
-import os
 import json
 import pickle
 import pandas as pd
@@ -23,7 +22,8 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
 
-from key_interactions_finder.data_preperation import SupervisedFeatureData
+# own module.
+from key_interactions_finder.utils import _prep_out_dir
 
 
 @dataclass
@@ -39,7 +39,11 @@ class MachineLearnModel(ABC):
 
     @abstractmethod
     def _assign_model_params(self):
-        """Take user selected level of exhaustivness for the grid search process and assign the appropriate parameters for each model."""
+        """Set model params for grid search process based on user exhaustivness."""
+
+    @abstractmethod
+    def model_building_report(self):
+        """Provide a detailed report of how the ML went."""
 
     def _save_best_models(self, best_model, out_path):
         """Save the best performing model to disk."""
@@ -52,9 +56,10 @@ class MachineLearnModel(ABC):
 class SupervisedModel(MachineLearnModel):
     """Class to Construct Supervised Machine Learning Models."""
 
-    # Can move generic params to parent class later...
+    # TODO Can I move generic params to parent class later...
     dataset: pd.core.frame.DataFrame
     evaluation_split_ratio: float = 0.15
+    classes_to_use: list = field(default_factory=[])
     scaling_method: str = "min_max"
     out_dir: str = ""
     cross_validation_splits: int = 5
@@ -63,16 +68,12 @@ class SupervisedModel(MachineLearnModel):
 
     # Dynamically generated:
     model_params: dict = field(init=False)
-    # SEEMS A BIT AWKWARD IS THIS THE RIGHT THING TO DO?
     cv: RepeatedStratifiedKFold = field(init=False)
-    #cv: sklearn.model_selection._split.RepeatedStratifiedKFold = field(init=False)
-
     feat_names: np.ndarray = field(init=False)
     train_data_scaled: np.ndarray = field(init=False)
     eval_data_scaled: np.ndarray = field(init=False)
     y_train: pd.core.series.Series = field(init=False)
     y_eval: pd.core.series.Series = field(init=False)
-
     ml_models: dict = field(init=False)
 
     if scaling_method not in ["min_max", "standard_scaling"]:
@@ -82,11 +83,13 @@ class SupervisedModel(MachineLearnModel):
     # This is called at the end of the dataclass's initialization procedure.
     def __post_init__(self):
         """Setup the provided dataset and params for ML."""
-        if self.out_dir != "":
-            if os.path.exists(self.out_dir) == False:
-                os.makedirs(self.out_dir)
-            if self.out_dir[-1] != "/":
-                self.out_dir += "/"
+        self.out_dir = _prep_out_dir(self.out_dir)
+
+        # Filter to only include desired classes.
+        if len(self.classes_to_use) != 0:
+            self.dataset = self.dataset[self.dataset["Classes"].isin(
+                self.classes_to_use)]
+        print(self.dataset)
 
         # Train-test split.
         X = self.dataset.drop("Classes", axis=1)
@@ -112,7 +115,6 @@ class SupervisedModel(MachineLearnModel):
             n_splits=self.cross_validation_splits, n_repeats=self.cross_validation_repeats)
         self.model_params = self._assign_model_params()
 
-        # Provide user an overview of what they have planned.
         return print(self._describe_ml_planned())
 
     def _supervised_scale_features(self, X_array_train, X_array_eval):
@@ -131,7 +133,7 @@ class SupervisedModel(MachineLearnModel):
         return train_data_scaled, eval_data_scaled
 
     def build_models(self, save_models=True):
-        """Call to run the actual model building process."""
+        """Runs the actual model building process."""
         scores = []
         self.ml_models = {}
 
@@ -146,7 +148,7 @@ class SupervisedModel(MachineLearnModel):
                 'best_std': clf.cv_results_['std_test_score'][clf.best_index_]
             })
             self.ml_models[model_name] = clf
-            if save_models == True:
+            if save_models:
                 # Note. I replaced user out_dir here so I could it read-back in later. # TODO.
                 out_path = "temporary_files" + "/" +  \
                     str(model_name) + "_Model.pickle"
@@ -164,7 +166,6 @@ class SupervisedModel(MachineLearnModel):
             print(f"Classification report for: {model_name}")
             yhat = clf.predict(self.eval_data_scaled)
             print(classification_report(self.y_eval, yhat))
-        return None
 
     def _assign_model_params(self):
         """Assigns the grid search paramters for the ML based on user criteria."""
@@ -192,7 +193,7 @@ class SupervisedModel(MachineLearnModel):
             model_params["GBoost"]["params"] = all_hyper_params["exhaustive"]["GBoost"]["params"]
         else:
             raise ValueError(
-                "Select either 'quick', 'moderate' or 'exhaustive' for the search_approach option.")
+                "You must select either 'quick', 'moderate' or 'exhaustive' for the search_approach option.")
 
         return model_params
 
@@ -213,7 +214,11 @@ class SupervisedModel(MachineLearnModel):
         out_text += "If you're happy with the above, lets get model building!"
         return out_text
 
+    def model_building_report(self):
+        """Provide a detailed report of how the ML went."""
+
 
 @dataclass
 class UnsupervisedModel(MachineLearnModel):
     """Class to Construct Unsupervised Machine Learning Models."""
+    # Can have a go with PCA Maybe or maybe just not use as already have a lot of stuff...
