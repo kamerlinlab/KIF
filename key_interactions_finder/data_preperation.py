@@ -29,7 +29,7 @@ class UnsupervisedFeautureData(FeatureData):
 
         Parameters
         ----------
-        df : pd.DataFrame
+        df : pd.core.frame.DataFrame
             Pandas Dataframe containing features ready to be filtered.
 
         min_occupancy : int
@@ -37,7 +37,7 @@ class UnsupervisedFeautureData(FeatureData):
 
         Returns
         -------
-        df_filtered : pd.DataFrame
+        pd.core.frame.DataFrame
             Filtered dataframe.
 
         """
@@ -83,19 +83,19 @@ class SupervisedFeatureData(FeatureData):
         Filter features such that only features with %occupancy >= the min_occupancy are kept.
         (%occupancy is the % of frames that have a non-zero interaction value).
         In the supervised form %occupancy is determined for each class,
-        meaning only 1 class has to meet the cut-off.
+        meaning only observation from 1 class has to meet the cut-off.
 
         Parameters
         ----------
-        df : pd.DataFrame
-            Pandas Dataframe containing features ready to be filtered (and also includes a classifications column).
+        df : pd.core.frame.DataFrame
+            df containing PyContact features to be filtered and a column with classes.
 
         min_occupancy : int
-            Minimun percantage occupancy that a feature must have to be retained.
+            Minimun %occupancy that a feature must have to be retained.
 
         Returns
         -------
-        df_filtered : pd.DataFrame
+        pd.core.frame.DataFrame
             Filtered dataframe.
 
         """
