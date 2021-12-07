@@ -2,11 +2,13 @@
 Prepares data for various form of network/correlation based analyses in different programs.
 """
 from dataclasses import dataclass, field
+from typing import Optional
 import pandas as pd
 import numpy as np
-from key_interactions_finder.utils import _prep_out_dir
+import MDAnalysis as mda
+from MDAnalysis.analysis import distances
 
-# TODO - Add contact map from pdb functionality here:
+from key_interactions_finder.utils import _prep_out_dir, _filter_features
 
 
 @dataclass
@@ -37,15 +39,16 @@ class CorrelationNetwork:
             pass  # If not present then dataset is from unsupervised learning.
 
         if sorted(self.interaction_types_included) != sorted(["Hbond", "Hydrophobic", "Saltbr", "Other"]):
-            self._filter_features()
+            self.dataset = _filter_features(
+                self.dataset, self.interaction_types_included)
 
         # Generate the full_correlation_matrix and contact map.
         self.full_corr_matrix = self.dataset.corr()
-        # self.full_contact_map = self. - #  TODO.
+        # self.full_contact_map = self. - #  TODO. If possible/reasonable?
 
-        # maybe make these later instead.
-        self.res_corr_matrix = self.gen_per_res_correl_matrix()
-        self.res_contact_map = self.gen_per_res_contact_map()
+        # #TODO - Consider make these later instead.
+        #self.res_corr_matrix = self.gen_per_res_correl_matrix()
+        #self.res_contact_map = self.gen_per_res_contact_map()
 
     def gen_per_res_contact_map(self):
         """
@@ -170,50 +173,141 @@ class CorrelationNetwork:
         contact_pairs = dict(zip(df_cols["Res1"], df_cols["Res2"]))
         return contact_pairs
 
-    def _filter_features(self):
-        """Filter PyContact features to include only those a certain interaction type
-        in the network analysis, based on user selection."""
-        # Build the search term
-        str_rep = ""
-        for list_item in self.interaction_types_included:
-            str_rep += list_item + "|"
-        # must remove final "|", otherwise keeps all columns.
-        str_rep = str_rep[:-1]
 
-        # Filter.
-        self.dataset = self.dataset.loc[:, self.dataset.columns.str.contains(
-            str_rep)]
-
-
-# https://groups.google.com/g/mdnalysis-discussion/c/KlvkdN2bjiE
-# # mdanalysis is what pycontact uses...
-def heavy_atom_contact_map_from_pdb(pdb_file: str, first_res: int, last_res: int, d_cut: float, out_file: str) -> np.ndarray:
+def heavy_atom_contact_map_from_pdb(pdb_file: str,
+                                    first_res: int,
+                                    last_res: int,
+                                    d_cut: Optional[float] = 4.5,
+                                    out_file: Optional[str] = None,
+                                    ) -> np.ndarray:
     """
     Use mdanalysis to generate a heavy atom contact map/matrix given a pdb file.
 
     Parameters
     ----------
-    pdb+file
+    pdb_file: str
+        Path to PDB file to generate the contact map from.
 
     first_res : int
-        First residue number to use for the contact map, assumed to be 1 if not provided.
+        First residue number to use for the contact map.
 
     last_res : int
         Last residue number to use for the contact map.
 
-    d_cut : float # TODO Make optional and set default.
+    d_cut : Optional[float]
         Distance cut-off in Å. Default is 4.5 Å.
 
-    out_file : str
-        A path to save the file to. If left empty no file saved.
+    out_file : Optional[str]
+        Path to save the contact map file to. If left empty no file is saved.
 
     Returns
     ----------
     np.ndarray
-        Numpy matrix
+        Symmetrical (along diagonal) matrix of 1s (in contact) and 0s (not in contact).
     """
-    print(pdb_file)
-    print(d_cut)
-    print(first_res, last_res)
+    universe = mda.Universe(pdb_file)
+    res_selection = "not name H* and resid " + \
+        str(first_res) + "-" + str(last_res)
+    group1 = universe.select_atoms(res_selection)
+    group2 = universe.select_atoms(res_selection)
+    matrix_size = (last_res - first_res) + 1
 
-    # return
+    per_res_contact_map = np.zeros((matrix_size, matrix_size), dtype=int)
+
+    for group1_idx in range(first_res, last_res+1):
+        group1_selection = "resid " + str(group1_idx)
+        res1 = group1.select_atoms(group1_selection)
+
+        for group2_idx in range(first_res, last_res+1):
+            group2_selection = "resid " + str(group2_idx)
+            res2 = group2.select_atoms(group2_selection)
+
+            # Determine all heavy atom distance between residue pairs.
+            dist_arr = distances.distance_array(
+                res1.positions, res2.positions, box=universe.dimensions)
+
+            # Replace matrix pos with 1 if min_dist less than cutoff.
+            min_dist = dist_arr.min()
+            if min_dist <= d_cut:
+                per_res_contact_map[(group1_idx-1), (group2_idx-1)] = 1
+                per_res_contact_map[(group2_idx-1), (group1_idx-1)] = 1
+
+    if out_file is not None:
+        np.savetxt(out_file, per_res_contact_map, delimiter=" ", fmt="%.1f")
+    return per_res_contact_map
+
+
+# TODO - BELOW
+# CHALLENGE is that numpy minimun only wants two arrays.
+# So need a general approach for the matrix if want multiple pdbs.
+# def heavy_atom_contact_map_from_multiple_pdbs(pdb_files: list,
+#                                               first_res: int,
+#                                               last_res: int,
+#                                               d_cut: Optional[float] = 4.5,
+#                                               out_file: Optional[str] = None,
+#                                               ) -> np.ndarray:
+#     """
+#     Use mdanalysis to generate a heavy atom contact map/matrix given a
+#     list of pdb files.
+
+#     """
+#     min_dist_contact_maps = [_min_heavy_atom_distances(
+#         pdb, first_res, last_res) for pdb in pdb_files]
+
+#     numb_matrices = len(min_dist_contact_maps)
+#     print(f"Length is {numb_matrices}")
+
+#     if numb_matrices != 2:
+#         #min_dist_map = np.minimum(min_dist_contact_maps)
+#         print("working on it")
+
+#     else:
+#         print("working on it too")
+
+
+#     print(min_dist_contact_maps)
+#     print(min_dist_contact_maps[0])
+
+
+#     # get min at each position.
+
+#     # https://numpy.org/doc/stable/reference/generated/numpy.maximum.html
+
+#     # https://stackoverflow.com/questions/45648668/convert-numpy-array-to-0-or-1
+
+
+# def _min_heavy_atom_distances(pdb: str,
+#                               first_res: int,
+#                               last_res: int,
+#                               ) -> np.ndarray:
+#     """
+#     Given a pdb_file return a symmetrical matrix of the minimumn heavy atom distances.
+#     (Helper Function)
+#     """
+#     universe = mda.Universe(pdb)
+#     res_selection = "not name H* and resid " + \
+#         str(first_res) + "-" + str(last_res)
+#     group1 = universe.select_atoms(res_selection)
+#     group2 = universe.select_atoms(res_selection)
+#     matrix_size = (last_res - first_res) + 1
+
+#     min_dist_contact_map = np.zeros((matrix_size, matrix_size), dtype=float)
+
+#     for group1_idx in range(first_res, last_res+1):
+#         group1_selection = "resid " + str(group1_idx)
+#         res1 = group1.select_atoms(group1_selection)
+
+#         for group2_idx in range(first_res, last_res+1):
+#             group2_selection = "resid " + str(group2_idx)
+#             res2 = group2.select_atoms(group2_selection)
+
+#             # Determine all heavy atom distance between residue pairs.
+#             dist_arr = distances.distance_array(
+#                 res1.positions, res2.positions, box=universe.dimensions)
+
+#             # Replace matrix pos with 1 if min_dist less than cutoff.
+#             min_dist = dist_arr.min()
+#             min_dist_contact_map[(group1_idx-1), (group2_idx-1)] = min_dist
+#             min_dist_contact_map[(group2_idx-1), (group1_idx-1)] = min_dist
+
+#     return min_dist_contact_map
