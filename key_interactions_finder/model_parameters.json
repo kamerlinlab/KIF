@@ -1,4 +1,33 @@
 {
+    "none": {
+        "ada_boost": {
+            "params": {
+                "n_estimators": [
+                    1
+                ],
+                "learning_rate": [
+                    0.1
+                ]
+            }
+        },
+        "random_forest": {
+            "params": {
+                "n_estimators": [
+                    1
+                ]
+            }
+        },
+        "GBoost": {
+            "params": {
+                "n_estimators": [
+                    1
+                ],
+                "learning_rate": [
+                    0.1
+                ]
+            }
+        }
+    },
     "quick": {
         "ada_boost": {
             "params": {
