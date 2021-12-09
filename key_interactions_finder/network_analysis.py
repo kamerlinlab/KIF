@@ -1,5 +1,6 @@
 """
-Prepares data for various form of network/correlation based analyses in different programs.
+Perform correlation analysis on the PyContact interactions and outputs it in ways
+that can easily be read into various network/correlation based analyses tools in different programs.
 """
 from dataclasses import dataclass, field
 from typing import Optional
@@ -8,12 +9,12 @@ import numpy as np
 import MDAnalysis as mda
 from MDAnalysis.analysis import distances
 
-from key_interactions_finder.utils import _prep_out_dir, _filter_features
+from key_interactions_finder.utils import _prep_out_dir, _filter_features_by_strings
 
 
 @dataclass
 class CorrelationNetwork:
-    """Descript. """
+    """Generates the correlation and contact maps with PyContact datasets."""
 
     # Generated at runtime.
     dataset: pd.core.frame.DataFrame
@@ -30,7 +31,7 @@ class CorrelationNetwork:
 
     # Called at the end of the dataclass's initialization procedure.
     def __post_init__(self):
-        """Descript. """
+        """"""
         self.out_dir = _prep_out_dir(self.out_dir)
 
         try:
@@ -38,17 +39,20 @@ class CorrelationNetwork:
         except KeyError:
             pass  # If not present then dataset is from unsupervised learning.
 
-        if sorted(self.interaction_types_included) != sorted(["Hbond", "Hydrophobic", "Saltbr", "Other"]):
-            self.dataset = _filter_features(
-                self.dataset, self.interaction_types_included)
+        if sorted(self.interaction_types_included) != sorted(
+                ["Hbond", "Hydrophobic", "Saltbr", "Other"]):
+            self.dataset = _filter_features_by_strings(
+                dataset=self.dataset,
+                strings_to_preserve=self.interaction_types_included
+            )
 
         # Generate the full_correlation_matrix and contact map.
         self.full_corr_matrix = self.dataset.corr()
         # self.full_contact_map = self. - #  TODO. If possible/reasonable?
 
         # #TODO - Consider make these later instead.
-        #self.res_corr_matrix = self.gen_per_res_correl_matrix()
-        #self.res_contact_map = self.gen_per_res_contact_map()
+        self.res_corr_matrix = self.gen_per_res_correl_matrix()
+        self.res_contact_map = self.gen_per_res_contact_map()
 
     def gen_per_res_contact_map(self):
         """
@@ -181,7 +185,7 @@ def heavy_atom_contact_map_from_pdb(pdb_file: str,
                                     out_file: Optional[str] = None,
                                     ) -> np.ndarray:
     """
-    Use mdanalysis to generate a heavy atom contact map/matrix given a pdb file.
+    Use MDAnalysis to generate a heavy atom contact map/matrix given a pdb file.
 
     Parameters
     ----------

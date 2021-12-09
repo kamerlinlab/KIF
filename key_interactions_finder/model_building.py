@@ -4,6 +4,7 @@ Module to prepare and run machine learning in either a supervised or unsupervise
 
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
+import os
 import json
 import pickle
 import pandas as pd
@@ -28,10 +29,11 @@ from key_interactions_finder.utils import _prep_out_dir
 
 @dataclass
 class MachineLearnModel(ABC):
-    """Abstract base class to unify the construction of supervised and unsupervised machine learning models."""
+    """Abstract base class to unify the construction of supervised and unsupervised ML models."""
+
     @abstractmethod
     def build_models(self, save_models=True):
-        """Call to run the actual model building process."""
+        """Runs the machine learning and summarizes the results."""
 
     @abstractmethod
     def _describe_ml_planned(self):
@@ -64,7 +66,7 @@ class SupervisedModel(MachineLearnModel):
     out_dir: str = ""
     cross_validation_splits: int = 5
     cross_validation_repeats: int = 3
-    search_approach: str = "moderate"   # quick, moderate, exhaustive allowed.
+    search_approach: str = "quick"  # none, quick, moderate or exhaustive
 
     # Dynamically generated:
     model_params: dict = field(init=False)
@@ -89,26 +91,17 @@ class SupervisedModel(MachineLearnModel):
         if len(self.classes_to_use) != 0:
             self.dataset = self.dataset[self.dataset["Classes"].isin(
                 self.classes_to_use)]
-        print(self.dataset)
 
-        # Train-test split.
-        X = self.dataset.drop("Classes", axis=1)
-        X_array = X.to_numpy()
-        self.feat_names = X.columns.values
+        # Train-test split
+        df_features = self.dataset.drop("Classes", axis=1)
+        x_array = df_features.to_numpy()
+        self.feat_names = df_features.columns.values
         y = self.dataset["Classes"]
-        X_array_train, X_array_eval, self.y_train, self.y_eval = train_test_split(
-            X_array, y, test_size=self.evaluation_split_ratio)
+        x_array_train, x_array_eval, self.y_train, self.y_eval = train_test_split(
+            x_array, y, test_size=self.evaluation_split_ratio)
 
-        # Scale features
         self.train_data_scaled, self.eval_data_scaled = self._supervised_scale_features(
-            X_array_train=X_array_train, X_array_eval=X_array_eval)
-
-        # Save the above to disk so can be read back in for feature importance analysis later.
-        np.save("temporary_files/feature_names.npy", self.feat_names)
-        np.save("temporary_files/y_train.npy", self.y_train)
-        np.save("temporary_files/y_eval.npy", self.y_eval)
-        np.save("temporary_files/train_data_scaled.npy", self.train_data_scaled)
-        np.save("temporary_files/eval_data_scaled.npy", self.eval_data_scaled)
+            x_array_train=x_array_train, x_array_eval=x_array_eval)
 
         # Define ML Pipeline:
         self.cv = RepeatedStratifiedKFold(
@@ -117,7 +110,7 @@ class SupervisedModel(MachineLearnModel):
 
         return print(self._describe_ml_planned())
 
-    def _supervised_scale_features(self, X_array_train, X_array_eval):
+    def _supervised_scale_features(self, x_array_train, x_array_eval):
         """Scale all features with either MinMaxScaler or StandardScaler Scaler.
         implementation for supervised and unsupervised is different to prevent
         information leakage when doing supervised learning."""
@@ -126,16 +119,27 @@ class SupervisedModel(MachineLearnModel):
         else:
             scaler = StandardScaler()
 
-        scaler.fit(X_array_train)
-        train_data_scaled = scaler.transform(X_array_train)
-        eval_data_scaled = scaler.transform(X_array_eval)
+        scaler.fit(x_array_train)
+        train_data_scaled = scaler.transform(x_array_train)
+        eval_data_scaled = scaler.transform(x_array_eval)
 
         return train_data_scaled, eval_data_scaled
 
     def build_models(self, save_models=True):
-        """Runs the actual model building process."""
+        """Runs the machine learning and summarizes the results."""
         scores = []
         self.ml_models = {}
+
+        if save_models:
+            if not os.path.exists("temporary_files"):
+                os.makedirs("temporary_files")
+            np.save("temporary_files/feature_names.npy", self.feat_names)
+            np.save("temporary_files/y_train.npy", self.y_train)
+            np.save("temporary_files/y_eval.npy", self.y_eval)
+            np.save("temporary_files/train_data_scaled.npy",
+                    self.train_data_scaled)
+            np.save("temporary_files/eval_data_scaled.npy",
+                    self.eval_data_scaled)
 
         for model_name, mp in self.model_params.items():
             clf = GridSearchCV(mp['model'], mp['params'],
@@ -148,16 +152,16 @@ class SupervisedModel(MachineLearnModel):
                 'best_std': clf.cv_results_['std_test_score'][clf.best_index_]
             })
             self.ml_models[model_name] = clf
+
             if save_models:
-                # Note. I replaced user out_dir here so I could it read-back in later. # TODO.
-                out_path = "temporary_files" + "/" +  \
+                temp_out_path = "temporary_files" + "/" +  \
                     str(model_name) + "_Model.pickle"
                 self._save_best_models(
-                    best_model=clf.best_estimator_, out_path=out_path)
+                    best_model=clf.best_estimator_, out_path=temp_out_path)
 
         # Provide a model summary with the train/test data.
         print(pd.DataFrame(scores, columns=[
-              'model', 'best_params', 'best_score', 'best_std']))
+            'model', 'best_params', 'best_score', 'best_std']))
         return self.ml_models
 
     def evaluate_model(self):
@@ -179,7 +183,11 @@ class SupervisedModel(MachineLearnModel):
             all_hyper_params = json.load(file_in)
 
         # Assign search parameters accordingly.
-        if self.search_approach == "quick":
+        if self.search_approach == "none":
+            model_params["ada_boost"]["params"] = all_hyper_params["none"]["ada_boost"]["params"]
+            model_params["random_forest"]["params"] = all_hyper_params["none"]["random_forest"]["params"]
+            model_params["GBoost"]["params"] = all_hyper_params["none"]["GBoost"]["params"]
+        elif self.search_approach == "quick":
             model_params["ada_boost"]["params"] = all_hyper_params["quick"]["ada_boost"]["params"]
             model_params["random_forest"]["params"] = all_hyper_params["quick"]["random_forest"]["params"]
             model_params["GBoost"]["params"] = all_hyper_params["quick"]["GBoost"]["params"]
@@ -193,23 +201,29 @@ class SupervisedModel(MachineLearnModel):
             model_params["GBoost"]["params"] = all_hyper_params["exhaustive"]["GBoost"]["params"]
         else:
             raise ValueError(
-                "You must select either 'quick', 'moderate' or 'exhaustive' for the search_approach option.")
+                "You must select either 'none' 'quick', 'moderate' or 'exhaustive' for the search_approach option.")
 
         return model_params
 
     def _describe_ml_planned(self):
         """Prints out a summary to the user of what machine learning protoctol they have selected."""
-        train_pcent = 100 - (self.evaluation_split_ratio*100)
         eval_pcent = self.evaluation_split_ratio*100
+        train_pcent = 100 - eval_pcent
+        ml_models = "d"
 
         out_text = "\n"
         out_text += "Below is a summary of the machine learning you have planned.\n"
-        out_text += f"You will use {self.cross_validation_splits}-fold cross validation and perform {self.cross_validation_repeats} repeats.\n"
 
-        out_text += f"{train_pcent}% of you data will be used for training, which is {len(self.train_data_scaled)} observations.\n"
-        out_text += f"{eval_pcent}% of you data will be used for evaluating the best models from cross validation, which is {len(self.eval_data_scaled)} observations.\n"
+        out_text += f"You will use {self.cross_validation_splits}-fold cross validation "
+        out_text += f"and perform {self.cross_validation_repeats} repeats.\n"
 
-        out_text += f"You will evaluate the following models and an exhausitive search patten.\n"
+        out_text += f"{train_pcent}% of your data will be used for training, "
+        out_text += f"which is {len(self.train_data_scaled)} observations.\n"
+
+        out_text += f"{eval_pcent}% of your data will be used for evaluating the best models "
+        out_text += f"from cross validation, which is {len(self.eval_data_scaled)} observations.\n"
+
+        out_text += f"You will evaluate the following models: and an exhausitive search patten.\n"
 
         out_text += "If you're happy with the above, lets get model building!"
         return out_text
