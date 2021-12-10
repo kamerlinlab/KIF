@@ -15,6 +15,7 @@ class PyContactInitializer():
     # Generated when instantiated.
     pycontact_files: Union[str, list]
     base_name: str
+    merge_files_method: Optional[str]
     multiple_files: bool = False
     remove_false_interactions: bool = False
     in_dir: str = ""
@@ -35,7 +36,15 @@ class PyContactInitializer():
         else:
             self.individ_dfs = [
                 self._load_pycontact_dataset(i) for i in self.pycontact_files]
-            self.full_df = self._merge_pycontact_datasets()
+
+            if self.merge_files_method == "vertical":
+                self.full_df = self._merge_pycontact_datasets_vertically()
+            elif self.merge_files_method == "horizontal":
+                self.full_df = self._merge_pycontact_datasets_horizontally()
+            else:
+                raise ValueError(
+                    """You said you had multiple files but you did not define the
+                    'merge_files_method' parameter as either 'vertical' or 'horizontal'.""")
 
         if self.remove_false_interactions:
             self.prepared_df = self._rm_false_interactions()
@@ -46,19 +55,41 @@ class PyContactInitializer():
         print(f"You now have xxxx features and xxxx observations.")  # TODO
 
     def _load_pycontact_dataset(self, input_file):
-        """Load and preps a single PyContact dataset."""
+        """Load a single PyContact dataset."""
         file_in_path = self.in_dir + input_file
         return pd.read_csv(file_in_path)
 
-    def _merge_pycontact_datasets(self):
+    def _merge_pycontact_datasets_vertically(self):
         """
-        Function to merge multiple PyContact dfs.
-        dfs merged in the same order as they are given.
+        Function to merge multiple PyContact dfs vertically.
+        This would be used when a user has multiple replicas or has broken
+        there trajectory into blocks of seperate frames.
+
+        Returns
+        ----------
+        pd.core.frame.DataFrame
+            A complete dataframe with individual dataframe merged in the same order as they were given.
         """
         merged_df = pd.concat(
             self.individ_dfs, ignore_index='True', sort='False')
         merged_df = merged_df.fillna(0.0)
         return merged_df
+
+    def _merge_pycontact_datasets_horizontally(self):
+        """
+        Function to merge multiple PyContact dfs horizontally
+
+        This would be used when a user has analysed different parts of their protein
+        with PyContact and wants to put them all together (i.e. each file is from the
+        same trajectory.)
+
+        Returns
+        ----------
+        pd.core.frame.DataFrame
+            A complete dataframe with the individual dfs merged.
+        """
+        # TODO.
+        # TODO. Add a check that the length of index for each file is the same too.
 
     def _interaction_is_duplicate(self, contact_parts, contacts_to_keep):
         """
