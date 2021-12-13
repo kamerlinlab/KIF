@@ -43,10 +43,6 @@ class MachineLearnModel(ABC):
     def _assign_model_params(self):
         """Set model params for grid search process based on user exhaustivness."""
 
-    @abstractmethod
-    def model_building_report(self):
-        """Provide a detailed report of how the ML went."""
-
     def _save_best_models(self, best_model, out_path):
         """Save the best performing model to disk."""
         with open(out_path, 'wb') as file_out:
@@ -58,7 +54,6 @@ class MachineLearnModel(ABC):
 class SupervisedModel(MachineLearnModel):
     """Class to Construct Supervised Machine Learning Models."""
 
-    # TODO Can I move generic params to parent class later...
     dataset: pd.core.frame.DataFrame
     evaluation_split_ratio: float = 0.15
     classes_to_use: list = field(default_factory=[])
@@ -80,7 +75,7 @@ class SupervisedModel(MachineLearnModel):
 
     if scaling_method not in ["min_max", "standard_scaling"]:
         raise AssertionError(
-            "Please set the scaling_method to be either min_max or standard_scaling")
+            "Please set the scaling_method to be either 'min_max' or 'standard_scaling'.")
 
     # This is called at the end of the dataclass's initialization procedure.
     def __post_init__(self):
@@ -160,9 +155,10 @@ class SupervisedModel(MachineLearnModel):
                     best_model=clf.best_estimator_, out_path=temp_out_path)
 
         # Provide a model summary with the train/test data.
+        print("Model building complete, final results below:")
+        print("")
         print(pd.DataFrame(scores, columns=[
             'model', 'best_params', 'best_score', 'best_std']))
-        return self.ml_models
 
     def evaluate_model(self):
         """Evaluates model performance on the validation data set."""
@@ -209,7 +205,6 @@ class SupervisedModel(MachineLearnModel):
         """Prints out a summary to the user of what machine learning protoctol they have selected."""
         eval_pcent = self.evaluation_split_ratio*100
         train_pcent = 100 - eval_pcent
-        ml_models = "d"
 
         out_text = "\n"
         out_text += "Below is a summary of the machine learning you have planned.\n"
@@ -223,13 +218,11 @@ class SupervisedModel(MachineLearnModel):
         out_text += f"{eval_pcent}% of your data will be used for evaluating the best models "
         out_text += f"from cross validation, which is {len(self.eval_data_scaled)} observations.\n"
 
+        # TODO.
         out_text += f"You will evaluate the following models: and an exhausitive search patten.\n"
 
         out_text += "If you're happy with the above, lets get model building!"
         return out_text
-
-    def model_building_report(self):
-        """Provide a detailed report of how the ML went."""
 
 
 @dataclass
