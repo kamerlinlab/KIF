@@ -13,10 +13,6 @@ to save a results file automatically does not seem to work.)
 Further, with the below approach you can measure the relative contributions...
 from the side chain as compared to the main chain for each interaction...
 (this info is lost when you export using the PyContact GUI).
-
-I have a conda enviro with PyContact already installed on Tetralith...
-Feel free to use it if you want:
-conda activate /home/x_rorcr/miniconda2/envs/Py3_PyContact
 """
 import numpy as np
 import pandas as pd
@@ -49,9 +45,9 @@ def main():
     """Main function, you'll want to edit the PyContactJob section for sure!"""
     # define input files and parameters
     job = PyContactJob(
-        "Trajects/R1_5d2w_Protein.tpr",
-        "Trajects/R1_5d2w_Protein_5_frames.xtc",
-        "R1_5d2w",
+        "[your_topology_file_path]",
+        "[your_trajectory_file_path]",
+        "[your_protein_name]",
         JobConfig(
             5.0, 2.5, 120,
             [0, 0, 1, 1, 0],  # if you change me you'll need to change main()
@@ -60,6 +56,9 @@ def main():
     )
     # Run job on 4 cores.
     job.runJob(4)
+
+    # Comment me in if you want to write a session file to visulise results in the GUI.
+    # job.writeSessionToFile()
 
     # For mapping the determine_ctype() function output to a specific contact type.
     contact_type_map = {
@@ -94,13 +93,13 @@ def main():
 
         # Determine whether key contributor is the backbone (bb) or sidechain (sc) for each residue.
         res1_contrib["res1_bb"] = float(
-            job.analyzer.finalAccumulatedContacts[0].bb1)
+            job.analyzer.finalAccumulatedContacts[idx].bb1)
         res1_contrib["res1_sc"] = float(
-            job.analyzer.finalAccumulatedContacts[0].sc1)
+            job.analyzer.finalAccumulatedContacts[idx].sc1)
         res2_contrib["res2_bb"] = float(
-            job.analyzer.finalAccumulatedContacts[0].bb2)
+            job.analyzer.finalAccumulatedContacts[idx].bb2)
         res2_contrib["res2_sc"] = float(
-            job.analyzer.finalAccumulatedContacts[0].sc2)
+            job.analyzer.finalAccumulatedContacts[idx].sc2)
         contact_type = assign_contact_type(res1_contrib, res2_contrib)
 
         # build a residue name using all the above info.
@@ -113,9 +112,10 @@ def main():
 
         # Get per frame scores alongside some summary stats.
         scores = job.analyzer.finalAccumulatedContacts[idx].scoreArray
-        per_frame_scores.append(scores)
+        per_frame_scores.append(np.round(scores, 5))
 
-        avg_scores.append(np.average(scores))
+        avg_score = np.round(np.average(scores), 5)
+        avg_scores.append(avg_score)
 
         nonzero_frames = np.count_nonzero(scores)
         tot_frames = len(scores)
