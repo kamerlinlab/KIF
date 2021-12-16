@@ -13,7 +13,7 @@ def write_file(file_name, text):
     return None
 
 
-def project_multiple_per_res_scores(all_per_res_scores, out_dir="") -> None:
+def project_multiple_per_res_scores(all_per_res_scores: dict, out_dir="") -> None:
     """
     Write out multiple PyMOL compatabile scripts for different models.
 
@@ -36,7 +36,7 @@ def project_multiple_per_res_scores(all_per_res_scores, out_dir="") -> None:
         )
 
 
-def project_pymol_per_res_scores(per_res_scores, model_name, out_dir="") -> None:
+def project_pymol_per_res_scores(per_res_scores, model_name="", out_dir="") -> None:
     """
     Write out a PyMOL compatabile python script to project per residue scores.
 
@@ -132,35 +132,14 @@ def project_pymol_top_features(per_feature_scores, model_name, numb_features="al
         Folder to save outputs to, if none given, saved to current directory.
 
     """
-    stick_col_scheme = {"Hbond": "red", "Saltbr": "blue",
-                        "Hydrophobic": "green", "Other": "magenta"}
-
     out_dir = _prep_out_dir(out_dir)
 
     df_feat_import = df_feat_import = pd.DataFrame(per_feature_scores.items())
     df_feat_import_res = df_feat_import[0].str.split(" ", expand=True)
 
-    residue1 = (df_feat_import_res[0].str.extract(
-        "(\d+)")).astype(int).values.tolist()
-    residue2 = (df_feat_import_res[1].str.extract(
-        "(\d+)")).astype(int).values.tolist()
-    res1 = [item for sublist in residue1 for item in sublist]
-    res2 = [item for sublist in residue2 for item in sublist]
-
-    # Define interaction type and colouring to use.
-    interact_type = df_feat_import_res[2].values.tolist()
-    interact_col = [stick_col_scheme[i]
-                    for i in interact_type if i in stick_col_scheme]
-
-    # Determine interaction strength value and scale so max is 0.5 (Good for PyMOL).
-    interact_strengths = df_feat_import[1]
-    max_strength = max(interact_strengths)
-    interact_strengths_scaled = []
-    for interaction in interact_strengths:
-        interact_strengths_scaled.append(interaction / max_strength / 2)
-
-    interact_strengths_scaled_rounded = [
-        round(elem, 4) for elem in interact_strengths_scaled]
+    res1, res2 = _extract_residue_lists(df_feat_import_res)
+    interact_color = _extract_interaction_types(df_feat_import_res)
+    interact_strengths = _scale_interaction_strengths(df_feat_import)
 
     # Header of output file.
     top_feats_out = ""
@@ -182,8 +161,8 @@ def project_pymol_top_features(per_feature_scores, model_name, numb_features="al
         for i, _ in enumerate(res1):
             feature_rep = f"draw_links selection1=resi {res1[i]}, " + \
                 f"selection2=resi {res2[i]}, " + \
-                f"color={interact_col[i]}, " + \
-                f"radius={interact_strengths_scaled_rounded[i]} \n"
+                f"color={interact_color[i]}, " + \
+                f"radius={interact_strengths[i]} \n"
             top_feats_out += feature_rep
 
     elif isinstance(numb_features, int):
@@ -192,8 +171,8 @@ def project_pymol_top_features(per_feature_scores, model_name, numb_features="al
         for i in range(0, max_features):
             feature_rep = f"draw_links selection1=resi {res1[i]}, " + \
                 f"selection2=resi {res2[i]}, " + \
-                f"color={interact_col[i]}, " + \
-                f"radius={interact_strengths_scaled_rounded[i]} \n"
+                f"color={interact_color[i]}, " + \
+                f"radius={interact_strengths[i]} \n"
             top_feats_out += feature_rep
 
     else:
@@ -206,3 +185,90 @@ def project_pymol_top_features(per_feature_scores, model_name, numb_features="al
     out_file = out_dir + model_name + "_Pymol_Per_Feature_Scores.py"
     write_file(out_file, top_feats_out)
     print(f"The file: {out_file} was written to disk.")
+
+
+def _extract_residue_lists(input_df):
+    """
+    Extract the lists of residues for each each feature.
+
+    Parameters
+    ----------
+    input_df : pd.DataFrame
+        Dataframe of feature names.
+
+    Returns
+    ----------
+    res1 : list
+        residue 1 for each feature.
+
+    res2 : list
+        residue 2 for each feature.
+
+    """
+    residue1 = (input_df[0].str.extract(
+        "(\d+)")).astype(int).values.tolist()
+    residue2 = (input_df[1].str.extract(
+        "(\d+)")).astype(int).values.tolist()
+    res1 = [item for sublist in residue1 for item in sublist]
+    res2 = [item for sublist in residue2 for item in sublist]
+
+    return res1, res2
+
+
+def _extract_interaction_types(input_df):
+    """
+    Extract the interaction type for each feature and what colour scheme to use.
+
+    Parameters
+    ----------
+    input_df : pd.DataFrame
+        Dataframe of feature names.
+
+    Returns
+    ----------
+    list
+        List of colors to use for the different interaction types.
+    """
+    stick_col_scheme = {"Hbond": "red", "Saltbr": "blue",
+                        "Hydrophobic": "green", "Other": "magenta"}
+
+    interact_type = input_df[2].values.tolist()
+    return [stick_col_scheme[i] for i in interact_type if i in stick_col_scheme]
+
+
+def _scale_interaction_strengths(input_df):
+    """
+    Determine interaction strength value and scale so max is 0.5 (Good for PyMOL).
+
+    Parameters
+    ----------
+    input_df : pd.DataFrame
+        Dataframe of feature importances.
+
+    Returns
+    ----------
+    list
+        Scaled and rounded feature importances.
+    """
+    interact_strengths = input_df[1]
+    max_strength = max(interact_strengths)
+
+    interact_strengths_scaled = []
+    for interaction in interact_strengths:
+        interact_strengths_scaled.append(interaction / max_strength / 2)
+
+    return [round(elem, 4) for elem in interact_strengths_scaled]
+
+
+# def experimental_project_pymol_top_features(per_feature_scores,
+#                                             model_name,
+#                                             numb_features="all",
+#                                             out_dir=""
+#                                             ) -> None:
+#     """
+#     Experimental attempt to make a better version of the feature projection method.
+
+#     Will recognize residue types and project onto side or main chain?
+#     How do I handle ligands - weird residue names?
+#     """
+#     # TODO.
