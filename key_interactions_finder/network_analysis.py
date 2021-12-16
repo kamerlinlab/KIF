@@ -17,13 +17,13 @@ class CorrelationNetwork:
     """Generates the correlation and contact maps with PyContact datasets."""
 
     # Generated at runtime.
-    dataset: pd.core.frame.DataFrame
+    dataset: pd.DataFrame
     out_dir: str = ""
     interaction_types_included: list = field(
         default_factory=["Hbond", "Hydrophobic", "Saltbr", "Other"])
 
     # Generated later.
-    full_corr_matrix: pd.core.frame.DataFrame = field(init=False)
+    full_corr_matrix: pd.DataFrame = field(init=False)
     # full_contact_map: np.ndarray = field(init=False)
 
     res_corr_matrix: np.ndarray = field(init=False)
@@ -130,7 +130,7 @@ class CorrelationNetwork:
 
         Returns
         ----------
-        pd.core.frame.DataFrame
+        pd.DataFrame
             1st and 2nd residue number of each contact/feature in the dataframe.
         """
         df_cols = pd.DataFrame(list(self.dataset.columns),
@@ -238,80 +238,63 @@ def heavy_atom_contact_map_from_pdb(pdb_file: str,
 
     if out_file is not None:
         np.savetxt(out_file, per_res_contact_map, delimiter=" ", fmt="%.1f")
+        print(f"{out_file} saved to disk.")
     return per_res_contact_map
 
 
-# TODO - BELOW
-# CHALLENGE is that numpy minimun only wants two arrays.
-# So need a general approach for the matrix if want multiple pdbs.
-# def heavy_atom_contact_map_from_multiple_pdbs(pdb_files: list,
-#                                               first_res: int,
-#                                               last_res: int,
-#                                               d_cut: Optional[float] = 4.5,
-#                                               out_file: Optional[str] = None,
-#                                               ) -> np.ndarray:
-#     """
-#     Use mdanalysis to generate a heavy atom contact map/matrix given a
-#     list of pdb files.
+def heavy_atom_contact_map_from_multiple_pdbs(pdb_files: list,
+                                              first_res: int,
+                                              last_res: int,
+                                              d_cut: Optional[float] = 4.5,
+                                              out_file: Optional[str] = None,
+                                              ) -> np.ndarray:
+    """
+    Use mdanalysis to generate a heavy atom contact map/matrix given a
+    list of pdb files.
 
-#     """
-#     min_dist_contact_maps = [_min_heavy_atom_distances(
-#         pdb, first_res, last_res) for pdb in pdb_files]
+    """
+    res_selection = "not name H* and resid " + \
+        str(first_res) + "-" + str(last_res)
 
-#     numb_matrices = len(min_dist_contact_maps)
-#     print(f"Length is {numb_matrices}")
+    all_universes = [mda.Universe(pdb) for pdb in pdb_files]
 
-#     if numb_matrices != 2:
-#         #min_dist_map = np.minimum(min_dist_contact_maps)
-#         print("working on it")
+    all_group1s = [all_universes[idx].select_atoms(
+        res_selection) for idx, _ in enumerate(all_universes)]
+    all_group2s = [all_universes[idx].select_atoms(
+        res_selection) for idx, _ in enumerate(all_universes)]
 
-#     else:
-#         print("working on it too")
+    matrix_size = (last_res - first_res) + 1
+    per_res_contact_map = np.zeros((matrix_size, matrix_size), dtype=int)
 
+    for group1_idx in range(first_res, last_res+1):
+        group1_selection = "resid " + str(group1_idx)
+        residue_1s = [all_group1s[idx].select_atoms(
+            group1_selection) for idx, _ in enumerate(all_group1s)]
 
-#     print(min_dist_contact_maps)
-#     print(min_dist_contact_maps[0])
+        for group2_idx in range(first_res, last_res+1):
+            group2_selection = "resid " + str(group2_idx)
+            residue_2s = [all_group1s[idx].select_atoms(
+                group2_selection) for idx, _ in enumerate(all_group2s)]
 
+            # Find the smallest distance between the residue pairs across all pdbs
+            min_dist_all_pdbs = 999  # always going to be above cut-off.
+            for idx, _ in enumerate(all_group1s):
+                dist_arr = distances.distance_array(
+                    residue_1s[idx].positions,
+                    residue_2s[idx].positions,
+                    box=all_universes[idx].dimensions
+                )
+                min_dist = dist_arr.min()
 
-#     # get min at each position.
+                if min_dist < min_dist_all_pdbs:
+                    min_dist_all_pdbs = min_dist
 
-#     # https://numpy.org/doc/stable/reference/generated/numpy.maximum.html
+            # Replace matrix pos with 1 if min_dist_all_pdbs less than cutoff.
+            if min_dist_all_pdbs <= d_cut:
+                per_res_contact_map[(group1_idx-1), (group2_idx-1)] = 1
+                per_res_contact_map[(group2_idx-1), (group1_idx-1)] = 1
 
-#     # https://stackoverflow.com/questions/45648668/convert-numpy-array-to-0-or-1
-
-
-# def _min_heavy_atom_distances(pdb: str,
-#                               first_res: int,
-#                               last_res: int,
-#                               ) -> np.ndarray:
-#     """
-#     Given a pdb_file return a symmetrical matrix of the minimumn heavy atom distances.
-#     (Helper Function)
-#     """
-#     universe = mda.Universe(pdb)
-#     res_selection = "not name H* and resid " + \
-#         str(first_res) + "-" + str(last_res)
-#     group1 = universe.select_atoms(res_selection)
-#     group2 = universe.select_atoms(res_selection)
-#     matrix_size = (last_res - first_res) + 1
-
-#     min_dist_contact_map = np.zeros((matrix_size, matrix_size), dtype=float)
-
-#     for group1_idx in range(first_res, last_res+1):
-#         group1_selection = "resid " + str(group1_idx)
-#         res1 = group1.select_atoms(group1_selection)
-
-#         for group2_idx in range(first_res, last_res+1):
-#             group2_selection = "resid " + str(group2_idx)
-#             res2 = group2.select_atoms(group2_selection)
-
-#             # Determine all heavy atom distance between residue pairs.
-#             dist_arr = distances.distance_array(
-#                 res1.positions, res2.positions, box=universe.dimensions)
-
-#             # Replace matrix pos with 1 if min_dist less than cutoff.
-#             min_dist = dist_arr.min()
-#             min_dist_contact_map[(group1_idx-1), (group2_idx-1)] = min_dist
-#             min_dist_contact_map[(group2_idx-1), (group1_idx-1)] = min_dist
-
-#     return min_dist_contact_map
+    if out_file is not None:
+        np.savetxt(out_file, per_res_contact_map, delimiter=" ", fmt="%.1f")
+        print(f"{out_file} saved to disk.")
+    return per_res_contact_map
