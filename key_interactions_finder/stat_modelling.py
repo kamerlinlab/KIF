@@ -20,7 +20,7 @@ class ProteinStatModel():
     """Handles the generation of stastical models for PyContact feature sets."""
 
     # Generated at initialization.
-    dataset: pd.core.frame.DataFrame
+    dataset: pd.DataFrame
     class_names: list = field(default_factory=[])
     out_dir: str = ""
     kde_bandwidth: float = 0.02
@@ -28,7 +28,7 @@ class ProteinStatModel():
         default_factory=["Hbond", "Hydrophobic", "Saltbr", "Other"])
 
     # Generated later.
-    scaled_dataset: pd.core.frame.DataFrame = field(init=False)
+    scaled_dataset: pd.DataFrame = field(init=False)
     per_class_datasets: dict = field(init=False)
     feature_list: list = field(init=False)
     x_values: np.ndarray = field(init=False)
@@ -54,7 +54,6 @@ class ProteinStatModel():
 
         # Features need to be scaled in order to use same bandwidth throughout.
         self.scaled_dataset = self._scale_features()
-        print(self.scaled_dataset)
 
         if len(self.class_names) != 2:
             raise ValueError(
@@ -76,7 +75,7 @@ class ProteinStatModel():
 
         Returns
         ----------
-        pd.core.frame.DataFrame
+        pd.DataFrame
             Dataframe containing all features and the mutual information scores.
             Mutual information units are "nits".
         """
@@ -120,7 +119,8 @@ class ProteinStatModel():
 
     def _gen_prob_distributions(self):
         """
-        For each feature generate a probability distrubtion for each class.
+        For each feature generate a probability distrubtion of it scores
+        towards each class.
 
         Input feature sets are pre-normalised to ranges between 0 and 1,
         allowing for the approximation that using the same bandwith in the
@@ -142,7 +142,6 @@ class ProteinStatModel():
         x_values = x_values.reshape((int(1/self.kde_bandwidth)), 1)
 
         probablity_distributions = {}
-
         for class_name in self.class_names:
             per_feature_probs = {}
             for feature in self.feature_list:
@@ -167,7 +166,7 @@ class ProteinStatModel():
 
         Returns
         ----------
-        pd.core.frame.DataFrame
+        pd.DataFrame
             Dataframe with all features scaled between 0 and 1.
         """
         scaler = MinMaxScaler()

@@ -1,6 +1,11 @@
 """
 Reformats and (optionally) merges PyContact datafiles generated using the custom python script.
-TODO - ADD a comment here about importance of using "self" as second parameter and what happends if kept.
+
+Special Note:
+A pycontact job run with overlapping residue selections can obtain many false interactions.
+These false interactions would be for instance a vdw interaction between a residue to itself.
+If this is the case, the 'remove_false_interactions' must be set to True (default) when the
+class is initialised in order to remove these false interactions.
 """
 import re
 from typing import Union, Optional
@@ -14,16 +19,15 @@ class PyContactInitializer():
 
     # Generated when instantiated.
     pycontact_files: Union[str, list]
-    base_name: str
     merge_files_method: Optional[str]
     multiple_files: bool = False
-    remove_false_interactions: bool = False
+    remove_false_interactions: bool = True
     in_dir: str = ""
 
     # Generated later.
     individ_dfs: Optional[list] = field(init=False)
-    full_df: pd.core.frame.DataFrame = field(init=False)
-    prepared_df: pd.core.frame.DataFrame = field(init=False)
+    full_df: pd.DataFrame = field(init=False)
+    prepared_df: pd.DataFrame = field(init=False)
 
     # This is called at the end of the dataclass's initialization procedure.
     def __post_init__(self):
@@ -51,29 +55,16 @@ class PyContactInitializer():
         else:
             self.prepared_df = self.full_df
 
-        print("PyContact file(s) have been succefully processed.")
-        print(f"You now have xxxx features and xxxx observations.")  # TODO
+        num_feats = len(self.prepared_df.columns)
+        num_obs = len(self.prepared_df)
+        print("Your PyContact file(s) have been succefully processed.")
+        print(f"You have {num_feats} features and {num_obs} observations.")
+        print("The fully processed dataframe is accesible from the 'prepared_df' class attribute.")
 
     def _load_pycontact_dataset(self, input_file):
         """Load a single PyContact dataset."""
         file_in_path = self.in_dir + input_file
         return pd.read_csv(file_in_path)
-
-    def _merge_pycontact_datasets_vertically(self):
-        """
-        Function to merge multiple PyContact dfs vertically.
-        This would be used when a user has multiple replicas or has broken
-        there trajectory into blocks of seperate frames.
-
-        Returns
-        ----------
-        pd.core.frame.DataFrame
-            A complete dataframe with individual dataframe merged in the same order as they were given.
-        """
-        merged_df = pd.concat(
-            self.individ_dfs, ignore_index='True', sort='False')
-        merged_df = merged_df.fillna(0.0)
-        return merged_df
 
     def _merge_pycontact_datasets_horizontally(self):
         """
@@ -85,11 +76,37 @@ class PyContactInitializer():
 
         Returns
         ----------
-        pd.core.frame.DataFrame
+        pd.DataFrame
             A complete dataframe with the individual dfs merged.
         """
-        # TODO.
-        # TODO. Add a check that the length of index for each file is the same too.
+        df_lengths = [len(df) for df in self.individ_dfs]
+
+        if len(set(df_lengths)) != 1:
+            except_message = "The number of rows in each of your datasets are not identical. This is weird because you asked " + \
+                "to merge your files horizontally. If you are using this approach then your files should be from the " + \
+                "same trajectory frames, just with different contacts measured in each of them. " + \
+                "If not, you want to set the 'merge_files_method' parameter to 'vertical'. "
+            raise Exception(except_message)
+
+        merged_df = pd.concat(self.individ_dfs, axis=1)
+        merged_df = merged_df.fillna(0.0)
+        return merged_df
+
+    def _merge_pycontact_datasets_vertically(self):
+        """
+        Function to merge multiple PyContact dfs vertically.
+        This would be used when a user has multiple replicas or has broken
+        there trajectory into blocks of seperate frames.
+
+        Returns
+        ----------
+        pd.DataFrame
+            A complete dataframe with individual dataframe merged in the same order as they were given.
+        """
+        merged_df = pd.concat(
+            self.individ_dfs, ignore_index='True', sort='False')
+        merged_df = merged_df.fillna(0.0)
+        return merged_df
 
     def _interaction_is_duplicate(self, contact_parts, contacts_to_keep):
         """
@@ -121,7 +138,7 @@ class PyContactInitializer():
                 (contact_parts[5] == saved_contact[5])
             ):
                 duplicate = True
-                break  # don't need to continue looping if True.
+                break
 
         return duplicate
 
@@ -161,11 +178,3 @@ class PyContactInitializer():
         prepared_df = self.full_df.drop(
             self.full_df.columns[contacts_to_del], axis=1)
         return prepared_df
-
-
-def main():
-    """Do Nothing"""
-
-
-if __name__ == "__main__":
-    main()

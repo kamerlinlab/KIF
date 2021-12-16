@@ -5,9 +5,9 @@ import os
 import pandas as pd
 
 
-def _prep_out_dir(out_dir) -> str:
+def _prep_out_dir(out_dir: str) -> str:
     """
-    Makes the folder if it doesn't exist and appends a '/' if not present at end of name.
+    Makes the folder if it doesn't exist and appends a '/' if not present at end of a string.
 
     Parameters
     ----------
@@ -30,15 +30,14 @@ def _prep_out_dir(out_dir) -> str:
     return out_dir
 
 
-def _filter_features_by_strings(dataset: pd.core.frame.DataFrame,
-                                strings_to_preserve: list) -> pd.core.frame.DataFrame:
+def _filter_features_by_strings(dataset: pd.DataFrame, strings_to_preserve: list) -> pd.DataFrame:
     """
-    Filter PyContact features to only include those that match one of the strings
+    Filter features to only include those that match one of the strings
     in the list provided. (Helper function.)
 
     Parameters
     ----------
-    dataset : pd.core.frame.DataFrame
+    dataset : pd.DataFrame
         Input dataset to filter.
 
     strings_to_preserve : list
@@ -46,7 +45,7 @@ def _filter_features_by_strings(dataset: pd.core.frame.DataFrame,
 
     Returns
     ----------
-    pd.core.frame.DataFrame
+    pd.DataFrame
         Dataframe with features filtered to only include those the user wants.
     """
     # Build the search term
