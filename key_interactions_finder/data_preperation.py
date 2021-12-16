@@ -8,7 +8,7 @@ from key_interactions_finder.utils import _filter_features_by_strings
 
 
 class FeatureData(ABC):
-    """Abstract base class to unify the construction of supervised and unsupervised datasets."""
+    """Abstract base class to unify the construction of supervised and unsupervised classes."""
 
     @abstractmethod
     def filter_features_by_occupancy(self, min_occupancy):
@@ -31,8 +31,8 @@ class FeatureData(ABC):
 class UnsupervisedFeautureData(FeatureData):
     """FeatureData Class without any classification data."""
 
-    input_df: pd.core.frame.DataFrame
-    df_filtered: pd.core.frame.DataFrame = field(init=False)
+    input_df: pd.DataFrame
+    df_filtered: pd.DataFrame = field(init=False)
 
     def filter_features_by_occupancy(self, min_occupancy):
         """
@@ -47,7 +47,7 @@ class UnsupervisedFeautureData(FeatureData):
 
         Returns
         -------
-        pd.core.frame.DataFrame
+        pd.DataFrame
             Filtered dataframe.
 
         """
@@ -110,12 +110,12 @@ class UnsupervisedFeautureData(FeatureData):
 class SupervisedFeatureData(FeatureData):
     """FeatureData Class with classification data included."""
 
-    input_df: pd.core.frame.DataFrame
+    input_df: pd.DataFrame
     classifications_file: str
     header_present: bool = True
 
-    df_feat_class: pd.core.frame.DataFrame = field(init=False)
-    df_filtered: pd.core.frame.DataFrame = field(init=False)
+    df_feat_class: pd.DataFrame = field(init=False)
+    df_filtered: pd.DataFrame = field(init=False)
 
     def __post_init__(self):
         """Merge per frame classification results to dataframe."""
@@ -152,7 +152,7 @@ class SupervisedFeatureData(FeatureData):
 
         Returns
         -------
-        pd.core.frame.DataFrame
+        pd.DataFrame
             Filtered dataframe.
         """
         keep_cols = ["Classes"]  # always want "Classes" present...
