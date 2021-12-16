@@ -16,6 +16,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 
+from sklearn.decomposition import PCA
+
 # sklearn bits and bobs
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import RepeatedStratifiedKFold
@@ -41,7 +43,7 @@ class MachineLearnModel(ABC):
 
     @abstractmethod
     def _assign_model_params(self):
-        """Set model params for grid search process based on user exhaustivness."""
+        """Assigns the grid search paramters for the ML based on user criteria."""
 
     def _save_best_models(self, best_model, out_path):
         """Save the best performing model to disk."""
@@ -54,7 +56,7 @@ class MachineLearnModel(ABC):
 class SupervisedModel(MachineLearnModel):
     """Class to Construct Supervised Machine Learning Models."""
 
-    dataset: pd.core.frame.DataFrame
+    dataset: pd.DataFrame
     evaluation_split_ratio: float = 0.15
     classes_to_use: list = field(default_factory=[])
     scaling_method: str = "min_max"
@@ -103,7 +105,7 @@ class SupervisedModel(MachineLearnModel):
             n_splits=self.cross_validation_splits, n_repeats=self.cross_validation_repeats)
         self.model_params = self._assign_model_params()
 
-        return print(self._describe_ml_planned())
+        print(self._describe_ml_planned())
 
     def _supervised_scale_features(self, x_array_train, x_array_eval):
         """Scale all features with either MinMaxScaler or StandardScaler Scaler.
@@ -225,7 +227,60 @@ class SupervisedModel(MachineLearnModel):
         return out_text
 
 
+# Can have a go with PCA Maybe or maybe just not use as already have a lot of stuff...
 @dataclass
 class UnsupervisedModel(MachineLearnModel):
     """Class to Construct Unsupervised Machine Learning Models."""
-    # Can have a go with PCA Maybe or maybe just not use as already have a lot of stuff...
+    dataset: pd.DataFrame
+    out_dir: str = ""
+
+    # Dynamically generated:
+    feat_names: np.ndarray = field(init=False)
+    data_scaled: np.ndarray = field(init=False)
+    ml_models: dict = field(init=False)
+
+    # This is called at the end of the dataclass's initialization procedure.
+    def __post_init__(self):
+        """Setup the provided dataset and params for ML."""
+        self.out_dir = _prep_out_dir(self.out_dir)
+
+        # Allows a user with supervised dataset to use this method.
+        try:
+            self.dataset = self.dataset.drop(["Classes"], axis=1)
+        except KeyError:
+            pass
+
+        self.feat_names = self.dataset.columns.values
+        data_array = self.dataset.to_numpy()
+
+        scaler = StandardScaler()
+        self.data_scaled = scaler.fit_transform(data_array)
+
+        print(self._describe_ml_planned())
+
+    def build_models(self, save_models=True):
+        """Runs the machine learning and summarizes the results."""
+        self.ml_models = {}
+
+        pca = PCA()
+        pca.fit(self.data_scaled)
+        self.ml_models["PCA"] = pca
+        print("All models built.")
+
+    def _describe_ml_planned(self):
+        """Prints out a summary to the user of what machine learning protoctol they have selected. """
+        out_text = "\n"
+        out_text += "Below is a summary of the unsupervised machine learning you have planned. \n"
+
+        out_text += f"All of your data will be used for training the model, "
+        out_text += f"which is {len(self.dataset)} observations.\n"
+
+        out_text += f"Currently you will use just PCA to get your results. "
+        out_text += f"More methods might be added in the future. "  # TODO.
+
+        out_text += "If you're happy with the above, lets get model building!"
+        return out_text
+
+    def _assign_model_params(self):
+        """Assigns the grid search paramters for the ML based on user criteria."""
+        # Currently not needed, maybe remove as abstract method then? # TODO.
