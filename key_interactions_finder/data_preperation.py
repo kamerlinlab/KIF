@@ -1,5 +1,9 @@
 """
-Add docstring here.
+Takes a processed PyContact feature set and prepares the dataset for either
+supervised/unsupervised learning.
+Main responsibilities:
+1. Add classification data to supervised learning datasets.
+2. Offer several filtering methods for the PyContact features.
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -8,15 +12,15 @@ from key_interactions_finder.utils import _filter_features_by_strings
 
 
 class FeatureData(ABC):
-    """Abstract base class to unify the construction of supervised and unsupervised classes."""
+    """Abstract base class to unify the construction of the supervised and unsupervised classes."""
 
     @abstractmethod
     def filter_features_by_occupancy(self, min_occupancy):
-        """Filter features/interactions to use by a minimum allowed observation cut-off."""
+        """Filter features such that only features with %occupancy >= the min_occupancy are kept."""
 
     @abstractmethod
     def filter_features_by_type(self, interaction_types_included):
-        """Filter features/interactions to use by their type (e.g. hbond or vdws...)"""
+        """Filter features/interactions to use by their type (e.g. hbond or vdws...)."""
 
     @abstractmethod
     def filter_features_by_avg_strength(self, average_strength_cut_off):
@@ -24,91 +28,12 @@ class FeatureData(ABC):
 
     @abstractmethod
     def filter_features_by_main_or_side_chain(self, main_side_chain_types_included):
-        """Filter features/interactions to only certain combinations of main and side chain."""
-
-
-@dataclass
-class UnsupervisedFeautureData(FeatureData):
-    """FeatureData Class without any classification data."""
-
-    input_df: pd.DataFrame
-    df_filtered: pd.DataFrame = field(init=False)
-
-    def filter_features_by_occupancy(self, min_occupancy):
-        """
-        Filter features such that only features with %occupancy >= the min_occupancy are included.
-        (%occupancy is the % of frames that have a non-zero interaction value for a given feature).
-        The supervised form has a different implementation - hence the seperation.
-
-        Parameters
-        ----------
-        min_occupancy : int
-            Minimun percantage occupancy that a feature must have to be retained.
-
-        Returns
-        -------
-        pd.DataFrame
-            Filtered dataframe.
-
-        """
-        try:
-            self.df_filtered = self.df_filtered.loc[:, (
-                self.df_filtered != 0).mean() > (min_occupancy/100)]
-
-        except AttributeError:  # if no other filtering has been performed yet, follow this path.
-            self.df_filtered = self.input_df.loc[:, (
-                self.input_df != 0).mean() > (min_occupancy/100)]
-
-        return self.df_filtered
-
-    def filter_features_by_type(self, interaction_types_included):
-        """Filter features/interactions to use by their type (e.g. hbond or vdws...)"""
-        try:
-            self.df_filtered = _filter_features_by_strings(
-                dataset=self.df_filtered,
-                strings_to_preserve=interaction_types_included
-            )
-
-        except AttributeError:  # if no other filtering has been performed yet, follow this path.
-            self.df_filtered = _filter_features_by_strings(
-                dataset=self.input_df,
-                strings_to_preserve=interaction_types_included
-            )
-
-        return self.df_filtered
-
-    def filter_features_by_main_or_side_chain(self, main_side_chain_types_included):
-        """Filter features/interactions to only certain combinations of main and side chain."""
-        try:
-            self.df_filtered = _filter_features_by_strings(
-                dataset=self.df_filtered,
-                strings_to_preserve=main_side_chain_types_included
-            )
-
-        except AttributeError:  # if no other filtering has been performed yet, follow this path.
-            self.df_filtered = _filter_features_by_strings(
-                dataset=self.input_df,
-                strings_to_preserve=main_side_chain_types_included
-            )
-
-        return self.df_filtered
-
-    def filter_features_by_avg_strength(self, average_strength_cut_off):
-        """Filter features/interactions to use by their average strength."""
-        try:
-            self.df_filtered = self.df_filtered.loc[:, self.df_filtered.mean(
-            ) > average_strength_cut_off]
-
-        except AttributeError:  # if no other filtering has been performed yet, follow this path.
-            self.df_filtered = self.input_df.loc[:, self.input_df.mean(
-            ) > average_strength_cut_off]
-
-        return self.df_filtered
+        """Filter features to only certain combinations of main and side chain interactions."""
 
 
 @dataclass
 class SupervisedFeatureData(FeatureData):
-    """FeatureData Class with classification data included."""
+    """FeatureData Class for datasets with classification data."""
 
     input_df: pd.DataFrame
     classifications_file: str
@@ -118,7 +43,7 @@ class SupervisedFeatureData(FeatureData):
     df_filtered: pd.DataFrame = field(init=False)
 
     def __post_init__(self):
-        """Merge per frame classification results to dataframe."""
+        """Merge classifications to dataframe."""
         if self.header_present:
             df_class = pd.read_csv(self.classifications_file)
         else:
@@ -128,27 +53,29 @@ class SupervisedFeatureData(FeatureData):
 
         if len(df_class) == len(self.input_df):
             self.df_feat_class = pd.concat([df_class, self.input_df], axis=1)
-            return print("All good.")
         else:
-            print(f"Classifications file length: len(df_class)")
-            print(f"PyContact file length: len(self.input_df)")
-            raise Exception(
-                f"""The length of your classifications file ({len(df_class)})
-                doesn't match the length of your features file ({len(self.input_df)}).
-                If the difference is 1, check if you set the 'header_present' keyword correctly."""
-            )
+            exception_message = (f"Classifications file length: {len(df_class)} \n" +
+                                 f"PyContact file length: {len(self.input_df)} \n" +
+                                 "The length of your classifications file doesn't match the " +
+                                 "length of your features file. If the difference is 1, " +
+                                 "check if you set the 'header_present' keyword correctly."
+                                 )
+            raise Exception(exception_message)
 
-    def filter_features_by_occupancy(self, min_occupancy):
+        print("Your features and class datasets has been succesufully merged.")
+        print("You can access this dataset through the class attribute: '.df_feat_class'.")
+
+    def filter_features_by_occupancy(self, min_occupancy: float) -> pd.DataFrame:
         """
         Filter features such that only features with %occupancy >= the min_occupancy are kept.
         (%occupancy is the % of frames that have a non-zero interaction value).
-        In the supervised form %occupancy is determined for each class, meaning only
-        observations from 1 class has to meet the cut-off to keep the feature.
+        In the supervised form, %occupancy is determined for each class, meaning only
+        observations from 1 class have to meet the cut-off to keep the feature.
 
         Parameters
         ----------
-        min_occupancy : int
-            Minimun %occupancy that a feature must have to be retained.
+        min_occupancy : float
+            Minimum %occupancy that a feature must have to be retained.
 
         Returns
         -------
@@ -184,8 +111,20 @@ class SupervisedFeatureData(FeatureData):
 
         return self.df_filtered
 
-    def filter_features_by_type(self, interaction_types_included):
-        """Filter features/interactions to use by their type (e.g. hbond or vdws...)"""
+    def filter_features_by_type(self, interaction_types_included: list) -> pd.DataFrame:
+        """
+        Filter features/interactions to use by their type (e.g. hbond or vdws...)
+
+        Parameters
+        ----------
+        interaction_types_included : list
+            Expected list items can be one or more of: "Hbond", "Saltbr", "Hydrophobic", "Other"
+
+        Returns
+        -------
+        pd.DataFrame
+            Filtered dataframe.
+        """
         try:
             self.df_filtered = _filter_features_by_strings(
                 dataset=self.df_filtered,
@@ -200,8 +139,21 @@ class SupervisedFeatureData(FeatureData):
 
         return self.df_filtered
 
-    def filter_features_by_main_or_side_chain(self, main_side_chain_types_included):
-        """Filter features/interactions to only certain combinations of main and side chain."""
+    def filter_features_by_main_or_side_chain(self,
+                                              main_side_chain_types_included: list) -> pd.DataFrame:
+        """
+        Filter features to only certain combinations of main and side chain interactions.
+
+        Parameters
+        ----------
+        main_side_chain_types_included : list
+            Expected list items can be one or more of: "bb-bb", "sc-sc", "bb-sc", "sc-bb"
+
+        Returns
+        -------
+        pd.DataFrame
+            Filtered dataframe.
+        """
         try:
             self.df_filtered = _filter_features_by_strings(
                 dataset=self.df_filtered,
@@ -216,8 +168,20 @@ class SupervisedFeatureData(FeatureData):
 
         return self.df_filtered
 
-    def filter_features_by_avg_strength(self, average_strength_cut_off):
-        """Filter features/interactions to use by their average strength."""
+    def filter_features_by_avg_strength(self, average_strength_cut_off: float) -> pd.DataFrame:
+        """
+        Filter features/interactions to use by their average strength.
+
+        Parameters
+        ----------
+        average_strength_cut_off : float
+            Cutoff below which features are removed from the Dataframe.
+
+        Returns
+        -------
+        pd.DataFrame
+            Filtered dataframe.
+        """
         try:
             df_just_features = self.df_filtered.drop("Classes", axis=1)
             df_features_filtered = df_just_features.loc[:, df_just_features.mean(
@@ -235,5 +199,119 @@ class SupervisedFeatureData(FeatureData):
             df_features_filtered.insert(
                 0, "Classes", self.df_feat_class["Classes"])
             self.df_filtered = df_features_filtered
+
+        return self.df_filtered
+
+
+@dataclass
+class UnsupervisedFeautureData(FeatureData):
+    """FeatureData Class for datasets without any classification data."""
+
+    input_df: pd.DataFrame
+    df_filtered: pd.DataFrame = field(init=False)
+
+    def filter_features_by_occupancy(self, min_occupancy: float) -> pd.DataFrame:
+        """
+        Filter features such that only features with %occupancy >= the min_occupancy are included.
+        (%occupancy is the % of frames that have a non-zero interaction value for a given feature).
+        The supervised form has a different implementation - hence the separation.
+
+        Parameters
+        ----------
+        min_occupancy : float
+            Minimum percentage occupancy that a feature must have to be retained.
+
+        Returns
+        -------
+        pd.DataFrame
+            Filtered dataframe.
+        """
+        try:
+            self.df_filtered = self.df_filtered.loc[:, (
+                self.df_filtered != 0).mean() > (min_occupancy/100)]
+
+        except AttributeError:  # if no other filtering has been performed yet, follow this path.
+            self.df_filtered = self.input_df.loc[:, (
+                self.input_df != 0).mean() > (min_occupancy/100)]
+
+        return self.df_filtered
+
+    def filter_features_by_type(self, interaction_types_included: list) -> pd.DataFrame:
+        """
+        Filter features/interactions to use by their type (e.g. hbond or vdws...)
+
+        Parameters
+        ----------
+        interaction_types_included : list
+            Expected list items can be one or more of: "Hbond", "Saltbr", "Hydrophobic", "Other"
+
+        Returns
+        -------
+        pd.DataFrame
+            Filtered dataframe.
+        """
+        try:
+            self.df_filtered = _filter_features_by_strings(
+                dataset=self.df_filtered,
+                strings_to_preserve=interaction_types_included
+            )
+
+        except AttributeError:  # if no other filtering has been performed yet, follow this path.
+            self.df_filtered = _filter_features_by_strings(
+                dataset=self.input_df,
+                strings_to_preserve=interaction_types_included
+            )
+
+        return self.df_filtered
+
+    def filter_features_by_main_or_side_chain(self, main_side_chain_types_included) -> pd.DataFrame:
+        """
+        Filter features to only certain combinations of main and side chain interactions.
+
+        Parameters
+        ----------
+        main_side_chain_types_included : list
+            Expected list items can be one or more of: "bb-bb", "sc-sc", "bb-sc", "sc-bb"
+
+        Returns
+        -------
+        pd.DataFrame
+            Filtered dataframe.
+        """
+        try:
+            self.df_filtered = _filter_features_by_strings(
+                dataset=self.df_filtered,
+                strings_to_preserve=main_side_chain_types_included
+            )
+
+        except AttributeError:  # if no other filtering has been performed yet, follow this path.
+            self.df_filtered = _filter_features_by_strings(
+                dataset=self.input_df,
+                strings_to_preserve=main_side_chain_types_included
+            )
+
+        return self.df_filtered
+
+    def filter_features_by_avg_strength(self, average_strength_cut_off: float) -> pd.DataFrame:
+        """
+        Filter features/interactions to use by their average strength.
+
+        Parameters
+        ----------
+        average_strength_cut_off : float
+            Cutoff below which features are removed from the Dataframe.
+
+        Returns
+        -------
+        pd.DataFrame
+            Filtered dataframe.
+        """
+        try:
+            self.df_filtered = self.df_filtered.loc[:, self.df_filtered.mean(
+            ) > average_strength_cut_off]
+
+        except AttributeError:  # if no other filtering has been performed yet, follow this path.
+            self.df_filtered = self.input_df.loc[:, self.input_df.mean(
+            ) > average_strength_cut_off]
 
         return self.df_filtered
