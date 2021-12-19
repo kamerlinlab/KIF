@@ -1,19 +1,20 @@
 """
 Creates PyMOL compatable python scripts to visualise user generated results.
 """
+from typing import Union, Tuple
 import pandas as pd
 from key_interactions_finder.utils import _prep_out_dir
 
 
-def write_file(file_name, text):
+def write_file(file_name: str, text: str) -> None:
     """Write out a PyMOL text file."""
     file_out = open(file_name, "w+")
     file_out.write(text)
     file_out.close()
-    return None
 
 
-def project_multiple_per_res_scores(all_per_res_scores: dict, out_dir="") -> None:
+def project_multiple_per_res_scores(all_per_res_scores: dict,
+                                    out_dir: str = "") -> None:
     """
     Write out multiple PyMOL compatabile scripts for different models.
 
@@ -36,7 +37,9 @@ def project_multiple_per_res_scores(all_per_res_scores: dict, out_dir="") -> Non
         )
 
 
-def project_pymol_per_res_scores(per_res_scores, model_name="", out_dir="") -> None:
+def project_pymol_per_res_scores(per_res_scores: dict,
+                                 model_name: str = "",
+                                 out_dir: str = "") -> None:
     """
     Write out a PyMOL compatabile python script to project per residue scores.
 
@@ -50,7 +53,6 @@ def project_pymol_per_res_scores(per_res_scores, model_name="", out_dir="") -> N
 
     out_dir : str
         Folder to save outputs to, if none given, saved to current directory.
-
     """
     out_dir = _prep_out_dir(out_dir)
 
@@ -79,9 +81,9 @@ def project_pymol_per_res_scores(per_res_scores, model_name="", out_dir="") -> N
     print(f"The file: {out_file} was written to disk.")
 
 
-def project_multiple_per_feature_scores(all_feature_scores,
-                                        numb_features,
-                                        out_dir="") -> None:
+def project_multiple_per_feature_scores(all_feature_scores: dict,
+                                        numb_features: Union[int, str],
+                                        out_dir: str = "") -> None:
     """
     Write out multiple PyMOL compatabile scripts for different models.
 
@@ -109,7 +111,10 @@ def project_multiple_per_feature_scores(all_feature_scores,
         )
 
 
-def project_pymol_top_features(per_feature_scores, model_name, numb_features="all", out_dir=""):
+def project_pymol_top_features(per_feature_scores: dict,
+                               model_name: str,
+                               numb_features: Union[int, str] = "all",
+                               out_dir: str = "") -> None:
     """
     Write out a PyMOL compatabile python script to project the top X features.
     Features will be shown as cylinders between each residue pair,
@@ -148,7 +153,8 @@ def project_pymol_top_features(per_feature_scores, model_name, numb_features="al
     top_feats_out += "# You can run me in several ways, perhaps the easiest way is to:\n"
     top_feats_out += "# 1. Load the PDB file of your system in PyMOL.\n"
     top_feats_out += "# 2. Download and run the draw_links.py script.\n"
-    top_feats_out += "# It can be obtained from: http://pldserver1.biochem.queensu.ca/~rlc/work/pymol/draw_links.py \n"
+    top_feats_out += "# It can be obtained from: "
+    top_feats_out += "# http://pldserver1.biochem.queensu.ca/~rlc/work/pymol/draw_links.py \n"
     top_feats_out += "# 3. Type: @[FILE_NAME.py] in the command line.\n"
     top_feats_out += "# 4. Make sure the .py files are in the same directory as the pdb.\n"
     top_feats_out += "# The below 3 lines are suggestions for potentially nicer figures.\n"
@@ -187,7 +193,7 @@ def project_pymol_top_features(per_feature_scores, model_name, numb_features="al
     print(f"The file: {out_file} was written to disk.")
 
 
-def _extract_residue_lists(input_df):
+def _extract_residue_lists(input_df: pd.DataFrame) -> Tuple[list, list]:
     """
     Extract the lists of residues for each each feature.
 
@@ -203,7 +209,6 @@ def _extract_residue_lists(input_df):
 
     res2 : list
         residue 2 for each feature.
-
     """
     residue1 = (input_df[0].str.extract(
         "(\d+)")).astype(int).values.tolist()
@@ -215,7 +220,7 @@ def _extract_residue_lists(input_df):
     return res1, res2
 
 
-def _extract_interaction_types(input_df):
+def _extract_interaction_types(input_df: pd.DataFrame) -> list:
     """
     Extract the interaction type for each feature and what colour scheme to use.
 
@@ -236,7 +241,7 @@ def _extract_interaction_types(input_df):
     return [stick_col_scheme[i] for i in interact_type if i in stick_col_scheme]
 
 
-def _scale_interaction_strengths(input_df):
+def _scale_interaction_strengths(input_df: pd.DataFrame) -> list:
     """
     Determine interaction strength value and scale so max is 0.5 (Good for PyMOL).
 
@@ -258,17 +263,3 @@ def _scale_interaction_strengths(input_df):
         interact_strengths_scaled.append(interaction / max_strength / 2)
 
     return [round(elem, 4) for elem in interact_strengths_scaled]
-
-
-# def experimental_project_pymol_top_features(per_feature_scores,
-#                                             model_name,
-#                                             numb_features="all",
-#                                             out_dir=""
-#                                             ) -> None:
-#     """
-#     Experimental attempt to make a better version of the feature projection method.
-
-#     Will recognize residue types and project onto side or main chain?
-#     How do I handle ligands - weird residue names?
-#     """
-#     # TODO.
