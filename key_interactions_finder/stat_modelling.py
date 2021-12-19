@@ -2,7 +2,7 @@
 Models the distributions of each feature for the different classes.
 This is only available to datasets with labels.
 """
-
+from typing import Tuple
 from dataclasses import dataclass, field
 import pandas as pd
 import numpy as np
@@ -17,7 +17,7 @@ from key_interactions_finder.utils import _prep_out_dir, _filter_features_by_str
 
 @dataclass
 class ProteinStatModel():
-    """Handles the generation of stastical models for PyContact feature sets."""
+    """Handles the generation of stastical models for PyContact data sets."""
 
     # Generated at initialization.
     dataset: pd.DataFrame
@@ -37,13 +37,15 @@ class ProteinStatModel():
     mutual_infos: dict = field(init=False)
 
     # Called at the end of the dataclass's initialization procedure.
-    def __post_init__(self):
-        """Descript. """
+    def __post_init__(self) -> None:
+        """Filters, rescales and generates the probability distributions for each feature."""
+        self.js_distances = {}
+        self.mutual_infos = {}
+
         self.out_dir = _prep_out_dir(self.out_dir)
 
         if sorted(self.interaction_types_included) != sorted(
-            ["Hbond", "Hydrophobic", "Saltbr", "Other"]
-        ):
+                ["Hbond", "Hydrophobic", "Saltbr", "Other"]):
             self.dataset = _filter_features_by_strings(
                 dataset=self.dataset,
                 strings_to_preserve=self.interaction_types_included
@@ -67,7 +69,7 @@ class ProteinStatModel():
 
         self.x_values, self.probablity_distributions = self._gen_prob_distributions()
 
-    def calc_mutual_info_to_target(self):
+    def calc_mutual_info_to_target(self) -> pd.DataFrame:
         """
         Calculate the mutual information between each feature to the target classes.
         Note that Sklearns implementation (used here) is designed for "raw datasets"
@@ -91,11 +93,11 @@ class ProteinStatModel():
 
         return self.mutual_infos
 
-    def calc_js_distances(self):
+    def calc_js_distances(self) -> dict:
         """
         Calculate the Jensen-Shannon (JS) distance (metric) between each feature to
         the target classes.
-        Requires that each feature is described by a probabilty distrubtion.
+        Requires that each feature is described by a probabilty distribution.
 
         Returns
         ----------
@@ -103,12 +105,11 @@ class ProteinStatModel():
             Dictionary with each feature's (keys) JS distance (values) that is
             sorted from largest JS distance to smallest.
         """
-        self.js_distances = {}
         for feature in self.feature_list:
-            distrub_1 = self.probablity_distributions[self.class_names[0]][feature]
-            distrub_2 = self.probablity_distributions[self.class_names[1]][feature]
+            distrib_1 = self.probablity_distributions[self.class_names[0]][feature]
+            distrib_2 = self.probablity_distributions[self.class_names[1]][feature]
 
-            js_dist = np.around(jensenshannon(distrub_1, distrub_2, base=2), 5)
+            js_dist = np.around(jensenshannon(distrib_1, distrib_2, base=2), 5)
 
             self.js_distances.update({feature: js_dist})
 
@@ -117,9 +118,9 @@ class ProteinStatModel():
 
         return self.js_distances
 
-    def _gen_prob_distributions(self):
+    def _gen_prob_distributions(self) -> Tuple[np.ndarray, dict]:
         """
-        For each feature generate a probability distrubtion of it scores
+        For each feature generate a probability distributions of it scores
         towards each class.
 
         Input feature sets are pre-normalised to ranges between 0 and 1,
@@ -128,7 +129,7 @@ class ProteinStatModel():
 
         Returns
         ----------
-        x_values : np.array
+        x_values : np.ndarray
             x values for probabilities over the range 0 to 1. Spacing consistent with
             the probablity distributions generated in this function.
 
@@ -159,7 +160,7 @@ class ProteinStatModel():
 
         return x_values, probablity_distributions
 
-    def _scale_features(self):
+    def _scale_features(self) -> pd.DataFrame:
         """
         Scale features with MinMaxScaler so that they are all between 0 and 1.
         This is important for the KDE as I am using the same bandwidth parameter throughout.

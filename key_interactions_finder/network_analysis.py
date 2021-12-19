@@ -14,7 +14,7 @@ from key_interactions_finder.utils import _prep_out_dir, _filter_features_by_str
 
 @dataclass
 class CorrelationNetwork:
-    """Generates the correlation and contact maps with PyContact datasets."""
+    """Handles the correlation analysis on PyContact datasets."""
 
     # Generated at runtime.
     dataset: pd.DataFrame
@@ -24,14 +24,12 @@ class CorrelationNetwork:
 
     # Generated later.
     full_corr_matrix: pd.DataFrame = field(init=False)
-    # full_contact_map: np.ndarray = field(init=False)
-
     res_corr_matrix: np.ndarray = field(init=False)
     res_contact_map: np.ndarray = field(init=False)
 
     # Called at the end of the dataclass's initialization procedure.
     def __post_init__(self):
-        """"""
+        """Filter features and generate the full correlation matrix."""
         self.out_dir = _prep_out_dir(self.out_dir)
 
         try:
@@ -46,44 +44,55 @@ class CorrelationNetwork:
                 strings_to_preserve=self.interaction_types_included
             )
 
-        # Generate the full_correlation_matrix and contact map.
         self.full_corr_matrix = self.dataset.corr()
-        # self.full_contact_map = self. - #  TODO. If possible/reasonable?
+        return self.full_corr_matrix
 
-        # #TODO - Consider make these later instead.
-        self.res_corr_matrix = self.gen_per_res_correl_matrix()
-        self.res_contact_map = self.gen_per_res_contact_map()
-
-    def gen_per_res_contact_map(self):
+    def gen_res_contact_map(self, out_file: Optional[str] = None,) -> np.ndarray:
         """
         Generate a per residue contact map (matrix) that identifies whether two residues
         are in contact with each other. Two residues considered in contact with one
         another if they share an interaction (i.e. a column name).
 
+        Parameters
+        ----------
+        out_file : Optional[str]
+            Path to save the corelation matrix to. If left empty no file is saved.
+
         Returns
         ----------
         np.ndarray
             A symmetrical matrix (along diagonal) of 1s (in contact) and 0s (not in contact).
-
         """
         # Generate empty matrix for each residue
         last_residue = self._get_last_residue()
-        res_contact_map = np.zeros((last_residue, last_residue), dtype=int)
+        self.res_contact_map = np.zeros(
+            (last_residue, last_residue), dtype=int)
 
         contact_pairs = self._get_contact_pairs()
         for res1, res2 in contact_pairs.items():
-            res_contact_map[(res1-1), (res2-1)] = 1
-            res_contact_map[(res2-1), (res1-1)] = 1
+            self.res_contact_map[(res1-1), (res2-1)] = 1
+            self.res_contact_map[(res2-1), (res1-1)] = 1
 
         # correlation of residue to itself is 1.
-        np.fill_diagonal(res_contact_map, 1)
-        return res_contact_map
+        np.fill_diagonal(self.res_contact_map, 1)
 
-    def gen_per_res_correl_matrix(self):
+        if out_file is not None:
+            np.savetxt(out_file, self.res_contact_map,
+                       delimiter=" ", fmt="%.2f")
+            print(f"{out_file} saved to disk.")
+
+        return self.res_contact_map
+
+    def gen_res_correl_matrix(self, out_file: Optional[str] = None,) -> np.ndarray:
         """
         For every residue to every other residue determine the interaction (if exists)
         with the strongest correlation between them and use it to build a per residue
         correlation matrix.
+
+        Parameters
+        ----------
+        out_file : Optional[str]
+            Path to save the corelation matrix to. If left empty no file is saved.
 
         Returns
         ----------
@@ -92,7 +101,8 @@ class CorrelationNetwork:
         """
         # Generate empty correlation matrix for each residue
         last_residue = self._get_last_residue()
-        per_res_matrix = np.zeros((last_residue, last_residue), dtype=float)
+        self.res_corr_matrix = np.zeros(
+            (last_residue, last_residue), dtype=float)
 
         # Filter correlation matrix to only include columns with that residue.
         for res1 in range(1, last_residue+1):
@@ -113,17 +123,24 @@ class CorrelationNetwork:
                             correls = correls[correls != 1]
                             max_correl = max(
                                 correls.min(), correls.max(), key=abs)
-                            per_res_matrix[(res1-1), (res2-1)] = max_correl
-                            per_res_matrix[(res2-1), (res1-1)] = max_correl
+                            self.res_corr_matrix[(
+                                res1-1), (res2-1)] = max_correl
+                            self.res_corr_matrix[(
+                                res2-1), (res1-1)] = max_correl
                         except ValueError:  # happens if array becomes empty after removing the 1s.
                             pass
 
         # correlation of residue to itself is 1.
-        np.fill_diagonal(per_res_matrix, 1)
+        np.fill_diagonal(self.res_corr_matrix, 1)
 
-        return per_res_matrix
+        if out_file is not None:
+            np.savetxt(out_file, self.res_corr_matrix,
+                       delimiter=" ", fmt="%.2f")
+            print(f"{out_file} saved to disk.")
 
-    def _get_residue_lists(self):
+        return self.res_corr_matrix
+
+    def _get_residue_lists(self) -> pd.DataFrame:
         """
         Given a dataframe (self.dataset) containing only PyContact features,
         extract the residue numbers for each contact. (Helper Function.)
@@ -143,7 +160,7 @@ class CorrelationNetwork:
         df_cols["Res2"] = pd.to_numeric(df_cols["Res2"])
         return df_cols[["Res1", "Res2"]]
 
-    def _get_last_residue(self):
+    def _get_last_residue(self) -> int:
         """
         Given a dataframe (self.dataset) containing only PyContact features,
         find the last residue in the sequence.
@@ -153,7 +170,7 @@ class CorrelationNetwork:
         Returns
         ----------
         int
-            Largest residue number present in dataset.
+            Largest residue number present in the dataset.
         """
         df_cols = pd.DataFrame()
         df_cols[["Res1", "Res2"]] = self._get_residue_lists()
@@ -161,7 +178,7 @@ class CorrelationNetwork:
         max_res2 = df_cols["Res2"].max(axis=0)
         return max(max_res1, max_res2)
 
-    def _get_contact_pairs(self):
+    def _get_contact_pairs(self) -> dict:
         """
         Given a dataframe (self.dataset) containing only PyContact features,
         extract the pairs of residue in contact with one another.
@@ -185,7 +202,8 @@ def heavy_atom_contact_map_from_pdb(pdb_file: str,
                                     out_file: Optional[str] = None,
                                     ) -> np.ndarray:
     """
-    Use MDAnalysis to generate a heavy atom contact map/matrix given a pdb file.
+    Use MDAnalysis to generate a heavy atom contact map/matrix given a single PDB file.
+    If 'out_file' specified the result will be saved to disk.
 
     Parameters
     ----------
@@ -249,8 +267,30 @@ def heavy_atom_contact_map_from_multiple_pdbs(pdb_files: list,
                                               out_file: Optional[str] = None,
                                               ) -> np.ndarray:
     """
-    Use mdanalysis to generate a heavy atom contact map/matrix given a
-    list of pdb files.
+    Use MDAnalysis to generate a heavy atom contact map/matrix given a list of PDB files.
+    If 'out_file' specified the result will be saved to disk.
+
+    Parameters
+    ----------
+    pdb_file: list
+        Paths to PDB files to generate the contact map from.
+
+    first_res : int
+        First residue number to use for the contact map.
+
+    last_res : int
+        Last residue number to use for the contact map.
+
+    d_cut : Optional[float]
+        Distance cut-off in Å. Default is 4.5 Å.
+
+    out_file : Optional[str]
+        Path to save the contact map file to. If left empty no file is saved.
+
+    Returns
+    ----------
+    np.ndarray
+        Symmetrical (along diagonal) matrix of 1s (in contact) and 0s (not in contact).
 
     """
     res_selection = "not name H* and resid " + \
@@ -297,4 +337,5 @@ def heavy_atom_contact_map_from_multiple_pdbs(pdb_files: list,
     if out_file is not None:
         np.savetxt(out_file, per_res_contact_map, delimiter=" ", fmt="%.1f")
         print(f"{out_file} saved to disk.")
+
     return per_res_contact_map
