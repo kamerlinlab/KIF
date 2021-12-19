@@ -3,7 +3,7 @@ Performs the feature importance analysis for the supervised and unsupervised lea
 as well as the statistical modelling package.
 """
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Tuple, Union
 from abc import ABC, abstractmethod
 import warnings
 import csv
@@ -73,12 +73,13 @@ class PostProcessor(ABC):
         res_ids = []
         tot_scores = []
         for i in range(1, max_res+1, 1):
-            res_ids.append(i + 1)  # weird way to do this, TODO.
+            res_ids.append(i + 1)
             tot_scores.append(
                 per_res_import.loc[per_res_import["Res1"] == i, "Score"].sum() +
                 per_res_import.loc[per_res_import["Res2"] == i, "Score"].sum())
 
-        # Rescale scores so that new largest has size 1.0 (good for PyMOL sphere representation as well).
+        # Rescale scores so that new largest has size 1.0
+        # (good for PyMOL sphere representation as well).
         max_ori_score = max(tot_scores)
         tot_scores_scaled = []
         for i in range(1, max_res, 1):
@@ -256,7 +257,6 @@ class UnsupervisedPostProcessor(PostProcessor):
 
     unsupervised_model: Optional[UnsupervisedModel]
     out_dir: str = ""
-    # load_from_disk: bool = True # TODO.
     feat_names: np.ndarray = field(init=False)
     data_scaled: np.ndarray = field(init=False)
     all_feature_importances: dict = field(init=False)
@@ -264,8 +264,9 @@ class UnsupervisedPostProcessor(PostProcessor):
 
     # This is called at the end of the dataclass's initialization procedure.
     def __post_init__(self):
-        """Finalise preperation of the class."""
+        """Extract items from the ML model to this class. """
         self.out_dir = _prep_out_dir(self.out_dir)
+
         self.feat_names = self.unsupervised_model.feat_names
         self.data_scaled = self.unsupervised_model.data_scaled
         self.ml_models = self.unsupervised_model.ml_models
@@ -319,7 +320,7 @@ class UnsupervisedPostProcessor(PostProcessor):
         """
         Determine feature importances from principal component analysis (PCA).
 
-        Basic Idea is:
+        Basic idea is:
         1. Find the number of PCs needed to explain a given amount of variance (default = 95%).
         2. Extract the eigenvalues from each of those PCs for every feature.
         3. Take the absolute value of each eigenvalue and scale it based on the weight of
@@ -363,7 +364,8 @@ class UnsupervisedPostProcessor(PostProcessor):
 
             eigenvalue_sums.append(np.sum(np.absolute(eigenvalues_reweighted)))
 
-        # Scale sums so that new largest sum has size 1.0 (good for PyMOL sphere representation as well).
+        # Scale sums so that new largest sum has size 1.0
+        # (good for PyMOL sphere representation as well).
         max_eigen_value = max(eigenvalue_sums)
         eigenvalues_scaled = []
         for ori_eigenvalue in eigenvalue_sums:
@@ -372,8 +374,8 @@ class UnsupervisedPostProcessor(PostProcessor):
         pca_importances = dict(zip(self.feat_names, eigenvalues_scaled))
 
         print(
-            "The total variance described by the principal components (PCs) used for feature importance " +
-            f"analysis is: {variance_described:.1f}%. \n" +
+            "The total variance described by the principal components (PCs) used " +
+            f"for feature importance analysis is: {variance_described:.1f}%. \n" +
             f"This is the first {idx_position} PCs from a total of {len(variances)} PCs."
         )
 
@@ -449,10 +451,56 @@ class StatisticalPostProcessor(PostProcessor):
                 """You did not select one of either 'jenson_shannon'
                  or 'mutual_information' for the 'stat_method' parameter.""")
 
-    def plot_probability_distributions(self):
-        """Plots the probablity distributions of the user output."""
-        # probablity_distributions
-        # TODO.
+    def get_probability_distributions(self,
+                                      number_features: Union[int, str]
+                                      ) -> Tuple[np.ndarray, dict]:
+        """
+        Gets the probablity distributions for each feature. Features returned
+        are ordered by the jensen shannon distance scores.
+
+        Parameters
+        ----------
+        number_features : int or str
+            The number of features to return (those with the highest jenson-shannon
+            distances taken forward).
+            If "all" is used instead then all features are returned.
+
+        Returns
+        ----------
+        np.ndarray
+            X values between 0 and 1 to match the probability distributions.
+
+        dict
+            Nested dictionary of probabily distributions. Outer keys are the class names,
+            inner keys are the feature and inner values are the probability distributions.
+        """
+        tot_numb_features = len(self.stat_model.js_distances.keys())
+
+        # prevents issue if user hasn't already determined js_distances
+        if tot_numb_features == 0:
+            self.stat_model.calc_js_distances()
+            tot_numb_features = len(self.stat_model.js_distances.keys())
+
+        if (number_features == "all") or (number_features >= tot_numb_features):
+            return self.stat_model.x_values, self.stat_model.probablity_distributions
+
+        elif number_features < tot_numb_features:
+            selected_prob_distribs = {}
+            for class_name in self.stat_model.class_names:
+                one_feature_prob_distribs = {}
+                for feature in self.stat_model.feature_list[0:number_features]:
+                    distrib = self.stat_model.probablity_distributions[class_name][feature]
+                    one_feature_prob_distribs[feature] = distrib
+
+                selected_prob_distribs[class_name] = one_feature_prob_distribs
+
+            return self.stat_model.x_values, selected_prob_distribs
+
+        else:
+            error_message = (
+                "You need to choose either an integer value or 'all' for " +
+                "the parameter: 'number_features'.")
+            raise ValueError(error_message)
 
     def estimate_feature_directions(self) -> None:
         """
@@ -464,10 +512,10 @@ class StatisticalPostProcessor(PostProcessor):
         so user is warned when they use this method.
         """
         warning_message = (
-            "Warning, this function is very simplistic and just calculates the average " +
+            "Warning, this method is very simplistic and just calculates the average " +
             "contact score/strength for each features for both classes to determine the " +
             "direction each feature appears to favour. " +
-            "You should therefore intepretit these results with care..."
+            "You should therefore interpret these results with care..."
         )
         warnings.warn(warning_message)
 
@@ -495,20 +543,18 @@ class StatisticalPostProcessor(PostProcessor):
             out_file=out_file
         )
 
-    def estimate_per_residue_directions(self):
-        """
-        As above but per residues, TODO.
-
-        """
-
-    def _save_feature_residue_direction(self, dict_to_save: dict, feature_or_residue: str, out_file: str) -> None:
+    @staticmethod
+    def _save_feature_residue_direction(
+            dict_to_save: dict,
+            feature_or_residue: str,
+            out_file: str) -> None:
         """
         Save the estimated per feature or per residue "direction" to file.
 
         Parameters
         ----------
         dict_to_save : dict
-            Dictionary of feature name or residue numb (keys) vs predicted direction (values).
+            Dictionary of feature names or residue numbers (keys) vs predicted direction (values).
 
         feature_or_residue : str
             Define if the file to be saved is per residue or per feature.
