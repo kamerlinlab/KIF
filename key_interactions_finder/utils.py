@@ -33,7 +33,7 @@ def _prep_out_dir(out_dir: str) -> str:
 def _filter_features_by_strings(dataset: pd.DataFrame, strings_to_preserve: list) -> pd.DataFrame:
     """
     Filter features to only include those that match one of the strings
-    in the list provided. (Helper function.)
+    in the list provided.
 
     Parameters
     ----------
@@ -56,7 +56,4 @@ def _filter_features_by_strings(dataset: pd.DataFrame, strings_to_preserve: list
     # must remove the final "|", otherwise it will keep all columns.
     str_rep = str_rep[:-1]
 
-    # Filter.
-    filtered_dataset = dataset.loc[:, dataset.columns.str.contains(str_rep)]
-
-    return filtered_dataset
+    return dataset.loc[:, dataset.columns.str.contains(str_rep)]
