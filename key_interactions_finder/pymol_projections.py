@@ -6,15 +6,9 @@ import pandas as pd
 from key_interactions_finder.utils import _prep_out_dir
 
 
-def write_file(file_name: str, text: str) -> None:
-    """Write out a PyMOL text file."""
-    file_out = open(file_name, "w+")
-    file_out.write(text)
-    file_out.close()
-
-
 def project_multiple_per_res_scores(all_per_res_scores: dict,
-                                    out_dir: str = "") -> None:
+                                    out_dir: str = ""
+                                    ) -> None:
     """
     Write out multiple PyMOL compatabile scripts for different models.
 
@@ -27,7 +21,6 @@ def project_multiple_per_res_scores(all_per_res_scores: dict,
 
     out_dir : str
         Folder to save outputs to, if none given, saved to current directory.
-
     """
     for model_name, model_scores in all_per_res_scores.items():
         project_pymol_per_res_scores(
@@ -39,7 +32,8 @@ def project_multiple_per_res_scores(all_per_res_scores: dict,
 
 def project_pymol_per_res_scores(per_res_scores: dict,
                                  model_name: str = "",
-                                 out_dir: str = "") -> None:
+                                 out_dir: str = ""
+                                 ) -> None:
     """
     Write out a PyMOL compatabile python script to project per residue scores.
 
@@ -77,13 +71,14 @@ def project_pymol_per_res_scores(per_res_scores: dict,
         per_res_import_out += f"sele All_Spheres, resi {res_numb} and name CA\n"
 
     out_file = out_dir + model_name + "_Pymol_Per_Res_Scores.py"
-    write_file(out_file, per_res_import_out)
+    _write_file(out_file, per_res_import_out)
     print(f"The file: {out_file} was written to disk.")
 
 
 def project_multiple_per_feature_scores(all_feature_scores: dict,
                                         numb_features: Union[int, str],
-                                        out_dir: str = "") -> None:
+                                        out_dir: str = ""
+                                        ) -> None:
     """
     Write out multiple PyMOL compatabile scripts for different models.
 
@@ -100,7 +95,6 @@ def project_multiple_per_feature_scores(all_feature_scores: dict,
 
     out_dir : str
         Folder to save outputs to, if none given, saved to current directory.
-
     """
     for model_name, model_scores in all_feature_scores.items():
         project_pymol_top_features(
@@ -114,7 +108,8 @@ def project_multiple_per_feature_scores(all_feature_scores: dict,
 def project_pymol_top_features(per_feature_scores: dict,
                                model_name: str,
                                numb_features: Union[int, str] = "all",
-                               out_dir: str = "") -> None:
+                               out_dir: str = ""
+                               ) -> None:
     """
     Write out a PyMOL compatabile python script to project the top X features.
     Features will be shown as cylinders between each residue pair,
@@ -135,7 +130,6 @@ def project_pymol_top_features(per_feature_scores: dict,
 
     out_dir : str
         Folder to save outputs to, if none given, saved to current directory.
-
     """
     out_dir = _prep_out_dir(out_dir)
 
@@ -189,7 +183,7 @@ def project_pymol_top_features(per_feature_scores: dict,
     top_feats_out += "group All_Features, link*\n"
 
     out_file = out_dir + model_name + "_Pymol_Per_Feature_Scores.py"
-    write_file(out_file, top_feats_out)
+    _write_file(out_file, top_feats_out)
     print(f"The file: {out_file} was written to disk.")
 
 
@@ -218,6 +212,13 @@ def _extract_residue_lists(input_df: pd.DataFrame) -> Tuple[list, list]:
     res2 = [item for sublist in residue2 for item in sublist]
 
     return res1, res2
+
+
+def _write_file(file_name: str, text: str) -> None:
+    """Write out a PyMOL text file."""
+    file_out = open(file_name, "w+")
+    file_out.write(text)
+    file_out.close()
 
 
 def _extract_interaction_types(input_df: pd.DataFrame) -> list:

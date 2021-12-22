@@ -27,18 +27,19 @@ def assign_contact_type(res1_contrib, res2_contrib):
     """
     if (res1_contrib["res1_bb"] == 0.0) and (res2_contrib["res2_bb"] == 0.0):
         return "sc-sc"
-    elif (res1_contrib["res1_sc"] == 0.0) and (res2_contrib["res2_sc"] == 0.0):
+    if (res1_contrib["res1_sc"] == 0.0) and (res2_contrib["res2_sc"] == 0.0):
         return "bb-bb"
+
+    # if mix of sc and bb contributions.
+    if res1_contrib["res1_bb"] >= res1_contrib["res1_sc"]:
+        part1 = "bb"
     else:
-        if res1_contrib["res1_bb"] >= res1_contrib["res1_sc"]:
-            part1 = "bb"
-        else:
-            part1 = "sc"
-        if res2_contrib["res2_bb"] >= res2_contrib["res2_sc"]:
-            part2 = "bb"
-        else:
-            part2 = "sc"
-        return part1 + "-" + part2
+        part1 = "sc"
+    if res2_contrib["res2_bb"] >= res2_contrib["res2_sc"]:
+        part2 = "bb"
+    else:
+        part2 = "sc"
+    return part1 + "-" + part2
 
 
 def main():

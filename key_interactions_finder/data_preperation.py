@@ -15,26 +15,60 @@ class FeatureData(ABC):
     """Abstract base class to unify the construction of the supervised and unsupervised classes."""
 
     @abstractmethod
-    def filter_features_by_occupancy(self, min_occupancy):
+    def filter_by_occupancy(self, min_occupancy):
         """Filter features such that only features with %occupancy >= the min_occupancy are kept."""
 
     @abstractmethod
-    def filter_features_by_type(self, interaction_types_included):
+    def filter_by_interaction_type(self, interaction_types_included):
         """Filter features/interactions to use by their type (e.g. hbond or vdws...)."""
 
     @abstractmethod
-    def filter_features_by_avg_strength(self, average_strength_cut_off):
+    def filter_by_avg_strength(self, average_strength_cut_off):
         """Filter features/interactions to use by their average strength."""
 
     @abstractmethod
-    def filter_features_by_main_or_side_chain(self, main_side_chain_types_included):
+    def filter_by_main_or_side_chain(self, main_side_chain_types_included):
         """Filter features to only certain combinations of main and side chain interactions."""
 
 
 @dataclass
 class SupervisedFeatureData(FeatureData):
-    """FeatureData Class for datasets with classification data."""
+    """
+    FeatureData Class for datasets with classification data.
 
+    Attributes
+    ----------
+    input_df : pd.DataFrame
+        Dataframe of PyContact features to process.
+
+    classifications_file : str
+        String for path to the classification file.
+
+    header_present : bool
+        True or False, does the classifications_file have a header.
+
+    df_feat_class : pd.DataFrame
+        Dataframe generated after merging feature and classifcation data together
+        but before any filtering has been performed.
+
+    df_filtered : pd.DataFrame
+        Dataframe generated after filtering. Each time a filtering method is applied, this
+        dataset is updated so all filtering method performed are preserved.
+
+    Methods
+    -------
+    filter_by_occupancy(min_occupancy)
+        Filter features such that only features with %occupancy >= the min_occupancy are kept.
+
+    filter_by_interaction_type(interaction_types_included)
+        Filter features/interactions to use by their type (e.g. hbond or vdws...)
+
+    filter_by_main_or_side_chain(main_side_chain_types_included)
+        Filter features to only certain combinations of main and side chain interactions.
+
+    filter_by_avg_strength(average_strength_cut_off)
+        Filter features/interactions to use by their average strength.
+    """
     input_df: pd.DataFrame
     classifications_file: str
     header_present: bool = True
@@ -54,8 +88,8 @@ class SupervisedFeatureData(FeatureData):
         if len(df_class) == len(self.input_df):
             self.df_feat_class = pd.concat([df_class, self.input_df], axis=1)
         else:
-            exception_message = (f"Classifications file length: {len(df_class)} \n" +
-                                 f"PyContact file length: {len(self.input_df)} \n" +
+            exception_message = (f"Number of rows for classification data: {len(df_class)} \n" +
+                                 f"Number of rows for PyContact data: {len(self.input_df)} \n" +
                                  "The length of your classifications file doesn't match the " +
                                  "length of your features file. If the difference is 1, " +
                                  "check if you set the 'header_present' keyword correctly."
@@ -65,7 +99,7 @@ class SupervisedFeatureData(FeatureData):
         print("Your features and class datasets has been succesufully merged.")
         print("You can access this dataset through the class attribute: '.df_feat_class'.")
 
-    def filter_features_by_occupancy(self, min_occupancy: float) -> pd.DataFrame:
+    def filter_by_occupancy(self, min_occupancy: float) -> pd.DataFrame:
         """
         Filter features such that only features with %occupancy >= the min_occupancy are kept.
         (%occupancy is the % of frames that have a non-zero interaction value).
@@ -111,7 +145,7 @@ class SupervisedFeatureData(FeatureData):
 
         return self.df_filtered
 
-    def filter_features_by_type(self, interaction_types_included: list) -> pd.DataFrame:
+    def filter_by_interaction_type(self, interaction_types_included: list) -> pd.DataFrame:
         """
         Filter features/interactions to use by their type (e.g. hbond or vdws...)
 
@@ -139,8 +173,9 @@ class SupervisedFeatureData(FeatureData):
 
         return self.df_filtered
 
-    def filter_features_by_main_or_side_chain(self,
-                                              main_side_chain_types_included: list) -> pd.DataFrame:
+    def filter_by_main_or_side_chain(self,
+                                     main_side_chain_types_included: list
+                                     ) -> pd.DataFrame:
         """
         Filter features to only certain combinations of main and side chain interactions.
 
@@ -168,7 +203,7 @@ class SupervisedFeatureData(FeatureData):
 
         return self.df_filtered
 
-    def filter_features_by_avg_strength(self, average_strength_cut_off: float) -> pd.DataFrame:
+    def filter_by_avg_strength(self, average_strength_cut_off: float) -> pd.DataFrame:
         """
         Filter features/interactions to use by their average strength.
 
@@ -205,12 +240,36 @@ class SupervisedFeatureData(FeatureData):
 
 @dataclass
 class UnsupervisedFeautureData(FeatureData):
-    """FeatureData Class for datasets without any classification data."""
+    """
+    FeatureData Class for datasets without any classification data.
 
+    Attributes
+    ----------
+    input_df : pd.DataFrame
+        Dataframe of PyContact features to process.
+
+    df_filtered : pd.DataFrame
+        Dataframe generated after filtering. If multiple filtering methods are used
+        this is repeatedly updated, (so all filtering method performed on it are preserved).
+
+    Methods
+    -------
+    filter_by_occupancy(min_occupancy)
+        Filter features such that only features with %occupancy >= the min_occupancy are kept.
+
+    filter_by_interaction_type(interaction_types_included)
+        Filter features/interactions to use by their type (e.g. hbond or vdws...)
+
+    filter_by_main_or_side_chain(main_side_chain_types_included)
+        Filter features to only certain combinations of main and side chain interactions.
+
+    filter_by_avg_strength(average_strength_cut_off)
+        Filter features/interactions to use by their average strength.
+    """
     input_df: pd.DataFrame
     df_filtered: pd.DataFrame = field(init=False)
 
-    def filter_features_by_occupancy(self, min_occupancy: float) -> pd.DataFrame:
+    def filter_by_occupancy(self, min_occupancy: float) -> pd.DataFrame:
         """
         Filter features such that only features with %occupancy >= the min_occupancy are included.
         (%occupancy is the % of frames that have a non-zero interaction value for a given feature).
@@ -236,7 +295,7 @@ class UnsupervisedFeautureData(FeatureData):
 
         return self.df_filtered
 
-    def filter_features_by_type(self, interaction_types_included: list) -> pd.DataFrame:
+    def filter_by_interaction_type(self, interaction_types_included: list) -> pd.DataFrame:
         """
         Filter features/interactions to use by their type (e.g. hbond or vdws...)
 
@@ -264,7 +323,7 @@ class UnsupervisedFeautureData(FeatureData):
 
         return self.df_filtered
 
-    def filter_features_by_main_or_side_chain(self, main_side_chain_types_included) -> pd.DataFrame:
+    def filter_by_main_or_side_chain(self, main_side_chain_types_included) -> pd.DataFrame:
         """
         Filter features to only certain combinations of main and side chain interactions.
 
@@ -292,7 +351,7 @@ class UnsupervisedFeautureData(FeatureData):
 
         return self.df_filtered
 
-    def filter_features_by_avg_strength(self, average_strength_cut_off: float) -> pd.DataFrame:
+    def filter_by_avg_strength(self, average_strength_cut_off: float) -> pd.DataFrame:
         """
         Filter features/interactions to use by their average strength.
 

@@ -49,25 +49,97 @@ class MachineLearnModel(ABC):
 
 @dataclass
 class SupervisedModel(MachineLearnModel):
-    """Class to Construct Supervised Machine Learning Models."""
+    """
+    Class to Construct Supervised Machine Learning Models.
 
+    Attributes
+    ----------
+    dataset : pd.DataFrame
+        Input dataset.
+
+    classes_to_use : list
+        Names of the classes to train the model on. Must be a list of two strings.
+
+    evaluation_split_ratio : float
+        Ratio of data that should be used to make the evaluation test set.
+        The rest of the data will be used for the training/hyper-param tuning.
+        Default = 0.15
+
+    scaling_method : str
+        How to scale the dataset prior to machine learning.
+        Options are "min_max" (scikit-learn's MinMaxScaler)
+        or "standard_scaling" (scikit-learn's StandardScaler).
+        Default = "min_max"
+
+    out_dir : str
+        Directory path to store results files to.
+        Default = ""
+
+    cross_validation_splits : int
+        Number of splits for the cross validation. I.E., the "k" in k-fold
+        cross validation.
+        Default = 5
+
+    cross_validation_repeats :
+        Nummer of repeats of the k-fold cross validation to perform.
+        Default = 3
+
+    search_approach : str
+        Define how extensive the grid search protocol should be for the models.
+        Options are: "none", "quick", "moderate" or "exhaustive".
+        Default = "quick"
+
+    model_params : dict
+        Nested dictionary of model parameters that can be read directly into
+        Scikit-learn's implementation of grid search cv.
+
+    cross_validation_approach : RepeatedStratifiedKFold
+        Instance of scikit-learn's RepeatedStratifiedKFold class for model building.
+
+    feat_names : np.ndarray
+        All feature names/labels.
+
+    train_data_scaled : np.ndarray
+        Training data scaled with either "min_max" or "standard_scaling".
+
+    eval_data_scaled : np.ndarray
+        Data used for evaluation scaled with either "min_max" or "standard_scaling".
+
+    y_train : pd.Series
+        Class labels for the training/testing data.
+
+    y_eval : pd.Series
+        Class labels for the validation data.
+
+    ml_models : dict
+        Keys are the model name/method and values are the instance of the
+        built model.
+
+    Methods
+    -------
+    build_models(save_models)
+        Runs the machine learning and summarizes the results.
+
+    evaluate_model()
+        Evaluates model performance on the validation data set and
+        prints a summary of this to the screen.
+    """
     dataset: pd.DataFrame
+    classes_to_use: list
     evaluation_split_ratio: float = 0.15
-    classes_to_use: list = field(default_factory=[])
     scaling_method: str = "min_max"
     out_dir: str = ""
     cross_validation_splits: int = 5
     cross_validation_repeats: int = 3
     search_approach: str = "quick"  # none, quick, moderate or exhaustive
 
-    # Dynamically generated:
     model_params: dict = field(init=False)
     cross_validation_approach: RepeatedStratifiedKFold = field(init=False)
     feat_names: np.ndarray = field(init=False)
     train_data_scaled: np.ndarray = field(init=False)
     eval_data_scaled: np.ndarray = field(init=False)
-    y_train: pd.core.series.Series = field(init=False)
-    y_eval: pd.core.series.Series = field(init=False)
+    y_train: pd.Series = field(init=False)
+    y_eval: pd.Series = field(init=False)
     ml_models: dict = field(init=False)
 
     if scaling_method not in ["min_max", "standard_scaling"]:
@@ -78,6 +150,7 @@ class SupervisedModel(MachineLearnModel):
     def __post_init__(self):
         """Setup the provided dataset and params for ML."""
         self.out_dir = _prep_out_dir(self.out_dir)
+        self.ml_models = {}  # not populated till method called later.
 
         # Filter to only include desired classes.
         if len(self.classes_to_use) != 0:
@@ -146,11 +219,8 @@ class SupervisedModel(MachineLearnModel):
         ----------
         save_models : bool
             Whether to save the ML models made to disk.
-            Default is True.
         """
         scores = []
-        self.ml_models = {}
-
         if save_models:
             if not os.path.exists("temporary_files"):
                 os.makedirs("temporary_files")
@@ -181,7 +251,7 @@ class SupervisedModel(MachineLearnModel):
                     best_model=clf.best_estimator_, out_path=temp_out_path)
 
         # Provide a model summary with the train/test data.
-        print("Model building complete, final results below:")
+        print("Model building complete, final results with train/test data below:")
         print("")
         print(pd.DataFrame(scores, columns=[
             'model', 'best_params', 'best_score', 'best_std']))
@@ -231,10 +301,24 @@ class SupervisedModel(MachineLearnModel):
             model_params["random_forest"]["params"] = all_hyper_params["exhaustive"]["random_forest"]["params"]
             model_params["GBoost"]["params"] = all_hyper_params["exhaustive"]["GBoost"]["params"]
         else:
-            raise ValueError(
-                "You must select either 'none' 'quick', 'moderate' or 'exhaustive' for the search_approach option.")
+            error_message = ("You must select either 'none' 'quick', 'moderate' "
+                             "or 'exhaustive' for the search_approach option.")
+            raise ValueError(error_message)
 
         return model_params
+
+    # def _assign_search_params(self, ml_algo: str) -> dict:
+    #     """
+
+    #     Returns
+    #     ----------
+    #     dict
+    #         Dictionary of hyperparameters to tune for a specific ML model.
+    #     """
+    #     hyper_params_file = "key_interactions_finder/model_params/gridsearch_" + \
+    #         str(self.search_approach) + ".json"
+    #     with open(hyper_params_file) as file_in:
+    #         hyper_params = json.load(file_in)
 
     def _describe_ml_planned(self) -> str:
         """
@@ -268,7 +352,36 @@ class SupervisedModel(MachineLearnModel):
 # Can have a go with PCA Maybe or maybe just not use as already have a lot of stuff...
 @dataclass
 class UnsupervisedModel(MachineLearnModel):
-    """Class to Construct Unsupervised Machine Learning Models."""
+    """
+    Class to Construct Unsupervised Machine Learning Models.
+
+    At present, there is limited support for this module with only
+    principal component analysis (PCA) available.
+
+    Attributes
+    ----------
+    dataset : pd.DataFrame
+        Input dataset.
+
+    out_dir : str
+        Directory path to store results files to.
+        Default = ""
+
+    feat_names : np.ndarray
+        All feature names/labels.
+
+    data_scaled : np.ndarray
+        Input dataset scaled with Standard scaling.
+
+    ml_models : dict
+        Keys are the model name/method and values are the instance of the
+        built model.
+
+    Methods
+    -------
+    build_models(save_models)
+        Runs the machine learning and summarizes the results.
+    """
     dataset: pd.DataFrame
     out_dir: str = ""
 
@@ -281,6 +394,8 @@ class UnsupervisedModel(MachineLearnModel):
     def __post_init__(self):
         """Setup the provided dataset and params for ML."""
         self.out_dir = _prep_out_dir(self.out_dir)
+
+        self.ml_models = {}  # not populated till method called later.
 
         # Allows a user with a supervised dataset to use this method.
         try:
@@ -296,6 +411,7 @@ class UnsupervisedModel(MachineLearnModel):
 
         print(self._describe_ml_planned())
 
+    # TODO - SAVE MODELS.
     def build_models(self, save_models: bool = True) -> None:
         """
         Runs the machine learning and summarizes the results.
@@ -306,7 +422,6 @@ class UnsupervisedModel(MachineLearnModel):
             Whether to save the ML models made to disk.
             Default is True.
         """
-        self.ml_models = {}
         pca = PCA()
         pca.fit(self.data_scaled)
         self.ml_models["PCA"] = pca

@@ -49,7 +49,7 @@ def _filter_features_by_strings(dataset: pd.DataFrame, strings_to_preserve: list
         Dataframe with features filtered to only include those the user wants.
     """
     # Build the search term
-    str_rep = "Classes|"  # preserves classes if already there.
+    str_rep = "Classes|"  # supervised/unsuperivsed learning agnostic.
     for list_item in strings_to_preserve:
         str_rep += list_item + "|"
 

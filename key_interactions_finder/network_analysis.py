@@ -14,18 +14,46 @@ from key_interactions_finder.utils import _prep_out_dir, _filter_features_by_str
 
 @dataclass
 class CorrelationNetwork:
-    """Handles the correlation analysis on PyContact datasets."""
+    """
+    Handles the correlation analysis on PyContact datasets.
+
+    Attributes
+    ----------
+    dataset : pd.DataFrame
+        Input Dataframe containing all features to be studied.
+
+    out_dir : str
+        Directory path to store results files to.
+        Default = ""
+
+    interaction_types_included : list, optional
+        What types of molecular interactions to generate the correlation matrix for.
+        options are one or more of: ["Hbond", "Hydrophobic", "Saltbr", "Other"]
+        Default is to include all 4 types.
+
+    feature_corr_matrix : pd.DataFrame
+        Correlation matrix for the dataset provided.
+
+    Methods
+    -------
+    gen_res_contact_matrix(out_file)
+        Generate a per residue contact map (matrix) that identifies whether two residues
+        are in contact with each other.
+
+    gen_res_correl_matrix(out_file)
+        For every residue to every other residue determine the interaction (if exists)
+        with the strongest correlation between them and use it to build a per residue
+        correlation matrix.
+    """
 
     # Generated at runtime.
     dataset: pd.DataFrame
     out_dir: str = ""
-    interaction_types_included: list = field(
+    interaction_types_included: Optional[list] = field(
         default_factory=["Hbond", "Hydrophobic", "Saltbr", "Other"])
 
     # Generated later.
-    full_corr_matrix: pd.DataFrame = field(init=False)
-    res_corr_matrix: np.ndarray = field(init=False)
-    res_contact_map: np.ndarray = field(init=False)
+    feature_corr_matrix: pd.DataFrame = field(init=False)
 
     # Called at the end of the dataclass's initialization procedure.
     def __post_init__(self):
@@ -44,10 +72,10 @@ class CorrelationNetwork:
                 strings_to_preserve=self.interaction_types_included
             )
 
-        self.full_corr_matrix = self.dataset.corr()
-        return self.full_corr_matrix
+        self.feature_corr_matrix = self.dataset.corr()
+        return self.feature_corr_matrix
 
-    def gen_res_contact_map(self, out_file: Optional[str] = None,) -> np.ndarray:
+    def gen_res_contact_matrix(self, out_file: Optional[str] = None) -> np.ndarray:
         """
         Generate a per residue contact map (matrix) that identifies whether two residues
         are in contact with each other. Two residues considered in contact with one
@@ -65,23 +93,23 @@ class CorrelationNetwork:
         """
         # Generate empty matrix for each residue
         last_residue = self._get_last_residue()
-        self.res_contact_map = np.zeros(
+        per_res_contact_matrix = np.zeros(
             (last_residue, last_residue), dtype=int)
 
         contact_pairs = self._get_contact_pairs()
         for res1, res2 in contact_pairs.items():
-            self.res_contact_map[(res1-1), (res2-1)] = 1
-            self.res_contact_map[(res2-1), (res1-1)] = 1
+            per_res_contact_matrix[(res1-1), (res2-1)] = 1
+            per_res_contact_matrix[(res2-1), (res1-1)] = 1
 
         # correlation of residue to itself is 1.
-        np.fill_diagonal(self.res_contact_map, 1)
+        np.fill_diagonal(per_res_contact_matrix, 1)
 
         if out_file is not None:
-            np.savetxt(out_file, self.res_contact_map,
+            np.savetxt(out_file, per_res_contact_matrix,
                        delimiter=" ", fmt="%.2f")
             print(f"{out_file} saved to disk.")
 
-        return self.res_contact_map
+        return per_res_contact_matrix
 
     def gen_res_correl_matrix(self, out_file: Optional[str] = None,) -> np.ndarray:
         """
@@ -101,13 +129,13 @@ class CorrelationNetwork:
         """
         # Generate empty correlation matrix for each residue
         last_residue = self._get_last_residue()
-        self.res_corr_matrix = np.zeros(
+        per_res_corr_matrix = np.zeros(
             (last_residue, last_residue), dtype=float)
 
         # Filter correlation matrix to only include columns with that residue.
         for res1 in range(1, last_residue+1):
             res1_regex_key = str(res1) + "([A-Za-z]{3})" + " "
-            res1_matrix = self.full_corr_matrix.filter(
+            res1_matrix = self.feature_corr_matrix.filter(
                 regex=res1_regex_key, axis=1)
 
             if len(res1_matrix.columns) != 0:
@@ -123,22 +151,22 @@ class CorrelationNetwork:
                             correls = correls[correls != 1]
                             max_correl = max(
                                 correls.min(), correls.max(), key=abs)
-                            self.res_corr_matrix[(
+                            per_res_corr_matrix[(
                                 res1-1), (res2-1)] = max_correl
-                            self.res_corr_matrix[(
+                            per_res_corr_matrix[(
                                 res2-1), (res1-1)] = max_correl
                         except ValueError:  # happens if array becomes empty after removing the 1s.
                             pass
 
         # correlation of residue to itself is 1.
-        np.fill_diagonal(self.res_corr_matrix, 1)
+        np.fill_diagonal(per_res_corr_matrix, 1)
 
         if out_file is not None:
-            np.savetxt(out_file, self.res_corr_matrix,
+            np.savetxt(out_file, per_res_corr_matrix,
                        delimiter=" ", fmt="%.2f")
             print(f"{out_file} saved to disk.")
 
-        return self.res_corr_matrix
+        return per_res_corr_matrix
 
     def _get_residue_lists(self) -> pd.DataFrame:
         """
