@@ -1,0 +1,29 @@
+{
+    "Random_Forest": {
+        "params": {
+            "n_estimators": [
+                1
+            ]
+        }
+    },
+    "Ada_Boost": {
+        "params": {
+            "n_estimators": [
+                1
+            ],
+            "learning_rate": [
+                0.1
+            ]
+        }
+    },
+    "GBoost": {
+        "params": {
+            "n_estimators": [
+                100
+            ],
+            "learning_rate": [
+                0.1
+            ]
+        }
+    }
+}

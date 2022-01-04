@@ -18,10 +18,8 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.decomposition import PCA
 
 # sklearn bits and bobs
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import RepeatedStratifiedKFold
+from sklearn.model_selection import train_test_split, RepeatedStratifiedKFold, GridSearchCV
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
-from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
 
 from key_interactions_finder.utils import _prep_out_dir
@@ -36,8 +34,8 @@ class MachineLearnModel(ABC):
         """Runs the machine learning and summarizes the results."""
 
     @abstractmethod
-    def _describe_ml_planned(self):
-        """Provide a summary to the user of what machine learning protoctol they have selected."""
+    def describe_ml_planned(self):
+        """Prints a summary of what machine learning protocol has been selected."""
 
     @staticmethod
     def _save_best_models(best_model, out_path: str) -> None:
@@ -60,6 +58,9 @@ class SupervisedModel(MachineLearnModel):
     classes_to_use : list
         Names of the classes to train the model on. Must be a list of two strings.
 
+    models_to_use : list
+        List of machine learning models/algorithims to use.
+
     evaluation_split_ratio : float
         Ratio of data that should be used to make the evaluation test set.
         The rest of the data will be used for the training/hyper-param tuning.
@@ -80,8 +81,8 @@ class SupervisedModel(MachineLearnModel):
         cross validation.
         Default = 5
 
-    cross_validation_repeats :
-        Nummer of repeats of the k-fold cross validation to perform.
+    cross_validation_repeats : int
+        Number of repeats for the k-fold cross validation to perform.
         Default = 3
 
     search_approach : str
@@ -89,7 +90,7 @@ class SupervisedModel(MachineLearnModel):
         Options are: "none", "quick", "moderate" or "exhaustive".
         Default = "quick"
 
-    model_params : dict
+    all_model_params : dict
         Nested dictionary of model parameters that can be read directly into
         Scikit-learn's implementation of grid search cv.
 
@@ -99,17 +100,10 @@ class SupervisedModel(MachineLearnModel):
     feat_names : np.ndarray
         All feature names/labels.
 
-    train_data_scaled : np.ndarray
-        Training data scaled with either "min_max" or "standard_scaling".
-
-    eval_data_scaled : np.ndarray
-        Data used for evaluation scaled with either "min_max" or "standard_scaling".
-
-    y_train : pd.Series
-        Class labels for the training/testing data.
-
-    y_eval : pd.Series
-        Class labels for the validation data.
+    ml_datasets : dict
+        Nested dictionary containing the training and testing data (both features and
+        classes) needed to run the model building.
+        Outer keys are the
 
     ml_models : dict
         Keys are the model name/method and values are the instance of the
@@ -123,57 +117,125 @@ class SupervisedModel(MachineLearnModel):
     evaluate_model()
         Evaluates model performance on the validation data set and
         prints a summary of this to the screen.
+
+    describe_ml_planned()
+        Prints a summary of what machine learning protocol has been selected
     """
+    available_models = {
+        "Random_Forest": {"model": RandomForestClassifier(), "params": {}},
+        "Ada_Boost": {"model": AdaBoostClassifier(), "params": {}},
+        "GBoost": {"model": GradientBoostingClassifier(), "params": {}}
+    }
+
     dataset: pd.DataFrame
     classes_to_use: list
+    models_to_use: list
     evaluation_split_ratio: float = 0.15
     scaling_method: str = "min_max"
     out_dir: str = ""
     cross_validation_splits: int = 5
     cross_validation_repeats: int = 3
-    search_approach: str = "quick"  # none, quick, moderate or exhaustive
+    search_approach: str = "quick"
 
-    model_params: dict = field(init=False)
+    all_model_params: dict = field(init=False)
     cross_validation_approach: RepeatedStratifiedKFold = field(init=False)
     feat_names: np.ndarray = field(init=False)
-    train_data_scaled: np.ndarray = field(init=False)
-    eval_data_scaled: np.ndarray = field(init=False)
-    y_train: pd.Series = field(init=False)
-    y_eval: pd.Series = field(init=False)
+    ml_datasets: dict = field(init=False)
     ml_models: dict = field(init=False)
 
     if scaling_method not in ["min_max", "standard_scaling"]:
         raise AssertionError(
-            "Please set the scaling_method to be either 'min_max' or 'standard_scaling'.")
+            "Please set the 'scaling_method' to be either 'min_max' or 'standard_scaling'.")
 
     # This is called at the end of the dataclass's initialization procedure.
     def __post_init__(self):
         """Setup the provided dataset and params for ML."""
         self.out_dir = _prep_out_dir(self.out_dir)
-        self.ml_models = {}  # not populated till method called later.
+
+        # not populated till method called later.
+        self.all_model_params = {}
+        self.ml_datasets = {}
+        self.ml_models = {}
+
+        if len(self.models_to_use) == 0:
+            self.models_to_use = ["Random_Forest"]
 
         # Filter to only include desired classes.
         if len(self.classes_to_use) != 0:
             self.dataset = self.dataset[self.dataset["Classes"].isin(
                 self.classes_to_use)]
 
-        # Train-test split
+        # Train-test splitting and scaling.
         df_features = self.dataset.drop("Classes", axis=1)
         x_array = df_features.to_numpy()
         self.feat_names = df_features.columns.values
         y_classes = self.dataset["Classes"]
-        x_array_train, x_array_eval, self.y_train, self.y_eval = train_test_split(
+        x_array_train, x_array_eval, y_train, y_eval = train_test_split(
             x_array, y_classes, test_size=self.evaluation_split_ratio)
 
-        self.train_data_scaled, self.eval_data_scaled = self._supervised_scale_features(
+        train_data_scaled, eval_data_scaled = self._supervised_scale_features(
             x_array_train=x_array_train, x_array_eval=x_array_eval)
+
+        self.ml_datasets = {}
+        self.ml_datasets["train_data_scaled"] = train_data_scaled
+        self.ml_datasets["eval_data_scaled"] = eval_data_scaled
+        self.ml_datasets["y_train"] = y_train
+        self.ml_datasets["y_eval"] = y_eval
 
         # Define ML Pipeline:
         self.cross_validation_approach = RepeatedStratifiedKFold(
             n_splits=self.cross_validation_splits, n_repeats=self.cross_validation_repeats)
-        self.model_params = self._assign_model_params()
+        self.all_model_params = self._assign_all_model_params()
 
-        print(self._describe_ml_planned())
+        self.describe_ml_planned()
+
+    def build_models(self, save_models: bool = True) -> None:
+        """
+        Runs the machine learning and summarizes the results.
+
+        Parameters
+        ----------
+        save_models : bool
+            Whether to save the ML models made to disk.
+        """
+        scores = []
+        if save_models:
+            if not os.path.exists("temporary_files"):
+                os.makedirs("temporary_files")
+            np.save("temporary_files/feature_names.npy", self.feat_names)
+
+        for model_name, mod_params in self.all_model_params.items():
+            clf = GridSearchCV(mod_params["model"], mod_params["params"],
+                               cv=self.cross_validation_approach, refit=True)
+            clf.fit(self.ml_datasets["train_data_scaled"],
+                    self.ml_datasets["y_train"])
+            scores.append({
+                "model": model_name,
+                "best_params": clf.best_params_,
+                "best_score": clf.best_score_,
+                "best_standard_deviation": clf.cv_results_['std_test_score'][clf.best_index_]
+            })
+            self.ml_models[model_name] = clf
+
+            if save_models:
+                temp_out_path = "temporary_files" + "/" +  \
+                    str(model_name) + "_Model.pickle"
+                self._save_best_models(
+                    best_model=clf.best_estimator_, out_path=temp_out_path)
+
+        # Provide a model summary with the train/test data.
+        print("Model building complete, final results with train/test datasets below:")
+        print("")
+        print(pd.DataFrame(scores, columns=[
+            "model", "best_params", "best_score", "best_standard_deviation"]))
+
+    def evaluate_model(self) -> None:
+        """Evaluates model performance on the validation data set and
+        prints a summary of this to the screen."""
+        for model_name, clf in self.ml_models.items():
+            print(f"Classification report for: {model_name}")
+            yhat = clf.predict(self.ml_datasets["eval_data_scaled"])
+            print(classification_report(self.ml_datasets["y_eval"], yhat))
 
     def _supervised_scale_features(self,
                                    x_array_train: np.ndarray,
@@ -211,60 +273,7 @@ class SupervisedModel(MachineLearnModel):
 
         return train_data_scaled, eval_data_scaled
 
-    def build_models(self, save_models: bool = True) -> None:
-        """
-        Runs the machine learning and summarizes the results.
-
-        Parameters
-        ----------
-        save_models : bool
-            Whether to save the ML models made to disk.
-        """
-        scores = []
-        if save_models:
-            if not os.path.exists("temporary_files"):
-                os.makedirs("temporary_files")
-            np.save("temporary_files/feature_names.npy", self.feat_names)
-            np.save("temporary_files/y_train.npy", self.y_train)
-            np.save("temporary_files/y_eval.npy", self.y_eval)
-            np.save("temporary_files/train_data_scaled.npy",
-                    self.train_data_scaled)
-            np.save("temporary_files/eval_data_scaled.npy",
-                    self.eval_data_scaled)
-
-        for model_name, mod_params in self.model_params.items():
-            clf = GridSearchCV(mod_params['model'], mod_params['params'],
-                               cv=self.cross_validation_approach, refit=True)
-            clf.fit(self.train_data_scaled, self.y_train)
-            scores.append({
-                'model': model_name,
-                'best_params': clf.best_params_,
-                'best_score': clf.best_score_,
-                'best_std': clf.cv_results_['std_test_score'][clf.best_index_]
-            })
-            self.ml_models[model_name] = clf
-
-            if save_models:
-                temp_out_path = "temporary_files" + "/" +  \
-                    str(model_name) + "_Model.pickle"
-                self._save_best_models(
-                    best_model=clf.best_estimator_, out_path=temp_out_path)
-
-        # Provide a model summary with the train/test data.
-        print("Model building complete, final results with train/test data below:")
-        print("")
-        print(pd.DataFrame(scores, columns=[
-            'model', 'best_params', 'best_score', 'best_std']))
-
-    def evaluate_model(self) -> None:
-        """Evaluates model performance on the validation data set and
-        prints a summary of this to the screen."""
-        for model_name, clf in self.ml_models.items():
-            print(f"Classification report for: {model_name}")
-            yhat = clf.predict(self.eval_data_scaled)
-            print(classification_report(self.y_eval, yhat))
-
-    def _assign_model_params(self) -> dict:
+    def _assign_all_model_params(self) -> dict:
         """
         Assigns the grid search paramters for the ML based on user criteria.
 
@@ -274,63 +283,41 @@ class SupervisedModel(MachineLearnModel):
             Nested dictionary of model parameters that can be read directly into
             Scikit-learn's implementation of grid search cv.
         """
-        model_params = {
-            "ada_boost": {"model": AdaBoostClassifier(), "params": {}},
-            "random_forest": {"model": RandomForestClassifier(), "params": {}},
-            "GBoost": {"model": GradientBoostingClassifier(), "params": {}}
-        }
+        all_model_params = {}
+        for model_name in self.models_to_use:
+            all_model_params[model_name] = self.available_models[model_name]
+            all_model_params[model_name]["params"] = (
+                self._assign_search_params(model_name))
 
-        with open("key_interactions_finder/model_parameters.json") as file_in:
-            all_hyper_params = json.load(file_in)
+        return all_model_params
 
-        # Assign search parameters accordingly.
-        if self.search_approach == "none":
-            model_params["ada_boost"]["params"] = all_hyper_params["none"]["ada_boost"]["params"]
-            model_params["random_forest"]["params"] = all_hyper_params["none"]["random_forest"]["params"]
-            model_params["GBoost"]["params"] = all_hyper_params["none"]["GBoost"]["params"]
-        elif self.search_approach == "quick":
-            model_params["ada_boost"]["params"] = all_hyper_params["quick"]["ada_boost"]["params"]
-            model_params["random_forest"]["params"] = all_hyper_params["quick"]["random_forest"]["params"]
-            model_params["GBoost"]["params"] = all_hyper_params["quick"]["GBoost"]["params"]
-        elif self.search_approach == "moderate":
-            model_params["ada_boost"]["params"] = all_hyper_params["moderate"]["ada_boost"]["params"]
-            model_params["random_forest"]["params"] = all_hyper_params["moderate"]["random_forest"]["params"]
-            model_params["GBoost"]["params"] = all_hyper_params["moderate"]["GBoost"]["params"]
-        elif self.search_approach == "exhaustive":
-            model_params["ada_boost"]["params"] = all_hyper_params["exhaustive"]["ada_boost"]["params"]
-            model_params["random_forest"]["params"] = all_hyper_params["exhaustive"]["random_forest"]["params"]
-            model_params["GBoost"]["params"] = all_hyper_params["exhaustive"]["GBoost"]["params"]
-        else:
-            error_message = ("You must select either 'none' 'quick', 'moderate' "
-                             "or 'exhaustive' for the search_approach option.")
-            raise ValueError(error_message)
-
-        return model_params
-
-    # def _assign_search_params(self, ml_algo: str) -> dict:
-    #     """
-
-    #     Returns
-    #     ----------
-    #     dict
-    #         Dictionary of hyperparameters to tune for a specific ML model.
-    #     """
-    #     hyper_params_file = "key_interactions_finder/model_params/gridsearch_" + \
-    #         str(self.search_approach) + ".json"
-    #     with open(hyper_params_file) as file_in:
-    #         hyper_params = json.load(file_in)
-
-    def _describe_ml_planned(self) -> str:
+    def _assign_search_params(self, ml_algo: str) -> dict:
         """
-        Provide a summary to the user of what machine learning protoctol they have selected.
+        Read in the grid search CV params for a specific machine learning algorithim.
 
         Returns
         ----------
-        str
-            Summary text.
+        ml_algo : str
+            Name of the machine learning algorithim.
+
+        dict
+            Dictionary of hyperparameters to tune for a specific ML algorithim.
         """
+        hyper_params_file = "key_interactions_finder/model_params/gridsearch_" + \
+            str(self.search_approach) + ".json"
+
+        with open(hyper_params_file) as file_in:
+            hyper_params = json.load(file_in)
+
+        return hyper_params[ml_algo]["params"]
+
+    def describe_ml_planned(self):
+        """Prints a summary of what machine learning protocol has been selected."""
         eval_pcent = self.evaluation_split_ratio*100
         train_pcent = 100 - eval_pcent
+
+        train_obs = len(self.ml_datasets["train_data_scaled"])
+        eval_obs = len(self.ml_datasets["eval_data_scaled"])
 
         out_text = "\n"
         out_text += "Below is a summary of the machine learning you have planned.\n"
@@ -340,13 +327,22 @@ class SupervisedModel(MachineLearnModel):
 
         out_text += f"You will use {len(self.dataset.columns)} features to build the model, with "
         out_text += f"{train_pcent}% of your data used for training the model, "
-        out_text += f"which is {len(self.train_data_scaled)} observations. \n"
+        out_text += f"which is {train_obs} observations. \n"
 
-        out_text += f"{eval_pcent}% of your data will be used for evaluating the best models produced "
-        out_text += f"by cross validation, which is {len(self.eval_data_scaled)} observations.\n"
+        out_text += f"{eval_pcent}% of your data will be used for evaluating the best models "
+        out_text += f"produced by cross validation, which is {eval_obs} observations.\n"
+
+        out_text += f"You have chosen to build {len(self.models_to_use)} different ml "
+        out_text += "models/algos, each with the following hyperparameters: \n \n"
+
+        for model_name, model_params in self.all_model_params.items():
+            out_text += f"{model_name} with grid search parameters: \n"
+            out_text += f"{model_params} \n"
+            out_text += "\n"
 
         out_text += "If you're happy with the above, lets get model building!"
-        return out_text
+
+        print(out_text)
 
 
 # Can have a go with PCA Maybe or maybe just not use as already have a lot of stuff...
@@ -409,9 +405,8 @@ class UnsupervisedModel(MachineLearnModel):
         scaler = StandardScaler()
         self.data_scaled = scaler.fit_transform(data_array)
 
-        print(self._describe_ml_planned())
+        self.describe_ml_planned()
 
-    # TODO - SAVE MODELS.
     def build_models(self, save_models: bool = True) -> None:
         """
         Runs the machine learning and summarizes the results.
@@ -427,15 +422,16 @@ class UnsupervisedModel(MachineLearnModel):
         self.ml_models["PCA"] = pca
         print("All models built.")
 
-    def _describe_ml_planned(self) -> str:
-        """
-        Provide a summary to the user of what machine learning protoctol they have selected.
+        if save_models:
+            if not os.path.exists("temporary_files"):
+                os.makedirs("temporary_files")
+            np.save("temporary_files/feature_names.npy", self.feat_names)
 
-        Returns
-        ----------
-        str
-            Summary text.
-        """
+            temp_out_path = "temporary_files" + "/" + "PCA" + "_Model.pickle"
+            self._save_best_models(best_model=pca, out_path=temp_out_path)
+
+    def describe_ml_planned(self):
+        """Prints a summary of what machine learning protocol has been selected."""
         out_text = "\n"
         out_text += "Below is a summary of the unsupervised machine learning you have planned. \n"
 
