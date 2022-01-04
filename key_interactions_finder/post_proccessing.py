@@ -146,15 +146,6 @@ class SupervisedPostProcessor(PostProcessor):
         Directory path to store results files to.
         Default = ""
 
-    load_from_disk : bool
-        Whether to load the machine learning results from disk or if not
-        from the class. If false, the 'supervised_model' parameter must be provided.
-        Default = True
-
-    supervised_model : SupervisedModel, optional
-        Name of the SupervisedModel class instance used to build the ml models.
-        Only required if load_from_disk = False.
-
     feat_names : np.ndarray
         All feature names/labels.
         Generated at class initialization
@@ -179,15 +170,20 @@ class SupervisedPostProcessor(PostProcessor):
 
     Methods
     -------
+    load_models_from_instance(supervised_model)
+        Gets the generated machine learning model data from an instance of the SupervisedModel class.
+
+    load_models_from_disk(models_to_use)
+        Loads the generated machine learning models from disk.
+
     get_feature_importance()
         Gets the feature importances and saves them to disk.
 
     get_per_res_importance()
         Projects feature importances onto the per-residue level.
     """
-    supervised_model: Optional[SupervisedModel]
     out_dir: str = ""
-    load_from_disk: bool = True
+
     feat_names: np.ndarray = field(init=False)
     best_models: dict = field(init=False)
     all_feature_importances: dict = field(init=False)
@@ -195,47 +191,75 @@ class SupervisedPostProcessor(PostProcessor):
 
     # This is called at the end of the dataclass's initialization procedure.
     def __post_init__(self):
-        """Read in extra params from either the class or disk."""
+        """Prep outdir."""
         self.out_dir = _prep_out_dir(self.out_dir)
+
+        self.best_models = {}
+        self.all_feature_importances = {}
         self.per_residue_scores = {}
 
-        if self.load_from_disk:
-            try:
-                model_names = ["ada_boost", "GBoost", "random_forest"]
-                self.best_models = self._load_models_from_disk(model_names)
-                self.feat_names = np.load(
-                    "temporary_files/feature_names.npy", allow_pickle=True)
-            except:
-                error_message = "I cannot find the files you generated from a prior " + \
-                    "machine learning run, if you have already run the machine learning, " + \
-                    "make sure you are inside the right working directory. You " + \
-                    "should see a folder named: 'temporary_files' if you are."
-                raise FileNotFoundError(error_message)
+    def load_models_from_instance(self,
+                                  supervised_model: SupervisedModel,
+                                  models_to_use: Union[str, list] = "all") -> None:
+        """
+        Gets the generated machine learning model data from an instance
+        of the SupervisedModel class.
+
+        Parameters
+        ----------
+        supervised_model : SupervisedModel
+            Name of the SupervisedModel class instance used to build the ml models.
+
+        models_to_use : str or list
+            Either perform post-processing on all generated models ("all") or
+            provide a list of strings of the ml models to postprocess.
+            Default is "all"
+        """
+        self.feat_names = supervised_model.feat_names
+        self.best_models = {}
+
+        if models_to_use == "all":
+            for model in supervised_model.ml_models.keys():
+                self.best_models[model] = (
+                    supervised_model.ml_models[model].best_estimator_)
+
+        elif isinstance(models_to_use, list):
+            for model in models_to_use:
+                self.best_models[model] = (
+                    supervised_model.ml_models[model].best_estimator_)
 
         else:
-            self.feat_names = self.supervised_model.feat_names
-            models_made = self.supervised_model.ml_models.keys()
-            self.best_models = {}
-            for model in models_made:
-                self.best_models[model] = (
-                    self.supervised_model.ml_models[model].best_estimator_)
+            error_message = ("For the parameter 'models_to_use', you need to choose either 'all' " +
+                             "or provide a list of models you wish to use.")
+            raise ValueError(error_message)
 
-    @staticmethod
-    def _load_models_from_disk(model_names) -> dict:
+    def load_models_from_disk(self, models_to_use: list) -> None:
         """
-        Loads previously made machine learning models from disk.
-        # TODO PROBABLY CHANGE HOW THIS IS DONE WITH MODEL LOADING...
-        Returns
+        Loads the generated machine learning models from disk to obtain
+        the models to be analysed (self.best_models) as a dictionary
+        and the feature names (self.feat_names) as a numpy array.
+
+        Parameters
         ----------
-        dict
-            Dictionary, keys are the model name, values are the models.
+        models_to_use : list
+            List of machine learning models/algorithims to do the postprocessing on.
         """
-        best_models = {}
-        for model_name in model_names:
-            model = pickle.load(
-                open(f"temporary_files/{model_name}_Model.pickle", 'rb'))
-            best_models.update({model_name: model})
-        return best_models
+        try:
+            self.feat_names = np.load(
+                "temporary_files/feature_names.npy", allow_pickle=True)
+
+            self.best_models = {}
+            for model_name in models_to_use:
+                model = pickle.load(
+                    open(f"temporary_files/{model_name}_Model.pickle", 'rb'))
+                self.best_models.update({model_name: model})
+
+        except FileNotFoundError:
+            error_message = "I cannot find the files you generated from a prior " + \
+                "machine learning run, if you have already run the machine learning, " + \
+                "make sure you are inside the right working directory. You " + \
+                "should see a folder named: 'temporary_files' if you are."
+            raise (error_message)
 
     def get_feature_importance(self) -> None:
         """Gets the feature importances and saves them to disk."""
@@ -333,12 +357,20 @@ class UnsupervisedPostProcessor(PostProcessor):
         self.out_dir = _prep_out_dir(self.out_dir)
         self.per_residue_scores = {}
 
-    def get_feature_importance(self) -> None:
-        """Gets the feature importances and saves them to disk."""
+    def get_feature_importance(self, variance_explained_cutoff=0.95) -> None:
+        """
+        Gets the feature importances and saves them to disk.
+
+        Parameters
+        ----------
+        variance_explained_cutoff : int
+            What fraction of the variance needs to be described by the principal components (PCs)
+            in order to stop including further PCs. Default is 0.95 (95%).
+        """
         self.all_feature_importances = {}
 
         self.all_feature_importances["PCA"] = (
-            self._get_pca_importances(variance_explained_cutoff=0.95))
+            self._get_pca_importances(variance_explained_cutoff))
 
         # If more models are to be added beyond PCA, append here.
 
@@ -426,12 +458,7 @@ class UnsupervisedPostProcessor(PostProcessor):
 
             eigenvalue_sums.append(np.sum(np.absolute(eigenvalues_reweighted)))
 
-        # Scale sums so that new largest sum has size 1.0
-        # (good for PyMOL sphere representation as well).
-        max_eigen_value = max(eigenvalue_sums)
-        eigenvalues_scaled = []
-        for ori_eigenvalue in eigenvalue_sums:
-            eigenvalues_scaled.append(ori_eigenvalue / max_eigen_value)
+        eigenvalues_scaled = self._scale_eigenvalues(eigenvalue_sums)
 
         pca_importances = dict(
             zip(self.unsupervised_model.feat_names, eigenvalues_scaled))
@@ -443,6 +470,29 @@ class UnsupervisedPostProcessor(PostProcessor):
         )
 
         return pca_importances
+
+    @staticmethod
+    def _scale_eigenvalues(eigenvalue_sums: list) -> list:
+        """
+        Scale the summed per feature eigenvalues so that the new largest sum has size 1.0.
+        This is a good size for PyMOL sphere representation as well.
+
+        Parameters
+        ----------
+        eigenvalue_sums : list
+            Per feature summed eigenvalues with no scaling.
+
+        Returns
+        ----------
+        list
+            Per feature summed eigenvalues now scaled.
+        """
+        max_eigen_value = max(eigenvalue_sums)
+        eigenvalues_scaled = []
+        for ori_eigenvalue in eigenvalue_sums:
+            eigenvalues_scaled.append(ori_eigenvalue / max_eigen_value)
+
+        return eigenvalues_scaled
 
 
 @dataclass
