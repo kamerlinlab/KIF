@@ -78,6 +78,8 @@ class SupervisedFeatureData(FeatureData):
 
     def __post_init__(self):
         """Merge classifications to dataframe."""
+        self.df_filtered = pd.DataFrame()
+
         if self.header_present:
             df_class = pd.read_csv(self.classifications_file)
         else:
@@ -130,7 +132,7 @@ class SupervisedFeatureData(FeatureData):
             self.df_filtered = self.df_filtered[list(
                 sorted(set(keep_cols), reverse=True))]
 
-        except AttributeError:  # if no other filtering has been performed yet, follow this path.
+        except KeyError:  # if no other filtering has been performed yet, follow this path.
             for class_label in list(self.df_feat_class["Classes"].unique()):
                 df_single_class = self.df_feat_class[(
                     self.df_feat_class["Classes"] == class_label)]
@@ -165,7 +167,7 @@ class SupervisedFeatureData(FeatureData):
                 strings_to_preserve=interaction_types_included
             )
 
-        except AttributeError:  # if no other filtering has been performed yet, follow this path.
+        except KeyError:  # if no other filtering has been performed yet, follow this path.
             self.df_filtered = _filter_features_by_strings(
                 dataset=self.df_feat_class,
                 strings_to_preserve=interaction_types_included
@@ -195,7 +197,7 @@ class SupervisedFeatureData(FeatureData):
                 strings_to_preserve=main_side_chain_types_included
             )
 
-        except AttributeError:  # if no other filtering has been performed yet, follow this path.
+        except KeyError:  # if no other filtering has been performed yet, follow this path.
             self.df_filtered = _filter_features_by_strings(
                 dataset=self.df_feat_class,
                 strings_to_preserve=main_side_chain_types_included
@@ -226,7 +228,7 @@ class SupervisedFeatureData(FeatureData):
                 0, "Classes", self.df_filtered["Classes"])
             self.df_filtered = df_features_filtered
 
-        except AttributeError:  # if no other filtering has been performed yet, follow this path.
+        except KeyError:  # if no other filtering has been performed yet, follow this path.
             df_just_features = self.df_feat_class.drop("Classes", axis=1)
             df_features_filtered = df_just_features.loc[:, df_just_features.mean(
             ) > average_strength_cut_off]
@@ -269,6 +271,10 @@ class UnsupervisedFeautureData(FeatureData):
     input_df: pd.DataFrame
     df_filtered: pd.DataFrame = field(init=False)
 
+    def __post_init__(self):
+        """Initialise an empty dataframe so dataclass can be printed."""
+        self.df_filtered = pd.DataFrame()
+
     def filter_by_occupancy(self, min_occupancy: float) -> pd.DataFrame:
         """
         Filter features such that only features with %occupancy >= the min_occupancy are included.
@@ -285,13 +291,14 @@ class UnsupervisedFeautureData(FeatureData):
         pd.DataFrame
             Filtered dataframe.
         """
-        try:
-            self.df_filtered = self.df_filtered.loc[:, (
-                self.df_filtered != 0).mean() > (min_occupancy/100)]
-
-        except AttributeError:  # if no other filtering has been performed yet, follow this path.
+        # Different paths for if filtering has/hasn't been performed yet.
+        if len(self.df_filtered) == 0:
             self.df_filtered = self.input_df.loc[:, (
                 self.input_df != 0).mean() > (min_occupancy/100)]
+
+        else:
+            self.df_filtered = self.df_filtered.loc[:, (
+                self.df_filtered != 0).mean() > (min_occupancy/100)]
 
         return self.df_filtered
 
@@ -309,21 +316,22 @@ class UnsupervisedFeautureData(FeatureData):
         pd.DataFrame
             Filtered dataframe.
         """
-        try:
-            self.df_filtered = _filter_features_by_strings(
-                dataset=self.df_filtered,
-                strings_to_preserve=interaction_types_included
-            )
-
-        except AttributeError:  # if no other filtering has been performed yet, follow this path.
+        # Different paths for if filtering has/hasn't been performed yet.
+        if len(self.df_filtered) == 0:
             self.df_filtered = _filter_features_by_strings(
                 dataset=self.input_df,
                 strings_to_preserve=interaction_types_included
             )
 
+        else:
+            self.df_filtered = _filter_features_by_strings(
+                dataset=self.df_filtered,
+                strings_to_preserve=interaction_types_included
+            )
+
         return self.df_filtered
 
-    def filter_by_main_or_side_chain(self, main_side_chain_types_included) -> pd.DataFrame:
+    def filter_by_main_or_side_chain(self, main_side_chain_types_included: list) -> pd.DataFrame:
         """
         Filter features to only certain combinations of main and side chain interactions.
 
@@ -337,15 +345,16 @@ class UnsupervisedFeautureData(FeatureData):
         pd.DataFrame
             Filtered dataframe.
         """
-        try:
+        # Different paths for if filtering has/hasn't been performed yet.
+        if len(self.df_filtered) == 0:
             self.df_filtered = _filter_features_by_strings(
-                dataset=self.df_filtered,
+                dataset=self.input_df,
                 strings_to_preserve=main_side_chain_types_included
             )
 
-        except AttributeError:  # if no other filtering has been performed yet, follow this path.
+        else:
             self.df_filtered = _filter_features_by_strings(
-                dataset=self.input_df,
+                dataset=self.df_filtered,
                 strings_to_preserve=main_side_chain_types_included
             )
 
@@ -365,12 +374,13 @@ class UnsupervisedFeautureData(FeatureData):
         pd.DataFrame
             Filtered dataframe.
         """
-        try:
-            self.df_filtered = self.df_filtered.loc[:, self.df_filtered.mean(
+        # Different paths for if filtering has/hasn't been performed yet.
+        if len(self.df_filtered) == 0:
+            self.df_filtered = self.input_df.loc[:, self.input_df.mean(
             ) > average_strength_cut_off]
 
-        except AttributeError:  # if no other filtering has been performed yet, follow this path.
-            self.df_filtered = self.input_df.loc[:, self.input_df.mean(
+        else:
+            self.df_filtered = self.df_filtered.loc[:, self.df_filtered.mean(
             ) > average_strength_cut_off]
 
         return self.df_filtered
