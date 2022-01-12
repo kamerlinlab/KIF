@@ -6,30 +6,6 @@ import pandas as pd
 from key_interactions_finder.utils import _prep_out_dir
 
 
-def project_multiple_per_res_scores(all_per_res_scores: dict,
-                                    out_dir: str = ""
-                                    ) -> None:
-    """
-    Write out multiple PyMOL compatabile scripts for different models.
-
-    Parameters
-    ----------
-    all_per_res_scores : dict
-        Nested dictionary, the outer layer keys are the model names/methods used.
-        The inner layer is a dict with keys being each residue and
-        values the per residue score.
-
-    out_dir : str
-        Folder to save outputs to, if none given, saved to current directory.
-    """
-    for model_name, model_scores in all_per_res_scores.items():
-        project_pymol_per_res_scores(
-            per_res_scores=model_scores,
-            model_name=str(model_name),
-            out_dir=out_dir
-        )
-
-
 def project_pymol_per_res_scores(per_res_scores: dict,
                                  model_name: str = "",
                                  out_dir: str = ""
@@ -75,32 +51,26 @@ def project_pymol_per_res_scores(per_res_scores: dict,
     print(f"The file: {out_file} was written to disk.")
 
 
-def project_multiple_per_feature_scores(all_feature_scores: dict,
-                                        numb_features: Union[int, str],
-                                        out_dir: str = ""
-                                        ) -> None:
+def project_multiple_per_res_scores(all_per_res_scores: dict,
+                                    out_dir: str = ""
+                                    ) -> None:
     """
     Write out multiple PyMOL compatabile scripts for different models.
 
     Parameters
     ----------
-    all_feature_scores : dict
+    all_per_res_scores : dict
         Nested dictionary, the outer layer keys are the model names/methods used.
         The inner layer is a dict with keys being each residue and
         values the per residue score.
 
-    numb_features : int or str
-        The max number of top scoring features to determine (specified by an int).
-        Alternatively, if set to "all", then all feature importances will be determined.
-
     out_dir : str
         Folder to save outputs to, if none given, saved to current directory.
     """
-    for model_name, model_scores in all_feature_scores.items():
-        project_pymol_top_features(
-            per_feature_scores=model_scores,
-            model_name=model_name,
-            numb_features=numb_features,
+    for model_name, model_scores in all_per_res_scores.items():
+        project_pymol_per_res_scores(
+            per_res_scores=model_scores,
+            model_name=str(model_name),
             out_dir=out_dir
         )
 
@@ -156,7 +126,7 @@ def project_pymol_top_features(per_feature_scores: dict,
     top_feats_out += "# set antialias, 2\n"
     top_feats_out += "# set ray_shadows, 0\n"
 
-    # Main, show spheres and set their size.
+    # Main, show CA carbons as spheres and set their size.
     if numb_features == "all":
         for i, _ in enumerate(res1):
             feature_rep = f"draw_links selection1=resi {res1[i]}, " + \
@@ -185,6 +155,36 @@ def project_pymol_top_features(per_feature_scores: dict,
     out_file = out_dir + model_name + "_Pymol_Per_Feature_Scores.py"
     _write_file(out_file, top_feats_out)
     print(f"The file: {out_file} was written to disk.")
+
+
+def project_multiple_per_feature_scores(all_feature_scores: dict,
+                                        numb_features: Union[int, str],
+                                        out_dir: str = ""
+                                        ) -> None:
+    """
+    Write out multiple PyMOL compatabile scripts for different models.
+
+    Parameters
+    ----------
+    all_feature_scores : dict
+        Nested dictionary, the outer layer keys are the model names/methods used.
+        The inner layer is a dict with keys being each residue and
+        values the per residue score.
+
+    numb_features : int or str
+        The max number of top scoring features to determine (specified by an int).
+        Alternatively, if set to "all", then all feature importances will be determined.
+
+    out_dir : str
+        Folder to save outputs to, if none given, saved to current directory.
+    """
+    for model_name, model_scores in all_feature_scores.items():
+        project_pymol_top_features(
+            per_feature_scores=model_scores,
+            model_name=model_name,
+            numb_features=numb_features,
+            out_dir=out_dir
+        )
 
 
 def _extract_residue_lists(input_df: pd.DataFrame) -> Tuple[list, list]:
@@ -233,7 +233,7 @@ def _extract_interaction_types(input_df: pd.DataFrame) -> list:
     Returns
     ----------
     list
-        List of colors to use for the different interaction types.
+        List of colors to assign for each feature.
     """
     stick_col_scheme = {"Hbond": "red", "Saltbr": "blue",
                         "Hydrophobic": "green", "Other": "magenta"}
