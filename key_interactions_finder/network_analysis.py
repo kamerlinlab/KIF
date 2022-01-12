@@ -1,6 +1,7 @@
 """
-Perform correlation analysis on the PyContact interactions and outputs it in ways
-that can easily be read into various network/correlation based analyses tools in different programs.
+Perform correlation analysis on the PyContact interactions/features and outputs
+the results in ways such that can easily be read into various network/correlation
+based analyses tools in different programs.
 """
 from dataclasses import dataclass, field
 from typing import Optional
@@ -16,6 +17,7 @@ from key_interactions_finder.utils import _prep_out_dir, _filter_features_by_str
 class CorrelationNetwork:
     """
     Handles the correlation analysis on PyContact datasets.
+    Does not require or make use of class labels (i.e., dataset can be unsupervised).
 
     Attributes
     ----------
@@ -45,17 +47,14 @@ class CorrelationNetwork:
         with the strongest correlation between them and use it to build a per residue
         correlation matrix.
     """
-
-    # Generated at runtime.
     dataset: pd.DataFrame
     out_dir: str = ""
     interaction_types_included: Optional[list] = field(
         default_factory=["Hbond", "Hydrophobic", "Saltbr", "Other"])
 
-    # Generated later.
+    # Generated during init.
     feature_corr_matrix: pd.DataFrame = field(init=False)
 
-    # Called at the end of the dataclass's initialization procedure.
     def __post_init__(self):
         """Filter features and generate the full correlation matrix."""
         self.out_dir = _prep_out_dir(self.out_dir)

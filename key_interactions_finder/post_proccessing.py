@@ -39,7 +39,6 @@ class PostProcessor(ABC):
         ----------
         pd.DataFrame
             dataframe of residue numbers and scores for each feature.
-
         """
         df_feat_import = pd.DataFrame(feat_importances.items())
         df_feat_import_res = df_feat_import[0].str.split(" +", expand=True)
@@ -171,7 +170,8 @@ class SupervisedPostProcessor(PostProcessor):
     Methods
     -------
     load_models_from_instance(supervised_model)
-        Gets the generated machine learning model data from an instance of the SupervisedModel class.
+        Gets the generated machine learning model data from an instance
+        of the SupervisedModel class.
 
     load_models_from_disk(models_to_use)
         Loads the generated machine learning models from disk.
@@ -307,8 +307,7 @@ class SupervisedPostProcessor(PostProcessor):
             # Save to Class.
             self.per_residue_scores.update({model_name: spheres})
 
-        print(
-            "All per residue feature importance scores were written to disk.")
+        print("All per residue feature importance scores were saved to disk.")
 
 
 @dataclass
@@ -383,7 +382,7 @@ class UnsupervisedPostProcessor(PostProcessor):
                 feature_importances=feat_importances,
                 out_file=out_file)
 
-        print("All feature importances were written to disk successfully.")
+        print("All feature importances were saved to disk successfully.")
 
     def get_per_res_importance(self) -> None:
         """Projects feature importances onto the per-residue level."""
@@ -646,30 +645,35 @@ class StatisticalPostProcessor(PostProcessor):
 
             return self.stat_model.x_values, selected_prob_distribs
 
-        error_message = ("You need to choose either an integer value or 'all'" +
+        error_message = ("You need to choose either an integer value or 'all' " +
                          "for the parameter: 'number_features'.")
         raise ValueError(error_message)
 
     def estimate_feature_directions(self) -> None:
         """
-        Estimate the direction each feature favours by calculating the average
-        score for each feature for each class. Whatever feature has the highest
-        average score
+        Estimate the "direction" each feature favours by calculating the average
+        score for each feature for each class, meaning that whatever class has
+        the highest average score for a feature is selected.
 
         Incredibly simple logic (but should work fine for obvious features),
-        so user is warned when they use this method.
+        so user is given a warning when they use this method.
         """
         warning_message = (
             "Warning, this method is very simplistic and just calculates the average " +
-            "contact score/strength for each features for both classes to determine the " +
+            "contact score/strength for all features for both classes to determine the " +
             "direction each feature appears to favour. " +
             "You should therefore interpret these results with care..."
         )
         warnings.warn(warning_message)
 
+        per_class_datasets = {}
+        for class_name in self.stat_model.class_names:
+            per_class_datasets[class_name] = self.stat_model.scaled_dataset[(
+                self.stat_model.scaled_dataset["Classes"] == class_name)]
+
         avg_contact_scores = {}
         self.feature_directions = {}
-        for class_name, class_observations in self.stat_model.per_class_datasets.items():
+        for class_name, class_observations in per_class_datasets.items():
             avg_contact_scores[class_name] = class_observations.mean()
 
         class_0_name = self.stat_model.class_names[0]

@@ -1,7 +1,7 @@
 """
 Calculates differences in the probabilty distributions of each feature
 for the different classes.
-This is only available to supervised datasets (i.e. has class labels).
+This is only available to supervised datasets (i.e. data must has class labels).
 """
 from typing import Tuple
 from dataclasses import dataclass, field
@@ -20,6 +20,7 @@ from key_interactions_finder.utils import _prep_out_dir, _filter_features_by_str
 class ProteinStatModel():
     """
     Handles the generation of stastical models for PyContact data sets.
+    Requires dataset to contain two unqiue class labels.
 
     Attributes
     ----------
@@ -28,7 +29,7 @@ class ProteinStatModel():
 
     class_names : list
         Class labels inside the column "Classes" of the dataset to model.
-        Must be only two classes for this approach.
+        You can only use two classes for this approach.
 
     out_dir : str
         Directory path to store results files to.
