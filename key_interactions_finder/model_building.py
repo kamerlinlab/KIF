@@ -233,7 +233,7 @@ class SupervisedModel(MachineLearnModel):
         """Evaluates model performance on the validation data set and
         prints a summary of this to the screen."""
         for model_name, clf in self.ml_models.items():
-            print(f"Classification report for: {model_name}")
+            print(f"Classification report for the: {model_name} model:")
             yhat = clf.predict(self.ml_datasets["eval_data_scaled"])
             print(classification_report(self.ml_datasets["y_eval"], yhat))
 
@@ -325,18 +325,19 @@ class SupervisedModel(MachineLearnModel):
         out_text += f"You will use {self.cross_validation_splits}-fold cross validation "
         out_text += f"and perform {self.cross_validation_repeats} repeats.\n"
 
-        out_text += f"You will use {len(self.dataset.columns)} features to build the model, with "
+        out_text += f"You will use up to {len(self.dataset.columns)} features to build each model, with "
         out_text += f"{train_pcent}% of your data used for training the model, "
         out_text += f"which is {train_obs} observations. \n"
 
         out_text += f"{eval_pcent}% of your data will be used for evaluating the best models "
-        out_text += f"produced by cross validation, which is {eval_obs} observations.\n"
+        out_text += f"produced by the {self.cross_validation_splits}-fold cross validation, "
+        out_text += f"which is {eval_obs} observations.\n"
 
-        out_text += f"You have chosen to build {len(self.models_to_use)} different ml "
-        out_text += "models/algos, each with the following hyperparameters: \n \n"
+        out_text += f"You have chosen to build {len(self.models_to_use)} different machine learning "
+        out_text += "models, each with the following hyperparameters: \n \n"
 
         for model_name, model_params in self.all_model_params.items():
-            out_text += f"{model_name} with grid search parameters: \n"
+            out_text += f"A {model_name} model, with grid search parameters: \n"
             out_text += f"{model_params} \n"
             out_text += "\n"
 
