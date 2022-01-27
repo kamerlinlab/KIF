@@ -5,6 +5,7 @@ This is only available to supervised datasets (i.e. data must has class labels).
 """
 from typing import Tuple
 from dataclasses import dataclass, field
+import csv
 import pandas as pd
 import numpy as np
 
@@ -49,7 +50,7 @@ class ProteinStatModel():
     x_values : np.ndarray
         Values on the x-axis for plotting the probability distrubitons.
 
-    probablity_distributions : dict
+    probability_distributions : dict
         Nested dictionary. Outer layer keys are class names, and values
         are a dictionary of each feature (as inner key) and values of a
         nested array of probabilities.
@@ -83,16 +84,13 @@ class ProteinStatModel():
     scaled_dataset: pd.DataFrame = field(init=False)
     feature_list: list = field(init=False)
     x_values: np.ndarray = field(init=False)
-    probablity_distributions: dict = field(init=False)
+    probability_distributions: dict = field(init=False)
     js_distances: dict = field(init=False)
     mutual_infos: dict = field(init=False)
 
     # Called at the end of the dataclass's initialization procedure.
     def __post_init__(self) -> None:
         """Filters, rescales and generates the probability distributions for each feature."""
-        self.js_distances = {}
-        self.mutual_infos = {}
-
         self.out_dir = _prep_out_dir(self.out_dir)
 
         if sorted(self.interaction_types_included) != sorted(
@@ -113,17 +111,16 @@ class ProteinStatModel():
                 "The number of classes to compare should be 2. \n" +
                 "Please use a list of 2 items for the parameter: 'class_names'.")
 
-    def calc_mutual_info_to_target(self) -> pd.DataFrame:
+        self.x_values = np.empty(shape=(0, 0))
+        self.probability_distributions = {}
+        self.js_distances = {}
+        self.mutual_infos = {}
+
+    def calc_mutual_info_to_target(self):
         """
         Calculate the mutual information between each feature to the target classes.
         Note that Sklearns implementation (used here) is designed for "raw datasets"
         (i.e., do not feed in a probability distribution, instead feed in the observations).
-
-        Returns
-        ----------
-        pd.DataFrame
-            Dataframe containing all features and the mutual information scores.
-            Mutual information units are "nits".
         """
         df_features = self.scaled_dataset.drop("Classes", axis=1)
         features_array = df_features.to_numpy()
@@ -135,9 +132,16 @@ class ProteinStatModel():
         self.mutual_infos = {k: v for k, v in sorted(
             self.mutual_infos.items(), key=lambda item: item[1], reverse=True)}
 
-        return self.mutual_infos
+        print("Mutual information scores calculated.")
 
-    def calc_js_distances(self, kde_bandwidth: float = 0.02) -> dict:
+        out_file = self.out_dir + "Mutual_Information_Per_Feature_Scores.csv"
+        self._per_feature_importances_to_file(
+            per_feat_values=self.mutual_infos,
+            out_file=out_file
+        )
+        print("You can also access these results via the class attribute: 'mutual_infos'.")
+
+    def calc_js_distances(self, kde_bandwidth: float = 0.02):
         """
         Calculate the Jensen-Shannon (JS) distance (metric) between each feature to
         the target classes.
@@ -149,20 +153,14 @@ class ProteinStatModel():
             Bandwidth used to generate the probabilty distribtions for each feature set.
             Note that features are all scaled to be between 0 and 1 before this step.
             Default = 0.02
-
-        Returns
-        ----------
-        dict
-            Dictionary with each feature's (keys) JS distance (values).
-            Dictionary is sorted from largest JS distance to smallest.
         """
 
-        self.x_values, self.probablity_distributions = self._gen_prob_distributions(
+        self.x_values, self.probability_distributions = self._gen_prob_distributions(
             kde_bandwidth=kde_bandwidth)
 
         for feature in self.feature_list:
-            distrib_1 = self.probablity_distributions[self.class_names[0]][feature]
-            distrib_2 = self.probablity_distributions[self.class_names[1]][feature]
+            distrib_1 = self.probability_distributions[self.class_names[0]][feature]
+            distrib_2 = self.probability_distributions[self.class_names[1]][feature]
 
             js_dist = np.around(jensenshannon(distrib_1, distrib_2, base=2), 5)
 
@@ -171,7 +169,14 @@ class ProteinStatModel():
         self.js_distances = {k: v for k, v in sorted(
             self.js_distances.items(), key=lambda item: item[1], reverse=True)}
 
-        return self.js_distances
+        print("Jensen-Shannon (JS) distances calculated.")
+
+        out_file = self.out_dir + "Jensen_Shannon_Per_Feature_Scores.csv"
+        self._per_feature_importances_to_file(
+            per_feat_values=self.js_distances,
+            out_file=out_file
+        )
+        print("You can also access these results via the class attribute: 'js_distances'.")
 
     def _gen_prob_distributions(self, kde_bandwidth: float) -> Tuple[np.ndarray, dict]:
         """
@@ -193,9 +198,9 @@ class ProteinStatModel():
         ----------
         x_values : np.ndarray
             x values for probabilities over the range 0 to 1. Spacing consistent with
-            the probablity distributions generated in this function.
+            the probability distributions generated in this function.
 
-        probablity_distributions : dict
+        probability_distributions : dict
             Nested dictionary. Outer layer keys are class names, and values
             are a dictionary of each feature (as inner key) and values of a
             nested array of probabilities.
@@ -209,7 +214,7 @@ class ProteinStatModel():
             [value for value in np.arange(0.0, 1.0, kde_bandwidth)])
         x_values = x_values.reshape((int(1/kde_bandwidth)), 1)
 
-        probablity_distributions = {}
+        probability_distributions = {}
         for class_name in self.class_names:
             per_feature_probs = {}
             for feature in self.feature_list:
@@ -223,9 +228,9 @@ class ProteinStatModel():
                 probablities = np.exp(model.score_samples(x_values))
                 per_feature_probs[feature] = probablities
 
-            probablity_distributions[class_name] = per_feature_probs
+            probability_distributions[class_name] = per_feature_probs
 
-        return x_values, probablity_distributions
+        return x_values, probability_distributions
 
     def _scale_features(self) -> pd.DataFrame:
         """
@@ -247,3 +252,22 @@ class ProteinStatModel():
         scaled_dataset.insert(0, "Classes", self.dataset["Classes"])
 
         return scaled_dataset
+
+    @staticmethod
+    def _per_feature_importances_to_file(per_feat_values: dict, out_file: str) -> None:
+        """
+        Write out a the per feature importances to a file.
+
+        Parameters
+        ----------
+        per_feat_values : dict
+            Dictionary of feature names and their scores to write to disk.
+
+        out_file : str
+            The full path to write the file too.
+        """
+        with open(out_file, "w", newline="") as file_out:
+            csv_out = csv.writer(file_out)
+            csv_out.writerow(["Feature", "Score"])
+            csv_out.writerows(per_feat_values.items())
+            print(f"{out_file} written to disk.")
