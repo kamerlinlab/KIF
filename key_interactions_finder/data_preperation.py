@@ -77,9 +77,7 @@ class SupervisedFeatureData(FeatureData):
     df_filtered: pd.DataFrame = field(init=False)
 
     def __post_init__(self):
-        """Merge classifications to dataframe."""
-        self.df_filtered = pd.DataFrame()
-
+        """Merge classifications to dataframe, make a fake df for df_filtered."""
         if self.header_present:
             df_class = pd.read_csv(self.classifications_file)
         else:
@@ -98,7 +96,10 @@ class SupervisedFeatureData(FeatureData):
                                  )
             raise Exception(exception_message)
 
-        print("Your features and class datasets has been succesufully merged.")
+        # Empty for now until any filtering is performed
+        self.df_filtered = pd.DataFrame()
+
+        print("Your features and class datasets have been succesufully merged.")
         print("You can access this dataset through the class attribute: '.df_feat_class'.")
 
     def filter_by_occupancy(self, min_occupancy: float) -> pd.DataFrame:
@@ -241,7 +242,7 @@ class SupervisedFeatureData(FeatureData):
 
 
 @dataclass
-class UnsupervisedFeautureData(FeatureData):
+class UnsupervisedFeatureData(FeatureData):
     """
     FeatureData Class for datasets without any classification data.
 

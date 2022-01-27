@@ -114,7 +114,7 @@ class SupervisedModel(MachineLearnModel):
     build_models(save_models)
         Runs the machine learning and summarizes the results.
 
-    evaluate_model()
+    evaluate_models()
         Evaluates model performance on the validation data set and
         prints a summary of this to the screen.
 
@@ -229,11 +229,11 @@ class SupervisedModel(MachineLearnModel):
         print(pd.DataFrame(scores, columns=[
             "model", "best_params", "best_score", "best_standard_deviation"]))
 
-    def evaluate_model(self) -> None:
+    def evaluate_models(self) -> None:
         """Evaluates model performance on the validation data set and
         prints a summary of this to the screen."""
         for model_name, clf in self.ml_models.items():
-            print(f"Classification report for the: {model_name} model:")
+            print(f"Classification report for the {model_name} model:")
             yhat = clf.predict(self.ml_datasets["eval_data_scaled"])
             print(classification_report(self.ml_datasets["y_eval"], yhat))
 

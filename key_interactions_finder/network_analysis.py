@@ -10,7 +10,7 @@ import numpy as np
 import MDAnalysis as mda
 from MDAnalysis.analysis import distances
 
-from key_interactions_finder.utils import _prep_out_dir, _filter_features_by_strings
+from key_interactions_finder.utils import _prep_out_dir
 
 
 @dataclass
@@ -28,11 +28,6 @@ class CorrelationNetwork:
         Directory path to store results files to.
         Default = ""
 
-    interaction_types_included : list, optional
-        What types of molecular interactions to generate the correlation matrix for.
-        options are one or more of: ["Hbond", "Hydrophobic", "Saltbr", "Other"]
-        Default is to include all 4 types.
-
     feature_corr_matrix : pd.DataFrame
         Correlation matrix for the dataset provided.
 
@@ -49,8 +44,6 @@ class CorrelationNetwork:
     """
     dataset: pd.DataFrame
     out_dir: str = ""
-    interaction_types_included: Optional[list] = field(
-        default_factory=["Hbond", "Hydrophobic", "Saltbr", "Other"])
 
     # Generated during init.
     feature_corr_matrix: pd.DataFrame = field(init=False)
@@ -64,15 +57,68 @@ class CorrelationNetwork:
         except KeyError:
             pass  # If not present then dataset is from unsupervised learning.
 
-        if sorted(self.interaction_types_included) != sorted(
-                ["Hbond", "Hydrophobic", "Saltbr", "Other"]):
-            self.dataset = _filter_features_by_strings(
-                dataset=self.dataset,
-                strings_to_preserve=self.interaction_types_included
-            )
-
         self.feature_corr_matrix = self.dataset.corr()
         return self.feature_corr_matrix
+
+    def gen_res_correl_matrix(self, out_file: Optional[str] = None) -> np.ndarray:
+        """
+        For every residue to every other residue determine the interaction (if exists)
+        with the strongest correlation between them and use it to build a per residue
+        correlation matrix.
+
+        Parameters
+        ----------
+        out_file : Optional[str]
+            Path to save the corelation matrix to. If left empty no file is saved.
+
+        Returns
+        ----------
+        np.ndarray
+            A symmetrical matrix (along diagonal) of correlations between each residue.
+        """
+        # Generate an empty correlation matrix for all residues.
+        last_residue = self._get_last_residue()
+        per_res_corr_matrix = np.zeros(
+            (last_residue, last_residue), dtype=float)
+
+        # Filter correlation matrix to only include columns with specific res number.
+        for res1 in range(1, last_residue+1):
+            res1_regex_key = str(res1) + "([A-Za-z]{3})" + " "
+            res1_matrix = self.feature_corr_matrix.filter(
+                regex=res1_regex_key, axis=1)
+
+            # Filter matrix on other axis so matrix contains only the pairs of residues.
+            if len(res1_matrix.columns) != 0:
+                for res2 in range(1, last_residue+1):
+                    res2_regex_key = " " + str(res2) + "([A-Za-z]{3})" + " "
+                    res1_res2_matrix = res1_matrix.filter(
+                        regex=res2_regex_key, axis=0)
+                    if len(res1_res2_matrix) != 0:
+                        correls = res1_res2_matrix.to_numpy()
+                        try:
+                            # prevent identical interactions (== 1) being used.
+                            correls = correls[correls != 1]
+                            max_correl = max(
+                                correls.min(), correls.max(), key=abs)
+                            per_res_corr_matrix[(
+                                res1-1), (res2-1)] = max_correl
+                            per_res_corr_matrix[(
+                                res2-1), (res1-1)] = max_correl
+
+                        # ValueError will happen if array becomes empty
+                        # when only identical interactions present in matrix.
+                        except ValueError:
+                            pass  # value stays at 0.
+
+        # correlation of residue to itself is 1.
+        np.fill_diagonal(per_res_corr_matrix, 1)
+
+        if out_file is not None:
+            np.savetxt(out_file, per_res_corr_matrix,
+                       delimiter=" ", fmt="%.2f")
+            print(f"{out_file} saved to disk.")
+
+        return per_res_corr_matrix
 
     def gen_res_contact_matrix(self, out_file: Optional[str] = None) -> np.ndarray:
         """
@@ -109,63 +155,6 @@ class CorrelationNetwork:
             print(f"{out_file} saved to disk.")
 
         return per_res_contact_matrix
-
-    def gen_res_correl_matrix(self, out_file: Optional[str] = None,) -> np.ndarray:
-        """
-        For every residue to every other residue determine the interaction (if exists)
-        with the strongest correlation between them and use it to build a per residue
-        correlation matrix.
-
-        Parameters
-        ----------
-        out_file : Optional[str]
-            Path to save the corelation matrix to. If left empty no file is saved.
-
-        Returns
-        ----------
-        np.ndarray
-            A symmetrical matrix (along diagonal) of correlations between each residue.
-        """
-        # Generate empty correlation matrix for each residue
-        last_residue = self._get_last_residue()
-        per_res_corr_matrix = np.zeros(
-            (last_residue, last_residue), dtype=float)
-
-        # Filter correlation matrix to only include columns with that residue.
-        for res1 in range(1, last_residue+1):
-            res1_regex_key = str(res1) + "([A-Za-z]{3})" + " "
-            res1_matrix = self.feature_corr_matrix.filter(
-                regex=res1_regex_key, axis=1)
-
-            if len(res1_matrix.columns) != 0:
-                # Filter matrix on other axis so matrix contains only the pairs of residues.
-                for res2 in range(1, last_residue+1):
-                    res2_regex_key = " " + str(res2) + "([A-Za-z]{3})" + " "
-                    res1_res2_matrix = res1_matrix.filter(
-                        regex=res2_regex_key, axis=0)
-                    if len(res1_res2_matrix) != 0:
-                        correls = res1_res2_matrix.to_numpy()
-                        try:
-                            # prevents identical interaction being used.
-                            correls = correls[correls != 1]
-                            max_correl = max(
-                                correls.min(), correls.max(), key=abs)
-                            per_res_corr_matrix[(
-                                res1-1), (res2-1)] = max_correl
-                            per_res_corr_matrix[(
-                                res2-1), (res1-1)] = max_correl
-                        except ValueError:  # happens if array becomes empty after removing the 1s.
-                            pass
-
-        # correlation of residue to itself is 1.
-        np.fill_diagonal(per_res_corr_matrix, 1)
-
-        if out_file is not None:
-            np.savetxt(out_file, per_res_corr_matrix,
-                       delimiter=" ", fmt="%.2f")
-            print(f"{out_file} saved to disk.")
-
-        return per_res_corr_matrix
 
     def _get_residue_lists(self) -> pd.DataFrame:
         """
