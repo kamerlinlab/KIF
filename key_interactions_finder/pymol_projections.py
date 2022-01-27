@@ -216,9 +216,8 @@ def _extract_residue_lists(input_df: pd.DataFrame) -> Tuple[list, list]:
 
 def _write_file(file_name: str, text: str) -> None:
     """Write out a PyMOL text file."""
-    file_out = open(file_name, "w+")
-    file_out.write(text)
-    file_out.close()
+    with open(file_name, "w+") as file_out:
+        file_out.write(text)
 
 
 def _extract_interaction_types(input_df: pd.DataFrame) -> list:
