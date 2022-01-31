@@ -30,6 +30,10 @@ class FeatureData(ABC):
     def filter_by_main_or_side_chain(self, main_side_chain_types_included):
         """Filter features to only certain combinations of main and side chain interactions."""
 
+    @abstractmethod
+    def reset_filtering(self):
+        """Reset the filtered dataframe back to its original form."""
+
 
 @dataclass
 class SupervisedFeatureData(FeatureData):
@@ -68,6 +72,9 @@ class SupervisedFeatureData(FeatureData):
 
     filter_by_avg_strength(average_strength_cut_off)
         Filter features/interactions to use by their average strength.
+
+    reset_filtering()
+        Reset the filtered dataframe back to its original form.
     """
     input_df: pd.DataFrame
     classifications_file: str
@@ -240,6 +247,11 @@ class SupervisedFeatureData(FeatureData):
 
         return self.df_filtered
 
+    def reset_filtering(self):
+        """Reset the filtered dataframe back to its original form."""
+        self.df_filtered = self.df_feat_class
+        return self.df_filtered
+
 
 @dataclass
 class UnsupervisedFeatureData(FeatureData):
@@ -268,6 +280,9 @@ class UnsupervisedFeatureData(FeatureData):
 
     filter_by_avg_strength(average_strength_cut_off)
         Filter features/interactions to use by their average strength.
+
+    reset_filtering()
+        Reset the filtered dataframe back to its original form.
     """
     input_df: pd.DataFrame
     df_filtered: pd.DataFrame = field(init=False)
@@ -384,4 +399,9 @@ class UnsupervisedFeatureData(FeatureData):
             self.df_filtered = self.df_filtered.loc[:, self.df_filtered.mean(
             ) > average_strength_cut_off]
 
+        return self.df_filtered
+
+    def reset_filtering(self):
+        """Reset the filtered dataframe back to its original form."""
+        self.df_filtered = self.input_df
         return self.df_filtered
