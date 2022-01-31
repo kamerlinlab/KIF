@@ -4,10 +4,10 @@ Module to prepare and run machine learning in either a supervised or unsupervise
 
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
+from typing import Tuple
 import os
 import json
 import pickle
-from typing import Tuple
 import pandas as pd
 import numpy as np
 
@@ -23,6 +23,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.metrics import classification_report
 
 from key_interactions_finder.utils import _prep_out_dir
+from key_interactions_finder import data_preperation
 
 
 @dataclass
@@ -199,10 +200,6 @@ class SupervisedModel(MachineLearnModel):
             Whether to save the ML models made to disk.
         """
         scores = []
-        if save_models:
-            if not os.path.exists("temporary_files"):
-                os.makedirs("temporary_files")
-            np.save("temporary_files/feature_names.npy", self.feat_names)
 
         for model_name, mod_params in self.all_model_params.items():
             clf = GridSearchCV(mod_params["model"], mod_params["params"],
@@ -218,6 +215,11 @@ class SupervisedModel(MachineLearnModel):
             self.ml_models[model_name] = clf
 
             if save_models:
+                if not os.path.exists("temporary_files"):
+                    os.makedirs("temporary_files")
+
+                np.save("temporary_files/feature_names.npy", self.feat_names)
+
                 temp_out_path = "temporary_files" + "/" +  \
                     str(model_name) + "_Model.pickle"
                 self._save_best_models(
@@ -295,15 +297,21 @@ class SupervisedModel(MachineLearnModel):
         """
         Read in the grid search CV params for a specific machine learning algorithim.
 
-        Returns
+        Parameters
         ----------
         ml_algo : str
             Name of the machine learning algorithim.
 
+        Returns
+        ----------
         dict
             Dictionary of hyperparameters to tune for a specific ML algorithim.
         """
-        hyper_params_file = "key_interactions_finder/model_params/gridsearch_" + \
+        # Determining this so the .json files can be found regardless of users working directory
+        # location. There might be a better way to do this...
+        module_relative_path = os.path.dirname(data_preperation.__file__)
+
+        hyper_params_file = module_relative_path + "/model_params/gridsearch_" + \
             str(self.search_approach) + ".json"
 
         with open(hyper_params_file) as file_in:
@@ -325,16 +333,16 @@ class SupervisedModel(MachineLearnModel):
         out_text += f"You will use {self.cross_validation_splits}-fold cross validation "
         out_text += f"and perform {self.cross_validation_repeats} repeats.\n"
 
-        out_text += f"You will use up to {len(self.dataset.columns)} features to build each model, with "
-        out_text += f"{train_pcent}% of your data used for training the model, "
+        out_text += f"You will use up to {len(self.dataset.columns)} features to build each "
+        out_text += f"model, with {train_pcent}% of your data used for training the model, "
         out_text += f"which is {train_obs} observations. \n"
 
         out_text += f"{eval_pcent}% of your data will be used for evaluating the best models "
         out_text += f"produced by the {self.cross_validation_splits}-fold cross validation, "
         out_text += f"which is {eval_obs} observations.\n"
 
-        out_text += f"You have chosen to build {len(self.models_to_use)} different machine learning "
-        out_text += "models, each with the following hyperparameters: \n \n"
+        out_text += f"You have chosen to build {len(self.models_to_use)} different machine "
+        out_text += "learning models, each with the following hyperparameters: \n \n"
 
         for model_name, model_params in self.all_model_params.items():
             out_text += f"A {model_name} model, with grid search parameters: \n"
@@ -346,7 +354,6 @@ class SupervisedModel(MachineLearnModel):
         print(out_text)
 
 
-# Can have a go with PCA Maybe or maybe just not use as already have a lot of stuff...
 @dataclass
 class UnsupervisedModel(MachineLearnModel):
     """
@@ -392,9 +399,9 @@ class UnsupervisedModel(MachineLearnModel):
         """Setup the provided dataset and params for ML."""
         self.out_dir = _prep_out_dir(self.out_dir)
 
-        self.ml_models = {}  # not populated till method called later.
+        self.ml_models = {}
 
-        # Allows a user with a supervised dataset to use this method.
+        # Allow a user with a supervised dataset to do unsupervised learning.
         try:
             self.dataset = self.dataset.drop(["Classes"], axis=1)
         except KeyError:
