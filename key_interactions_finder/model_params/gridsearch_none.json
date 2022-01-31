@@ -2,14 +2,14 @@
     "Random_Forest": {
         "params": {
             "n_estimators": [
-                1
+                100
             ]
         }
     },
     "Ada_Boost": {
         "params": {
             "n_estimators": [
-                1
+                100
             ],
             "learning_rate": [
                 0.1
