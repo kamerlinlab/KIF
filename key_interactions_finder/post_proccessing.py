@@ -138,6 +138,8 @@ class PostProcessor(ABC):
 class SupervisedPostProcessor(PostProcessor):
     """
     Processes the supervised machine learning results.
+    Data to process can be loaded from disk or using an instance of the SupervisedModel class,
+    see the Methods documentation of this class below.
 
     Attributes
     ----------
@@ -697,8 +699,6 @@ class StatisticalPostProcessor(PostProcessor):
         )
 
         print("You can also access these predictions through the 'feature_directions' class attribute.")
-
-    # TODO - ESTIMATE RESISUDE DIRECTIONS TOOO..
 
     @staticmethod
     def _save_feature_residue_direction(
