@@ -1,4 +1,7 @@
 {
+    "CatBoost": {
+        "params": {}
+    },
     "Random_Forest": {
         "params": {
             "n_estimators": [

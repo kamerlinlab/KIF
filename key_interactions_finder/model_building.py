@@ -11,16 +11,17 @@ import pickle
 import pandas as pd
 import numpy as np
 
-# sklearn learn models
+# ML models
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.decomposition import PCA
+from catboost import CatBoostClassifier
 
 # sklearn bits and bobs
 from sklearn.model_selection import train_test_split, RepeatedStratifiedKFold, GridSearchCV
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix
 
 from key_interactions_finder.utils import _prep_out_dir
 from key_interactions_finder import data_preperation
@@ -119,10 +120,14 @@ class SupervisedModel(MachineLearnModel):
         Evaluates model performance on the validation data set and
         prints a summary of this to the screen.
 
+    generate_confusion_matrix()
+        For each ml model used, determine the confusion matrix.
+
     describe_ml_planned()
-        Prints a summary of what machine learning protocol has been selected
+        Prints a summary of what machine learning protocol has been selected.
     """
     available_models = {
+        "CatBoost": {"model": CatBoostClassifier(), "params": {}},
         "Random_Forest": {"model": RandomForestClassifier(), "params": {}},
         "Ada_Boost": {"model": AdaBoostClassifier(), "params": {}},
         "GBoost": {"model": GradientBoostingClassifier(), "params": {}}
@@ -238,6 +243,28 @@ class SupervisedModel(MachineLearnModel):
             print(f"Classification report for the {model_name} model:")
             yhat = clf.predict(self.ml_datasets["eval_data_scaled"])
             print(classification_report(self.ml_datasets["y_eval"], yhat))
+
+    def generate_confusion_matrix(self) -> dict:
+        """
+        For each ml model used, determine the confusion matrix.
+        Returns a dictionary with key as the model name and the matrix as value.
+
+        Returns
+        ----------
+        dict
+            Keys are strings of each model name. Values are the confusion matrix
+            of said model as a numpy.ndarray.
+        """
+        confusion_matrices = {}
+        for model_name, clf in self.ml_models.items():
+            yhat = clf.predict(self.ml_datasets["eval_data_scaled"])
+            y_validation = self.ml_datasets["y_eval"]
+
+            confuse_matrix = confusion_matrix(y_validation, yhat)
+
+            confusion_matrices.update({model_name: confuse_matrix})
+
+        return confusion_matrices
 
     def _supervised_scale_features(self,
                                    x_array_train: np.ndarray,
