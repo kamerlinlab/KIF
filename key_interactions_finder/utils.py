@@ -18,7 +18,6 @@ def _prep_out_dir(out_dir: str) -> str:
     ----------
     str
         Corrected name of output directory to meet standardization criteria.
-
     """
     if out_dir != "":
         if not os.path.exists(out_dir):
@@ -49,7 +48,7 @@ def _filter_features_by_strings(dataset: pd.DataFrame, strings_to_preserve: list
         Dataframe with features filtered to only include those the user wants.
     """
     # Build the search term
-    str_rep = "Classes|"  # supervised/unsuperivsed learning agnostic.
+    str_rep = "Target|"  # supervised/unsuperivsed learning agnostic.
     for list_item in strings_to_preserve:
         str_rep += list_item + "|"
 

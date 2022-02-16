@@ -53,7 +53,7 @@ class CorrelationNetwork:
         self.out_dir = _prep_out_dir(self.out_dir)
 
         try:
-            self.dataset = self.dataset.drop(["Classes"], axis=1)
+            self.dataset = self.dataset.drop(["Target"], axis=1)
         except KeyError:
             pass  # If not present then dataset is from unsupervised learning.
 

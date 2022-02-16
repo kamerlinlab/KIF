@@ -29,7 +29,7 @@ class ProteinStatModel():
         Input dataframe.
 
     class_names : list
-        Class labels inside the column "Classes" of the dataset to model.
+        Class labels inside the column "Target" of the dataset to model.
         You can only use two classes for this approach.
 
     out_dir : str
@@ -101,7 +101,7 @@ class ProteinStatModel():
             )
 
         self.feature_list = list(self.dataset.columns)
-        self.feature_list.remove("Classes")
+        self.feature_list.remove("Target")
 
         # Features need to be scaled in order to use same bandwidth throughout.
         self.scaled_dataset = self._scale_features()
@@ -122,9 +122,9 @@ class ProteinStatModel():
         Note that Sklearns implementation (used here) is designed for "raw datasets"
         (i.e., do not feed in a probability distribution, instead feed in the observations).
         """
-        df_features = self.scaled_dataset.drop("Classes", axis=1)
+        df_features = self.scaled_dataset.drop("Target", axis=1)
         features_array = df_features.to_numpy()
-        classes = self.scaled_dataset["Classes"].to_numpy()
+        classes = self.scaled_dataset["Target"].to_numpy()
 
         mutual_info_raw = np.around(
             mutual_info_classif(features_array, classes), 5)
@@ -208,7 +208,7 @@ class ProteinStatModel():
         per_class_datasets = {}
         for class_name in self.class_names:
             per_class_datasets[class_name] = self.scaled_dataset[(
-                self.scaled_dataset["Classes"] == class_name)]
+                self.scaled_dataset["Target"] == class_name)]
 
         x_values = np.asarray(
             [value for value in np.arange(0.0, 1.0, kde_bandwidth)])
@@ -243,13 +243,13 @@ class ProteinStatModel():
             Dataframe with all features scaled between 0 and 1.
         """
         scaler = MinMaxScaler()
-        feature_values = (self.dataset.drop("Classes", axis=1)).to_numpy()
+        feature_values = (self.dataset.drop("Target", axis=1)).to_numpy()
         scaler.fit(feature_values)
         feature_values_scaled = scaler.transform(feature_values)
 
         scaled_dataset = pd.DataFrame.from_records(
             feature_values_scaled, columns=self.feature_list)
-        scaled_dataset.insert(0, "Classes", self.dataset["Classes"])
+        scaled_dataset.insert(0, "Target", self.dataset["Target"])
 
         return scaled_dataset
 
