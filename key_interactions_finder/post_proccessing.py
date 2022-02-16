@@ -11,7 +11,7 @@ import pickle
 import pandas as pd
 import numpy as np
 from key_interactions_finder.utils import _prep_out_dir
-from key_interactions_finder.model_building import SupervisedModel, UnsupervisedModel
+from key_interactions_finder.model_building import ClassificationModel, RegressionModel, UnsupervisedModel
 from key_interactions_finder.stat_modelling import ProteinStatModel
 
 
@@ -138,8 +138,9 @@ class PostProcessor(ABC):
 class SupervisedPostProcessor(PostProcessor):
     """
     Processes the supervised machine learning results.
-    Data to process can be loaded from disk or using an instance of the SupervisedModel class,
-    see the Methods documentation of this class below.
+    Data to process can be loaded from disk or using an instance of
+    either supervised model class, (ClassificationModel or RegressionModel).
+    See the Methods documentation of this class below.
 
     Attributes
     ----------
@@ -173,7 +174,7 @@ class SupervisedPostProcessor(PostProcessor):
     -------
     load_models_from_instance(supervised_model)
         Gets the generated machine learning model data from an instance
-        of the SupervisedModel class.
+        of either the ClassificationModel or RegressionModel class.
 
     load_models_from_disk(models_to_use)
         Loads the generated machine learning models from disk.
@@ -202,16 +203,16 @@ class SupervisedPostProcessor(PostProcessor):
         self.all_per_residue_scores = {}
 
     def load_models_from_instance(self,
-                                  supervised_model: SupervisedModel,
+                                  supervised_model: Union[ClassificationModel, RegressionModel],
                                   models_to_use: Union[str, list] = "all") -> None:
         """
         Gets the generated machine learning model data from an instance
-        of the SupervisedModel class.
+        of either the ClassificationModel or RegressionModel class.
 
         Parameters
         ----------
-        supervised_model : SupervisedModel
-            Name of the SupervisedModel class instance used to build the ml models.
+        supervised_model : ClassificationModel, RegressionModel
+            Name of the supervised model class instance used to build the ml models.
 
         models_to_use : str or list
             Either perform post-processing on all generated models ("all") or
@@ -672,7 +673,7 @@ class StatisticalPostProcessor(PostProcessor):
         per_class_datasets = {}
         for class_name in self.stat_model.class_names:
             per_class_datasets[class_name] = self.stat_model.scaled_dataset[(
-                self.stat_model.scaled_dataset["Classes"] == class_name)]
+                self.stat_model.scaled_dataset["Target"] == class_name)]
 
         avg_contact_scores = {}
         self.feature_directions = {}
