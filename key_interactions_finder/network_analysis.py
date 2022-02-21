@@ -83,21 +83,25 @@ class CorrelationNetwork:
 
         # Filter correlation matrix to only include columns with specific res number.
         for res1 in range(1, last_residue+1):
-            res1_regex_key = str(res1) + "([A-Za-z]{3})" + " "
+            res1_regex_key = self._build_regex_strs(res_number=res1)
+
             res1_matrix = self.feature_corr_matrix.filter(
                 regex=res1_regex_key, axis=1)
 
             # Filter matrix on other axis so matrix contains only the pairs of residues.
             if len(res1_matrix.columns) != 0:
                 for res2 in range(1, last_residue+1):
-                    res2_regex_key = " " + str(res2) + "([A-Za-z]{3})" + " "
+                    res2_regex_key = self._build_regex_strs(res_number=res2)
+
                     res1_res2_matrix = res1_matrix.filter(
                         regex=res2_regex_key, axis=0)
                     if len(res1_res2_matrix) != 0:
+
                         correls = res1_res2_matrix.to_numpy()
                         try:
                             # prevent identical interactions (== 1) being used.
                             correls = correls[correls != 1]
+
                             max_correl = max(
                                 correls.min(), correls.max(), key=abs)
                             per_res_corr_matrix[(
@@ -209,6 +213,34 @@ class CorrelationNetwork:
         df_cols[["Res1", "Res2"]] = self._get_residue_lists()
         contact_pairs = dict(zip(df_cols["Res1"], df_cols["Res2"]))
         return contact_pairs
+
+    @staticmethod
+    def _build_regex_strs(res_number: int) -> str:
+        """
+        Given a residue number, return a regex string that will match only that
+        residue number in a dataframe filled with pycontact features.
+
+        This is not as simple as it first seems as easy to catch other residues.
+        E.g. If residue is 1Arg, easy to accidently catch 11Arg and so on.
+
+        Parameters
+        ----------
+        int
+            Residue number to create the regex string for.
+
+        Returns
+        ----------
+        str
+            Regex str to be used to filter a dataframe with pycontact features.
+
+        """
+        # matches if target res number is 1st residue in name
+        regex_key_p1 = "(^" + str(res_number) + ")" + "([A-Za-z]{3})" + " "
+
+        # matches if target res number is 2nd residue in name
+        regex_key_p2 = " " + str(res_number) + "([A-Za-z]{3})" + " "
+
+        return regex_key_p1 + "|" + regex_key_p2
 
 
 def heavy_atom_contact_map_from_pdb(pdb_file: str,
