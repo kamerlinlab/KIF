@@ -103,8 +103,7 @@ class _SupervisedRunner(_MachineLearnModel):
         Default = ""
 
     cross_validation_splits : int
-        Number of splits for the cross validation. I.E., the "k" in k-fold
-        cross validation.
+        Number of splits in the cross validation, (the "k" in k-fold cross validation).
         Default = 5
 
     cross_validation_repeats : int
@@ -116,8 +115,20 @@ class _SupervisedRunner(_MachineLearnModel):
         Options are: "none", "quick", "moderate", "exhaustive" or custom.
         Default = "quick"
 
+    Methods
+    -------
+    describe_ml_planned()
+        Prints a summary of what machine learning protocol has been selected.
 
-    # TODO - ADD METHODS SECTION.
+    build_models(save_models)
+        Runs the machine learning and summarizes the results.
+
+    _assign_model_params(models_to_use, available_models, search_approach, is_classification)
+        Assigns the grid search paramters for the ML based on user criteria.
+
+    _supervised_scale_features(scaling_method, x_array_train, x_array_eval)
+        Scale all features with either MinMaxScaler or StandardScaler Scaler.
+
     """
     dataset: pd.DataFrame
     models_to_use: list = field(default_factory=["CatBoost"])
@@ -166,7 +177,7 @@ class _SupervisedRunner(_MachineLearnModel):
         out_text += "learning model(s), with the following hyperparameters: \n \n"
 
         for model_name, model_params in self.all_model_params.items():
-            out_text += f"An {model_name} model, with custom/grid search parameters: \n"
+            out_text += f"A {model_name} model, with grid search parameters: \n"
             single_model_params = model_params["params"]
             out_text += f"{single_model_params} \n"
             out_text += "\n"
@@ -233,7 +244,20 @@ class _SupervisedRunner(_MachineLearnModel):
 
         Parameters
         ----------
-        TODO
+        models_to_use : list
+            List of machine learning models/algorithims to use.
+
+        available_models : dict
+            Specific ML models available to be used. Keys are the models name and values
+            are an instance of the model.
+
+        search_approach : str
+            Define how extensive the grid search protocol should be for the models.
+            Options are: "none", "quick", "moderate", "exhaustive" or custom.
+
+        is_classification : bool
+            If true, the ML model is for classification.
+            If false, the ML model is for regression.
 
         Returns
         ----------
@@ -373,8 +397,7 @@ class ClassificationModel(_SupervisedRunner):
         Default = ""
 
     cross_validation_splits : int
-        Number of splits for the cross validation. I.E., the "k" in k-fold
-        cross validation.
+        Number of splits in the cross validation, (the "k" in k-fold cross validation).
         Default = 5
 
     cross_validation_repeats : int
@@ -401,7 +424,7 @@ class ClassificationModel(_SupervisedRunner):
         classes) needed to run the model building.
 
     label_encoder : LabelEncoder
-        Instance of sci-kit learn's label encoder object used on the target classes.
+        Instance of sci-kit learn's label encoder to encode the target classes.
         Required for the XGBoost model.
 
     ml_models : dict
@@ -410,6 +433,9 @@ class ClassificationModel(_SupervisedRunner):
 
     Methods
     -------
+    describe_ml_planned()
+        Prints a summary of what machine learning protocol has been selected.
+
     build_models(save_models)
         Runs the machine learning and summarizes the results.
 
@@ -419,9 +445,6 @@ class ClassificationModel(_SupervisedRunner):
 
     generate_confusion_matrix()
         For each ml model used, determine the confusion matrix from the validation dataset.
-
-    describe_ml_planned()
-        Prints a summary of what machine learning protocol has been selected.
     """
     available_models = {
         "CatBoost": {"model": CatBoostClassifier(), "params": {}},
@@ -487,32 +510,6 @@ class ClassificationModel(_SupervisedRunner):
 
         self.describe_ml_planned()
 
-    def generate_confusion_matrix(self) -> dict:
-        """
-        For each ml model used, determine the confusion matrix from the validation data set.
-        Returns a dictionary with model names as keys and the corresponding matrix as the values.
-
-        Returns
-        ----------
-        dict
-            Keys are strings of each model name. Values are the confusion matrix
-            of said model as a numpy.ndarray.
-        """
-        confusion_matrices = {}
-        for model_name, clf in self.ml_models.items():
-            yhat = clf.predict(self.ml_datasets["eval_data_scaled"])
-            y_true = self.ml_datasets["y_eval"]
-
-            yhat_decoded = self.label_encoder.inverse_transform(yhat)
-            y_true_decoded = self.label_encoder.inverse_transform(y_true)
-
-            confuse_matrix = metrics.confusion_matrix(
-                y_true_decoded, yhat_decoded)
-
-            confusion_matrices.update({model_name: confuse_matrix})
-
-        return confusion_matrices
-
     def evaluate_models(self) -> dict:
         """
         Evaluates each ML model's performance on the validation data set
@@ -561,6 +558,32 @@ class ClassificationModel(_SupervisedRunner):
         print("Returning classification reports for each model inside a single dictionary")
         return all_classification_reports
 
+    def generate_confusion_matrix(self) -> dict:
+        """
+        For each ml model used, determine the confusion matrix from the validation data set.
+        Returns a dictionary with model names as keys and the corresponding matrix as the values.
+
+        Returns
+        ----------
+        dict
+            Keys are strings of each model name. Values are the confusion matrix
+            of said model as a numpy.ndarray.
+        """
+        confusion_matrices = {}
+        for model_name, clf in self.ml_models.items():
+            yhat = clf.predict(self.ml_datasets["eval_data_scaled"])
+            y_true = self.ml_datasets["y_eval"]
+
+            yhat_decoded = self.label_encoder.inverse_transform(yhat)
+            y_true_decoded = self.label_encoder.inverse_transform(y_true)
+
+            confuse_matrix = metrics.confusion_matrix(
+                y_true_decoded, yhat_decoded)
+
+            confusion_matrices.update({model_name: confuse_matrix})
+
+        return confusion_matrices
+
 
 @dataclass
 class RegressionModel(_SupervisedRunner):
@@ -568,10 +591,72 @@ class RegressionModel(_SupervisedRunner):
     Class to construct supervised machine learning models when the target class
     is contionous (aka regression).
 
-    TODO - ADD LIST OF AVAIABLE MODELS HERE...
+    Attributes
+    ----------
+    dataset : pd.DataFrame
+        Input dataset.
 
-    TODO - list attritbutes from inherited classes here.
+    models_to_use : list
+        List of machine learning models/algorithims to use.
+        Default = ["CatBoost"]
 
+    evaluation_split_ratio : float
+        Ratio of data that should be used to make the evaluation test set.
+        The rest of the data will be used for the training/hyper-param tuning.
+        Default = 0.15
+
+    scaling_method : str
+        How to scale the dataset prior to machine learning.
+        Options are "min_max" (scikit-learn's MinMaxScaler)
+        or "standard_scaling" (scikit-learn's StandardScaler).
+        Default = "min_max"
+
+    out_dir : str
+        Directory path to store results files to.
+        Default = ""
+
+    cross_validation_splits : int
+        Number of splits in the cross validation, (the "k" in k-fold cross validation).
+        Default = 5
+
+    cross_validation_repeats : int
+        Number of repeats for the k-fold cross validation to perform.
+        Default = 3
+
+    search_approach : str
+        Define how extensive the grid search protocol should be for the models.
+        Options are: "none", "quick", "moderate", "exhaustive" or "custom".
+        Default = "quick"
+
+    all_model_params : dict
+        Nested dictionary of model parameters that can be read directly into
+        Scikit-learn's implementation of grid search cv.
+
+    cross_validation_approach : RepeatedStratifiedKFold
+        Instance of scikit-learn's RepeatedStratifiedKFold class for model building.
+
+    feat_names : np.ndarray
+        All feature names/labels.
+
+    ml_datasets : dict
+        Nested dictionary containing the training and testing data (both features and
+        classes) needed to run the model building.
+
+    ml_models : dict
+        Keys are the model name/method and values are the instance of the
+        built model.
+
+    Methods
+    -------
+    describe_ml_planned()
+        Prints a summary of what machine learning protocol has been selected.
+
+    build_models(save_models)
+        Runs the machine learning and summarizes the results.
+
+    evaluate_models()
+        Evaluates each ML model's performance on the validation data set
+        and provides the user with a summary of the results.
     """
     available_models = {
         "CatBoost": {"model": CatBoostRegressor(), "params": {}},
@@ -651,7 +736,7 @@ class RegressionModel(_SupervisedRunner):
     def _regression_metrics(
             model_name: str, y_true: np.ndarray, y_pred: np.ndarray) -> pd.DataFrame:
         """
-        Calculate the regression stasitics for a given ml model.
+        Calculate several regression statistics for a given ml model.
 
         Adapted from:
         https://stackoverflow.com/questions/26319259/how-to-get-a-regression-summary-in-scikit-learn-like-r-does
@@ -729,11 +814,11 @@ class UnsupervisedModel(_MachineLearnModel):
 
     Methods
     -------
-    build_models(save_models)
-        Runs the machine learning and summarizes the results.
-
     describe_ml_planned()
         Prints a summary of what machine learning protocol has been selected.
+
+    build_models(save_models)
+        Runs the machine learning and summarizes the results.
     """
     dataset: pd.DataFrame
     out_dir: str = ""
@@ -764,6 +849,21 @@ class UnsupervisedModel(_MachineLearnModel):
 
         self.describe_ml_planned()
 
+    def describe_ml_planned(self) -> None:
+        """Prints a summary of what machine learning protocol has been selected."""
+        out_text = "\n"
+        out_text += "Below is a summary of the unsupervised machine learning you have planned. \n"
+
+        out_text += f"You will use {len(self.dataset.columns)} features to build the model, with "
+        out_text += f"all of your data will be used for training the model, "
+        out_text += f"which is {len(self.dataset)} observations.\n"
+
+        out_text += f"Currently you will use principal component analysis to get your results. "
+        out_text += f"More methods might be added in the future. "
+
+        out_text += "If you're happy with the above, lets get model building!"
+        return out_text
+
     def build_models(self, save_models: bool = True) -> None:
         """
         Runs the machine learning and summarizes the results.
@@ -786,18 +886,3 @@ class UnsupervisedModel(_MachineLearnModel):
 
             temp_out_path = "temporary_files" + "/" + "PCA" + "_Model.pickle"
             self._save_best_models(best_model=pca, out_path=temp_out_path)
-
-    def describe_ml_planned(self) -> None:
-        """Prints a summary of what machine learning protocol has been selected."""
-        out_text = "\n"
-        out_text += "Below is a summary of the unsupervised machine learning you have planned. \n"
-
-        out_text += f"You will use {len(self.dataset.columns)} features to build the model, with "
-        out_text += f"all of your data will be used for training the model, "
-        out_text += f"which is {len(self.dataset)} observations.\n"
-
-        out_text += f"Currently you will use principal component analysis to get your results. "
-        out_text += f"More methods might be added in the future. "
-
-        out_text += "If you're happy with the above, lets get model building!"
-        return out_text
