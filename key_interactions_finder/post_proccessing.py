@@ -514,7 +514,7 @@ class StatisticalPostProcessor(PostProcessor):
 
     per_residue_js_distances : dict
         Dictionary of each residue (keys) and it's relative importance (values) by
-        summing and normalising all the per feature Jenson Shannon distances.
+        summing and normalising all the per feature Jensen Shannon distances.
         Can be enerated by calling the 'get_per_res_importance' method.
 
     per_residue_mutual_infos : dict
@@ -568,20 +568,20 @@ class StatisticalPostProcessor(PostProcessor):
         stat_method : str
             Define the statistical method that should be used to generate
             the per residue importances.
-            "jenson_shannon" or "mutual_information" allowed.
+            "jensen_shannon" or "mutual_information" allowed.
 
         Returns
         ----------
         dict
             Dictionary of each residue and it's relative importance.
         """
-        if stat_method == "jenson_shannon":
+        if stat_method == "jensen_shannon":
             per_res_import = (self._dict_to_df_feat_importances(
                 self.stat_model.js_distances))
             self.per_residue_js_distances = (
                 self._per_res_importance(per_res_import))
 
-            out_file = self.out_dir + "Jenson_Shannon_Distances_Per_Residue.csv"
+            out_file = self.out_dir + "Jensen_Shannon_Distances_Per_Residue.csv"
             self._per_res_importances_to_file(
                 per_res_values=self.per_residue_js_distances,
                 out_file=out_file
@@ -601,7 +601,7 @@ class StatisticalPostProcessor(PostProcessor):
             )
             return self.per_residue_mutual_infos
 
-        raise ValueError("""You did not select one of either 'jenson_shannon'
+        raise ValueError("""You did not select one of either 'jensen_shannon'
         or 'mutual_information' for the 'stat_method' parameter.""")
 
     def get_probability_distributions(self,
@@ -614,7 +614,7 @@ class StatisticalPostProcessor(PostProcessor):
         Parameters
         ----------
         number_features : int or str
-            The number of features to return (those with the highest jenson-shannon
+            The number of features to return (those with the highest jensen-shannon
             distances taken forward).
             If "all" is used instead then all features are returned.
 

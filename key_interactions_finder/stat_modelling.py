@@ -154,7 +154,6 @@ class ProteinStatModel():
             Note that features are all scaled to be between 0 and 1 before this step.
             Default = 0.02
         """
-
         self.x_values, self.probability_distributions = self._gen_prob_distributions(
             kde_bandwidth=kde_bandwidth)
 
