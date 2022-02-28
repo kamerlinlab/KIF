@@ -32,11 +32,12 @@ def project_pymol_per_res_scores(per_res_scores: dict,
     per_res_import_out += "# 1. Load the PDB file of your system in PyMOL.\n"
     per_res_import_out += "# 2. Type: @[FILE_NAME.py] in the command line.\n"
     per_res_import_out += "# 3. Make sure the .py file is in the same directory as the pdb.\n"
-    per_res_import_out += "bg_color white\n"
     per_res_import_out += "set sphere_color, red\n"
-    per_res_import_out += "set cartoon_color, grey90\n"
-    per_res_import_out += "# The below 3 lines are suggestions for potentially nicer figures.\n"
-    per_res_import_out += "# set ray_opaque_background, 0 \n"
+    per_res_import_out += "# The lines below are suggestions for potentially nicer figures.\n"
+    per_res_import_out += "# You can comment them in if you want.\n"
+    per_res_import_out += "# bg_color white\n"
+    per_res_import_out += "# set cartoon_color, grey90\n"
+    per_res_import_out += "# set ray_opaque_background, 0\n"
     per_res_import_out += "# set antialias, 2\n"
     per_res_import_out += "# set ray_shadows, 0\n"
 
@@ -44,7 +45,12 @@ def project_pymol_per_res_scores(per_res_scores: dict,
     for res_numb, sphere_size in per_res_scores.items():
         per_res_import_out += f"show spheres, resi {res_numb} and name CA\n"
         per_res_import_out += f"set sphere_scale, {sphere_size:.4f}, resi {res_numb} and name CA\n"
-        per_res_import_out += f"sele All_Spheres, resi {res_numb} and name CA\n"
+
+    # user selection of all CA carbons so easy to modify the sphere colours etc...
+    all_spheres_list = list(per_res_scores.keys())
+    all_spheres_str = '+'.join(map(str, all_spheres_list))
+    per_res_import_out += f"sele All_Spheres, resi {all_spheres_str} and name CA\n"
+
 
     out_file = out_dir + model_name + "_Pymol_Per_Res_Scores.py"
     _write_file(out_file, per_res_import_out)
@@ -112,8 +118,6 @@ def project_pymol_top_features(per_feature_scores: dict,
 
     # Header of output file.
     top_feats_out = ""
-    top_feats_out += "bg_color white\n"
-    top_feats_out += "set cartoon_color, grey90\n"
     top_feats_out += "# You can run me in several ways, perhaps the easiest way is to:\n"
     top_feats_out += "# 1. Load the PDB file of your system in PyMOL.\n"
     top_feats_out += "# 2. Download and run the draw_links.py script.\n"
@@ -121,7 +125,10 @@ def project_pymol_top_features(per_feature_scores: dict,
     top_feats_out += "# http://pldserver1.biochem.queensu.ca/~rlc/work/pymol/draw_links.py \n"
     top_feats_out += "# 3. Type: @[FILE_NAME.py] in the command line.\n"
     top_feats_out += "# 4. Make sure the .py files are in the same directory as the pdb.\n"
-    top_feats_out += "# The below 3 lines are suggestions for potentially nicer figures.\n"
+    top_feats_out += "# The lines below are suggestions for potentially nicer figures.\n"
+    top_feats_out += "# You can comment them in if you want.\n"
+    top_feats_out += "# bg_color white\n"
+    top_feats_out += "# set cartoon_color, grey90\n"
     top_feats_out += "# set ray_opaque_background, 0\n"
     top_feats_out += "# set antialias, 2\n"
     top_feats_out += "# set ray_shadows, 0\n"
