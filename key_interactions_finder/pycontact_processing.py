@@ -9,6 +9,10 @@ A pycontact job run with overlapping residue selections can obtain many false in
 If a job is run in the above way, the 'remove_false_interactions' parameter must be set
 to True (default) when the class is initialised in order to remove these false interactions.
 No harm if a PyContact job is not run in this way but 'remove_false_interactions' is True anyway.
+
+TODO - ADD NOTE ABOUT SPECIAL RESIDUES NUMBERS ISSUES AND FUNCTION
+modify_column_residue_numbers
+
 """
 import re
 from typing import Union, Optional
@@ -235,3 +239,47 @@ class PyContactInitializer():
         prepared_df = full_df.drop(
             full_df.columns[contacts_to_del], axis=1)
         return prepared_df
+
+
+def modify_column_residue_numbers(dataset: pd.DataFrame, constant_to_add: int = 1) -> pd.DataFrame:
+    """
+    Take a dataframe of PyContact generated features and add a constant value to all residue
+    numbers in each feature. This function exists as in some cases mdanalysis (used by Pycontact)
+    may renumber your residue numbers to start from 0 as opposed to most MD engines which
+    start from 1.
+
+    This function will NOT update the class attribute ".prepared_df" from your dataset!
+
+    Parameters
+    ----------
+    dataset: pd.DataFrame
+        Input dataframe with Pycontact features you wish to modify.
+
+    constant_to_add: int
+        Value of the constant you want ot
+        Default = 1
+
+    Returns
+    ----------
+    pd.DataFrame
+        Dataframe with residue numbers updated accordingly.
+    """
+    updated_names = []
+    all_ori_names = list(dataset)
+    for column_name in all_ori_names:
+        res_split = re.split("(\d+)", column_name)
+
+        res1_numb = int(res_split[1])
+        res1_name = res_split[2]
+        res2_numb = int(res_split[3])
+        remainder = res_split[4]
+
+        res1_numb += constant_to_add
+        res2_numb += constant_to_add
+
+        updated_name = str(res1_numb) + res1_name + \
+            str(res2_numb) + remainder
+        updated_names.append(updated_name)
+
+    dataset.columns = updated_names
+    return dataset
