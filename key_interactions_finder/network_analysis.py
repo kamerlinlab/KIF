@@ -84,7 +84,6 @@ class CorrelationNetwork:
         # Filter correlation matrix to only include columns with specific res number.
         for res1 in range(1, last_residue+1):
             res1_regex_key = self._build_regex_strs(res_number=res1)
-
             res1_matrix = self.feature_corr_matrix.filter(
                 regex=res1_regex_key, axis=1)
 
@@ -92,25 +91,25 @@ class CorrelationNetwork:
             if len(res1_matrix.columns) != 0:
                 for res2 in range(1, last_residue+1):
                     res2_regex_key = self._build_regex_strs(res_number=res2)
-
                     res1_res2_matrix = res1_matrix.filter(
                         regex=res2_regex_key, axis=0)
-                    if len(res1_res2_matrix) != 0:
 
+                    if len(res1_res2_matrix) != 0:
                         correls = res1_res2_matrix.to_numpy()
+
                         try:
                             # prevent identical interactions (== 1) being used.
                             correls = correls[correls != 1]
-
                             max_correl = max(
                                 correls.min(), correls.max(), key=abs)
+
                             per_res_corr_matrix[(
                                 res1-1), (res2-1)] = max_correl
                             per_res_corr_matrix[(
                                 res2-1), (res1-1)] = max_correl
 
                         # ValueError will happen if array becomes empty
-                        # when only identical interactions present in matrix.
+                        # when only identical interactions were present in matrix.
                         except ValueError:
                             pass  # value stays at 0.
 

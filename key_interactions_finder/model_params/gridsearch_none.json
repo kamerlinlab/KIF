@@ -3,27 +3,21 @@
         "CatBoost": {
             "params": {
                 "iterations": [
-                    50
+                    100
                 ]
             }
         },
         "XGBoost": {
-            "params": {}
+            "params": {
+                "n_estimators": [
+                    100
+                ]
+            }
         },
         "Random_Forest": {
             "params": {
                 "n_estimators": [
                     100
-                ]
-            }
-        },
-        "Ada_Boost": {
-            "params": {
-                "n_estimators": [
-                    100
-                ],
-                "learning_rate": [
-                    0.1
                 ]
             }
         }
@@ -32,17 +26,21 @@
         "CatBoost": {
             "params": {
                 "iterations": [
-                    50
+                    100
                 ]
             }
         },
         "XGBoost": {
-            "params": {}
+            "params": {
+                "n_estimators": [
+                    100
+                ]
+            }
         },
         "Random_Forest": {
             "params": {
                 "n_estimators": [
-                    50
+                    100
                 ]
             }
         }

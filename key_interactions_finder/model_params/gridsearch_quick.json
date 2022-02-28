@@ -1,40 +1,60 @@
 {
-    "CatBoost": {
-        "params": {}
-    },
-    "Random_Forest": {
-        "params": {
-            "n_estimators": [
-                50,
-                100,
-                250
-            ]
+    "classification_models": {
+        "CatBoost": {
+            "params": {
+                "iterations": [
+                    50,
+                    100,
+                    250
+                ]
+            }
+        },
+        "XGBoost": {
+            "params": {
+                "n_estimators": [
+                    50,
+                    100,
+                    250
+                ]
+            }
+        },
+        "Random_Forest": {
+            "params": {
+                "n_estimators": [
+                    50,
+                    100,
+                    250
+                ]
+            }
         }
     },
-    "Ada_Boost": {
-        "params": {
-            "n_estimators": [
-                50,
-                100,
-                250
-            ],
-            "learning_rate": [
-                0.01,
-                0.1
-            ]
-        }
-    },
-    "GBoost": {
-        "params": {
-            "n_estimators": [
-                50,
-                100,
-                250
-            ],
-            "learning_rate": [
-                0.01,
-                0.1
-            ]
+    "regression_models": {
+        "CatBoost": {
+            "params": {
+                "iterations": [
+                    50,
+                    100,
+                    250
+                ]
+            }
+        },
+        "XGBoost": {
+            "params": {
+                "n_estimators": [
+                    50,
+                    100,
+                    250
+                ]
+            }
+        },
+        "Random_Forest": {
+            "params": {
+                "n_estimators": [
+                    50,
+                    100,
+                    250
+                ]
+            }
         }
     }
 }
