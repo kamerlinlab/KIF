@@ -226,9 +226,9 @@ class PyContactInitializer():
                     contacts_to_del.append(idx)
                 else:
                     contacts_to_keep.append(contact_parts)
-            # Remove Hbond and Saltbr if <= 1 residues of each other.
+            # Remove Hbond and Saltbr if <= 2 residues of each other.
             else:
-                if residue_gap <= 1:
+                if residue_gap <= 2:
                     contacts_to_del.append(idx)
                 else:
                     contacts_to_keep.append(contact_parts)
