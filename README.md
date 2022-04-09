@@ -16,7 +16,17 @@
 
 This package is designed to 
 
-Pycontact and is MD engine agnositc. 
+#### The Workflow for this package is as follows: 
+1. Run MD simulations on your system(s) of interest with whatever MD engine you want. 
+2. (Both can be done simultanesouly)
+    1. Analyse the trajectory frames with [PyContact](https://github.com/maxscheurer/pycontact) (NOTE: this is not made by us), to determine all the non-covalent contacts in your trajectory. Pycontact is a well established program and is MD engine agnostic. 
+    2. Calculate the value of a target variable for each frame you analyse with PyContact using whatever approach you see fits. 
+3. Use this package to analyse your non-covalent interaction data. 
+4. Profit? 
+
+TODO - comment on PyContact python script available. 
+
+ 
 
 
 
