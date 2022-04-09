@@ -15,19 +15,16 @@ def per_residue_distance_to_site(pdb_file: str,
                                  site_defintion: str,
                                  first_residue: int,
                                  last_residue: int,
-                                 out_file: Optional[str]
+                                 out_file: Optional[str] = None,
                                  ) -> dict:
     """
     Calculate the closest heavy atom distance of each residue to an mdtraj defined
-    selection of a site of interest.
+    selection of a site of interest. You can write the results to file if desired.
 
     Parameters
     ----------
     pdb_file : str
         Path to pdb file to use for the distance calculation.
-
-    out_file : Optional[str]
-        Path to output file to write out the per residue distances.
 
     site_defintion : str
         mdtraj compatable defintion of the site of interest
@@ -39,6 +36,9 @@ def per_residue_distance_to_site(pdb_file: str,
 
     last_residue : int
         Last residue to measure the distance to.
+
+    out_file : Optional[str]
+        Path to output file to write out data.
 
     Returns
     ----------
