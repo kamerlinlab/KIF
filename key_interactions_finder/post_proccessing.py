@@ -1,6 +1,8 @@
 """
-Performs the feature importance analysis for the supervised and unsupervised learning
-as well as the statistical modelling package.
+Post processes the results generated from machine learning (with model_building.py) and
+from the statistical modelling (with stat_modelling.py).
+
+Provides users with the ability to... TODO.
 """
 from dataclasses import dataclass, field
 from typing import Optional, Tuple, Union
@@ -12,12 +14,12 @@ import pandas as pd
 import numpy as np
 from key_interactions_finder.utils import _prep_out_dir
 from key_interactions_finder.model_building import ClassificationModel, RegressionModel, UnsupervisedModel
-from key_interactions_finder.stat_modelling import ProteinStatModel
+from key_interactions_finder.stat_modelling import ClassificationStatModel, RegressionStatModel
 
 
 @dataclass
 class PostProcessor(ABC):
-    """Abstract base class to unify the different postprocessing types."""
+    """Abstract base class to unify the different postprocessing classes."""
 
     @abstractmethod
     def get_per_res_importance(self):
@@ -27,8 +29,8 @@ class PostProcessor(ABC):
     def _dict_to_df_feat_importances(feat_importances) -> pd.DataFrame:
         """
         Convert a dictionary of features and feature importances to a dataframe of 3 columns,
-        which are: residue 1 number, residue 2 number and importance score for each feature.
-        Helper function for determing the per residue importances.
+        which are: (1) the first residue, (2) the second residue and (3) the importance score.
+        Used as a helper function for converting from per feature scores to per residues scores.
 
         Parameters
         ----------
@@ -138,9 +140,11 @@ class PostProcessor(ABC):
 class SupervisedPostProcessor(PostProcessor):
     """
     Processes the supervised machine learning results.
-    Data to process can be loaded from disk or using an instance of
-    either supervised model class, (ClassificationModel or RegressionModel).
-    See the Methods documentation of this class below.
+    Data to process can be loaded from disk or using an instance of a
+    supervised model class, ("ClassificationModel" or "RegressionModel").
+
+    See the class method "load_models_from_instance()" and/or "load_models_from_disk"
+    for further information.
 
     Attributes
     ----------
@@ -186,7 +190,6 @@ class SupervisedPostProcessor(PostProcessor):
         Projects feature importances onto the per-residue level.
     """
     out_dir: str = ""
-
     feat_names: np.ndarray = field(init=False)
     best_models: dict = field(init=False)
     all_feature_importances: dict = field(init=False)
@@ -194,7 +197,7 @@ class SupervisedPostProcessor(PostProcessor):
 
     # This is called at the end of the dataclass's initialization procedure.
     def __post_init__(self):
-        """Prep outdir."""
+        """Prep outdir, initialise the undefined variables."""
         self.out_dir = _prep_out_dir(self.out_dir)
 
         self.feat_names = np.empty(shape=(0, 0))
@@ -318,6 +321,8 @@ class SupervisedPostProcessor(PostProcessor):
 class UnsupervisedPostProcessor(PostProcessor):
     """
     Processes unsupervised machine learning results.
+
+    Please note that there is limited support for this class as it stands.
 
     Attributes
     ----------
@@ -505,7 +510,7 @@ class StatisticalPostProcessor(PostProcessor):
 
     Attributes
     ----------
-    stat_model : ProteinStatModel
+    stat_model : ClassificationStatModel
         Instance of the statistical model produced.
 
     out_dir : str
@@ -542,7 +547,7 @@ class StatisticalPostProcessor(PostProcessor):
         score for each feature for each class. Whatever feature has the highest
         average score.
     """
-    stat_model: ProteinStatModel
+    stat_model: ClassificationStatModel
     out_dir: str = ""
 
     per_residue_js_distances: dict = field(init=False)
@@ -608,6 +613,7 @@ class StatisticalPostProcessor(PostProcessor):
                                       number_features: Union[int, str]
                                       ) -> Tuple[np.ndarray, dict]:
         """
+        TODO - CHECK IF THIS WORKS FOR REGRESSION MODEL ONCE DONE.
         Gets the probability distributions for each feature. Features returned
         are ordered by the jensen shannon distance scores.
 
