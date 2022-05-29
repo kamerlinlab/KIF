@@ -1,17 +1,23 @@
 """
 Reformats and (optionally) merges PyContact datafiles generated using the custom python script.
 
-Special Note:
-A pycontact job run with overlapping residue selections can obtain many false interactions such as:
-1. A vdw interaction with a residue to itself.
-2. Duplicate interactions with the only difference being residue ordering swapped.
 
-If a job is run in the above way, the 'remove_false_interactions' parameter must be set
+ TODO Make this module okay with either using the script I made or the pycontact standard output.
+ keyword arg when making class defines input choice....
+
+Special Notes:
+
+1. A pycontact job run with overlapping residue selections can obtain many false interactions such as:
+    - A vdw interaction with a residue to itself.
+    - Duplicate interactions with the only difference being residue ordering swapped.
+
+2. If a job is run in the above way, the 'remove_false_interactions' parameter must be set
 to True (default) when the class is initialised in order to remove these false interactions.
-No harm if a PyContact job is not run in this way but 'remove_false_interactions' is True anyway.
+There is no harm if a PyContact job is not run in this way but 'remove_false_interactions' is True anyway.
 
-TODO - ADD NOTE ABOUT SPECIAL RESIDUES NUMBERS ISSUES AND FUNCTION
-modify_column_residue_numbers
+3. Depending on the md trajectory format used, the residue numbers assigned by PyContact can be off by
+1 residue number. If this happens to you, you can use the function "modify_column_residue_numbers" to edit
+renumber all the features in your dataframe.
 
 """
 import re
@@ -244,11 +250,12 @@ class PyContactInitializer():
 def modify_column_residue_numbers(dataset: pd.DataFrame, constant_to_add: int = 1) -> pd.DataFrame:
     """
     Take a dataframe of PyContact generated features and add a constant value to all residue
-    numbers in each feature. This function exists as in some cases mdanalysis (used by Pycontact)
-    may renumber your residue numbers to start from 0 as opposed to most MD engines which
+    numbers in each feature. This function exists as in some cases mdanalysis (used by PyContact)
+    may renumber residue numbers to start from 0 as opposed to most MD engines which
     start from 1.
 
-    This function will NOT update the class attribute ".prepared_df" from your dataset!
+    This function will NOT update the class attribute ".prepared_df" from the dataset!
+    Instead it returns a new dataframe with the updated residue numbers.
 
     Parameters
     ----------
@@ -256,8 +263,9 @@ def modify_column_residue_numbers(dataset: pd.DataFrame, constant_to_add: int = 
         Input dataframe with Pycontact features you wish to modify.
 
     constant_to_add: int
-        Value of the constant you want ot
+        Value of the constant you want to add to each residue.
         Default = 1
+        # TODO - CHECK if minus values are okay.
 
     Returns
     ----------
