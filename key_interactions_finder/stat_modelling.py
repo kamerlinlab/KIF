@@ -11,17 +11,129 @@ import numpy as np
 
 from sklearn.neighbors import KernelDensity
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.feature_selection import mutual_info_classif
+from sklearn.feature_selection import mutual_info_classif, mutual_info_regression
 from scipy.spatial.distance import jensenshannon
 
 from key_interactions_finder.utils import _prep_out_dir, _filter_features_by_strings
 
 
 @dataclass
-class ProteinStatModel():
+class _ProteinStatModel():
     """
-    Handles the generation of stastical models for PyContact data sets.
-    Requires dataset to contain two unqiue class labels.
+    Generic class to unify the construction of the classiciation and regression
+    classes used by the user.
+
+    TODO add documentation.
+
+    Note that there is no __post_init__ method called here because each
+    inheriting class is given their own instead.
+
+    """
+    # Generated at initialization.
+    dataset: pd.DataFrame
+    out_dir: str = ""
+    interaction_types_included: list = field(
+        default_factory=["Hbond", "Hydrophobic", "Saltbr", "Other"])
+
+    # Generated later.
+    scaled_dataset: pd.DataFrame = field(init=False)
+    feature_list: list = field(init=False)
+    mutual_infos: dict = field(init=False)
+
+    def _gen_prob_distributions(self, input_features: pd.DataFrame, kde_bandwidth: float) -> Tuple[np.ndarray, dict]:
+        """
+        Generate probability distributions for each feauture.
+        Further, optionally generates a probabilty dist
+
+        Input feature sets are pre-normalised to ranges between 0 and 1,
+        allowing for the approximation that using the same bandwith in the
+        kernel density estimation is okay.
+
+        Parameters
+        ----------
+        input_features : pd.DataFrame
+            TODO
+
+        kde_bandwidth : float
+            Bandwidth used to generate the probabilty distribtions for each feature set.
+            Note that features are all scaled to be between 0 and 1 before this step.
+            Default = 0.02
+
+        Returns
+        ----------
+        x_values : np.ndarray
+            x values for probabilities over the range 0 to 1. Spacing consistent with
+            the probability distributions generated in this function.
+
+        probability_distributions : dict
+            Keys are features and values are an array of probabilities.
+        """
+        x_values = np.asarray(
+            [value for value in np.arange(0.0, 1.0, kde_bandwidth)])
+        x_values = x_values.reshape((int(1/kde_bandwidth)), 1)
+
+        probability_distributions = {}
+
+        for feature in self.feature_list:
+            model = KernelDensity(
+                bandwidth=kde_bandwidth, kernel="gaussian")
+
+            feature_values = (
+                (input_features[feature]).to_numpy()).reshape(-1, 1)
+
+            model.fit(feature_values)
+
+            probablities = np.exp(model.score_samples(x_values))
+            probability_distributions[feature] = probablities
+
+        return x_values, probability_distributions
+
+    def _scale_features(self) -> pd.DataFrame:
+        """
+        Scale features with MinMaxScaler so that they are all between 0 and 1.
+        This is important for the KDE as I am using the same bandwidth parameter throughout.
+
+        Returns
+        ----------
+        pd.DataFrame
+            Dataframe with all features scaled between 0 and 1.
+        """
+        scaler = MinMaxScaler()
+        feature_values = (self.dataset.drop("Target", axis=1)).to_numpy()
+        scaler.fit(feature_values)
+        feature_values_scaled = scaler.transform(feature_values)
+
+        scaled_dataset = pd.DataFrame.from_records(
+            feature_values_scaled, columns=self.feature_list)
+        scaled_dataset.insert(0, "Target", self.dataset["Target"])
+
+        return scaled_dataset
+
+    @staticmethod
+    def _per_feature_importances_to_file(per_feat_values: dict, out_file: str) -> None:
+        """
+        Write out the per feature importances to a file.
+
+        Parameters
+        ----------
+        per_feat_values : dict
+            Dictionary of feature names and their scores to write to disk.
+
+        out_file : str
+            The full path to write the file too.
+        """
+        with open(out_file, "w", newline="") as file_out:
+            csv_out = csv.writer(file_out)
+            csv_out.writerow(["Feature", "Score"])
+            csv_out.writerows(per_feat_values.items())
+            print(f"{out_file} written to disk.")
+
+
+@dataclass
+class ClassificationStatModel(_ProteinStatModel):
+    """
+    Handles the generation of statistical models for PyContact data sets
+    when the target is made up of two unqiue class labels.
 
     Attributes
     ----------
@@ -72,25 +184,18 @@ class ProteinStatModel():
         Calculate the Jensen-Shannon (JS) distance (metric) between each feature to
         the target classes.
     """
+    # Note that most attributes are inherited from _ProteinStatModel.
 
     # Generated at initialization.
-    dataset: pd.DataFrame
     class_names: list = field(default_factory=[])
-    out_dir: str = ""
-    interaction_types_included: list = field(
-        default_factory=["Hbond", "Hydrophobic", "Saltbr", "Other"])
-
     # Generated later.
-    scaled_dataset: pd.DataFrame = field(init=False)
-    feature_list: list = field(init=False)
     x_values: np.ndarray = field(init=False)
     probability_distributions: dict = field(init=False)
     js_distances: dict = field(init=False)
-    mutual_infos: dict = field(init=False)
 
     # Called at the end of the dataclass's initialization procedure.
     def __post_init__(self) -> None:
-        """Filters, rescales and generates the probability distributions for each feature."""
+        """Filter, rescale and calc the probability distributions for each feature."""
         self.out_dir = _prep_out_dir(self.out_dir)
 
         if sorted(self.interaction_types_included) != sorted(
@@ -114,11 +219,12 @@ class ProteinStatModel():
         self.x_values = np.empty(shape=(0, 0))
         self.probability_distributions = {}
         self.js_distances = {}
+
         self.mutual_infos = {}
 
     def calc_mutual_info_to_target(self):
         """
-        Calculate the mutual information between each feature to the target classes.
+        Calculate the mutual information between each feature to the 2 target classes.
         Note that Sklearns implementation (used here) is designed for "raw datasets"
         (i.e., do not feed in a probability distribution, instead feed in the observations).
         """
@@ -154,9 +260,17 @@ class ProteinStatModel():
             Note that features are all scaled to be between 0 and 1 before this step.
             Default = 0.02
         """
-        self.x_values, self.probability_distributions = self._gen_prob_distributions(
-            kde_bandwidth=kde_bandwidth)
+        for class_name in self.class_names:
+            # split observations into each class first.
+            per_class_dataset = self.scaled_dataset[(
+                self.scaled_dataset["Target"] == class_name)]
 
+            # generate probability distr. for each class.
+            self.x_values, self.probability_distributions[class_name] = self._gen_prob_distributions(
+                input_features=per_class_dataset,
+                kde_bandwidth=kde_bandwidth)
+
+        # iterate through each feature and calc js dist.
         for feature in self.feature_list:
             distrib_1 = self.probability_distributions[self.class_names[0]][feature]
             distrib_2 = self.probability_distributions[self.class_names[1]][feature]
@@ -177,96 +291,82 @@ class ProteinStatModel():
         )
         print("You can also access these results via the class attribute: 'js_distances'.")
 
-    def _gen_prob_distributions(self, kde_bandwidth: float) -> Tuple[np.ndarray, dict]:
+
+@dataclass
+class RegressionStatModel(_ProteinStatModel):
+    """
+    Handles the generation of statistical models for PyContact data sets
+    when the target variable is continous.
+
+    """
+    # Note that several attributes are inherited from _ProteinStatModel.
+
+    # Attribute is generated after initiziliation.
+    linear_correlations: dict = field(init=False)
+
+    # Called at the end of the dataclass's initialization procedure.
+    def __post_init__(self) -> None:
+        """Filter and rescale the features."""
+        self.out_dir = _prep_out_dir(self.out_dir)
+
+        self.mutual_infos = {}
+        self.linear_correlations = {}
+
+        if sorted(self.interaction_types_included) != sorted(
+                ["Hbond", "Hydrophobic", "Saltbr", "Other"]):
+            self.dataset = _filter_features_by_strings(
+                dataset=self.dataset,
+                strings_to_preserve=self.interaction_types_included
+            )
+
+        self.feature_list = list(self.dataset.columns)
+        self.feature_list.remove("Target")
+
+        # Features need to be scaled in order to use same bandwidth throughout.
+        self.scaled_dataset = self._scale_features()
+
+    def calc_mutual_info_to_target(self) -> None:
         """
-        For each feature generate a probability distributions of it scores
-        towards each class.
-
-        Input feature sets are pre-normalised to ranges between 0 and 1,
-        allowing for the approximation that using the same bandwith in the
-        kernel density estimation is okay.
-
-        Parameters
-        ----------
-        kde_bandwidth : float
-            Bandwidth used to generate the probabilty distribtions for each feature set.
-            Note that features are all scaled to be between 0 and 1 before this step.
-            Default = 0.02
-
-        Returns
-        ----------
-        x_values : np.ndarray
-            x values for probabilities over the range 0 to 1. Spacing consistent with
-            the probability distributions generated in this function.
-
-        probability_distributions : dict
-            Nested dictionary. Outer layer keys are class names, and values
-            are a dictionary of each feature (as inner key) and values of a
-            nested array of probabilities.
+        Calculate the mutual information between each feature to target.
+        The target variable should be continous.
+        Note that Sklearns implementation (used here) is designed for "raw datasets"
+        (i.e., do not feed in a probability distribution, instead feed in the observations).
         """
-        per_class_datasets = {}
-        for class_name in self.class_names:
-            per_class_datasets[class_name] = self.scaled_dataset[(
-                self.scaled_dataset["Target"] == class_name)]
+        df_features = self.scaled_dataset.drop("Target", axis=1)
+        features_array = df_features.to_numpy()
+        target_values = self.scaled_dataset["Target"].to_numpy()
 
-        x_values = np.asarray(
-            [value for value in np.arange(0.0, 1.0, kde_bandwidth)])
-        x_values = x_values.reshape((int(1/kde_bandwidth)), 1)
+        mutual_info_raw = np.around(
+            mutual_info_regression(features_array, target_values), 5)
+        self.mutual_infos = dict(zip(df_features.columns, mutual_info_raw))
+        self.mutual_infos = {k: v for k, v in sorted(
+            self.mutual_infos.items(), key=lambda item: item[1], reverse=True)}
 
-        probability_distributions = {}
-        for class_name in self.class_names:
-            per_feature_probs = {}
-            for feature in self.feature_list:
-                model = KernelDensity(
-                    bandwidth=kde_bandwidth, kernel="gaussian")
+        print("Mutual information scores calculated.")
 
-                feature_values = (
-                    (per_class_datasets[class_name][feature]).to_numpy()).reshape(-1, 1)
-                model.fit(feature_values)
+        out_file = self.out_dir + "Mutual_Information_Per_Feature_Scores.csv"
+        self._per_feature_importances_to_file(
+            per_feat_values=self.mutual_infos,
+            out_file=out_file
+        )
+        print("You can also access these results via the class attribute: 'mutual_infos'.")
 
-                probablities = np.exp(model.score_samples(x_values))
-                per_feature_probs[feature] = probablities
+    def calc_linear_correl_to_target(self) -> None:
+        """Calculate the pearson correlation coeffcient between each feature to the target variable."""
+        target = self.dataset["Target"]
+        features = self.dataset.drop(["Target"], axis=1)
 
-            probability_distributions[class_name] = per_feature_probs
+        correlations = features.corrwith(target).to_frame()
+        sorted_correlations = correlations.sort_values(
+            by=0, key=abs, ascending=False)
+        self.linear_correlations = sorted_correlations.to_dict(orient='dict')[
+            0]
 
-        return x_values, probability_distributions
+        print("Pearson correlations calculated.")
 
-    def _scale_features(self) -> pd.DataFrame:
-        """
-        Scale features with MinMaxScaler so that they are all between 0 and 1.
-        This is important for the KDE as I am using the same bandwidth parameter throughout.
-
-        Returns
-        ----------
-        pd.DataFrame
-            Dataframe with all features scaled between 0 and 1.
-        """
-        scaler = MinMaxScaler()
-        feature_values = (self.dataset.drop("Target", axis=1)).to_numpy()
-        scaler.fit(feature_values)
-        feature_values_scaled = scaler.transform(feature_values)
-
-        scaled_dataset = pd.DataFrame.from_records(
-            feature_values_scaled, columns=self.feature_list)
-        scaled_dataset.insert(0, "Target", self.dataset["Target"])
-
-        return scaled_dataset
-
-    @staticmethod
-    def _per_feature_importances_to_file(per_feat_values: dict, out_file: str) -> None:
-        """
-        Write out a the per feature importances to a file.
-
-        Parameters
-        ----------
-        per_feat_values : dict
-            Dictionary of feature names and their scores to write to disk.
-
-        out_file : str
-            The full path to write the file too.
-        """
-        with open(out_file, "w", newline="") as file_out:
-            csv_out = csv.writer(file_out)
-            csv_out.writerow(["Feature", "Score"])
-            csv_out.writerows(per_feat_values.items())
-            print(f"{out_file} written to disk.")
+        out_file = self.out_dir + "Pearson_Correlations_Per_Feature_Scores.csv"
+        self._per_feature_importances_to_file(
+            per_feat_values=self.linear_correlations,
+            out_file=out_file
+        )
+        print("You can also access these results via the class attribute: 'linear_correlations'.")
