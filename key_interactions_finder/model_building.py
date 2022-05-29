@@ -23,7 +23,7 @@ as much as their shared behaviour as possible.
 
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Tuple, Optional
 import os
 import json
 import pickle
@@ -102,18 +102,27 @@ class _SupervisedRunner(_MachineLearnModel):
         Directory path to store results files to.
         Default = ""
 
-    cross_validation_splits : int
+    cross_validation_splits : Optional[int]
         Number of splits in the cross validation, (the "k" in k-fold cross validation).
         Default = 5
 
-    cross_validation_repeats : int
+    cross_validation_repeats : Optional[int]
         Number of repeats for the k-fold cross validation to perform.
         Default = 3
 
-    search_approach : str
+    search_approach : Optional[str]
         Define how extensive the grid search protocol should be for the models.
         Options are: "none", "quick", "moderate", "exhaustive" or custom.
         Default = "quick"
+
+    loss_function : Optional[str]
+        Select the loss function you want to use.
+        Options are all those available in the sci-kit learn library assuming it is compatabile
+        with your model.
+        Default is whatever the default is for the model(s) you have chosen.
+
+    # TODO
+    # Add a loss function selection option - if people have poorly chosen data?
 
     Methods
     -------
@@ -135,9 +144,10 @@ class _SupervisedRunner(_MachineLearnModel):
     evaluation_split_ratio: float = 0.15
     scaling_method: str = "min_max"
     out_dir: str = ""
-    cross_validation_splits: int = 5
-    cross_validation_repeats: int = 3
-    search_approach: str = "none"
+    cross_validation_splits: Optional[int] = 5
+    cross_validation_repeats: Optional[int] = 3
+    search_approach: Optional[str] = "none"
+    loss_function: Optional[str] = None
 
     # Generated later by method calls.
     ml_models: dict = field(init=False)
@@ -161,6 +171,8 @@ class _SupervisedRunner(_MachineLearnModel):
 
         out_text = "\n"
         out_text += "Below is a summary of the machine learning you have planned.\n"
+
+        # TODO - add optional loss function desription.
 
         out_text += f"You will use {self.cross_validation_splits}-fold cross validation "
         out_text += f"and perform {self.cross_validation_repeats} repeats.\n"
@@ -213,6 +225,10 @@ class _SupervisedRunner(_MachineLearnModel):
                 "best_standard_deviation": clf.cv_results_['std_test_score'][clf.best_index_]
             })
             self.ml_models[model_name] = clf
+
+            if self.loss_function is not None:
+                # TODO add logic.
+                print("to be done ")
 
             if save_models:
                 if not os.path.exists("temporary_files"):
