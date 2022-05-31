@@ -221,21 +221,25 @@ class ClassificationStatModel(_ProteinStatModel):
                 "The number of classes to compare should be 2. \n" +
                 "Please use a list of 2 items for the parameter: 'class_names'.")
 
-
-
     def calc_mutual_info_to_target(self):
         """
         Calculate the mutual information between each feature to the 2 target classes.
         Note that Sklearns implementation (used here) is designed for "raw datasets"
         (i.e., do not feed in a probability distribution, instead feed in the observations).
+
+        Further, the mutual information values calculated from Sklearns implementation are
+        scaled by the natural logarithm of 2. In this implementation,
+        the results are re-scaled to be linear.
         """
         df_features = self.scaled_dataset.drop("Target", axis=1)
         features_array = df_features.to_numpy()
         classes = self.scaled_dataset["Target"].to_numpy()
 
-        mutual_info_raw = np.around(
-            mutual_info_classif(features_array, classes), 5)
-        self.mutual_infos = dict(zip(df_features.columns, mutual_info_raw))
+        mutual_info_raw = mutual_info_classif(features_array, classes)
+        mutual_info_rescaled = np.around((np.exp(mutual_info_raw) - 1), 5)
+
+        self.mutual_infos = dict(
+            zip(df_features.columns, mutual_info_rescaled))
         self.mutual_infos = {k: v for k, v in sorted(
             self.mutual_infos.items(), key=lambda item: item[1], reverse=True)}
 
@@ -332,14 +336,20 @@ class RegressionStatModel(_ProteinStatModel):
         The target variable should be continous.
         Note that Sklearns implementation (used here) is designed for "raw datasets"
         (i.e., do not feed in a probability distribution, instead feed in the observations).
+
+        Further, the mutual information values calculated from Sklearns implementation are
+        scaled by the natural logarithm of 2. In this implementation,
+        the results are re-scaled to be linear.
         """
         df_features = self.scaled_dataset.drop("Target", axis=1)
         features_array = df_features.to_numpy()
         target_values = self.scaled_dataset["Target"].to_numpy()
 
-        mutual_info_raw = np.around(
-            mutual_info_regression(features_array, target_values), 5)
-        self.mutual_infos = dict(zip(df_features.columns, mutual_info_raw))
+        mutual_info_raw = mutual_info_regression(features_array, target_values)
+        mutual_info_rescaled = np.around((np.exp(mutual_info_raw) - 1), 5)
+
+        self.mutual_infos = dict(
+            zip(df_features.columns, mutual_info_rescaled))
         self.mutual_infos = {k: v for k, v in sorted(
             self.mutual_infos.items(), key=lambda item: item[1], reverse=True)}
 
