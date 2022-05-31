@@ -167,8 +167,15 @@ class PyContactInitializer():
     def _interaction_is_duplicate(contact_parts: list, contacts_to_keep: list) -> bool:
         """
         Check if current interaction is a duplicate of an already kept contact.
-        Duplicates are identical but have the residue order swapped.
+
+        Most duplicates are identical but have the residue order swapped.
         i.e. resX + resY + [other columns] vs. resY + resX + [other columns]
+        This is true if the interaction type is sc-sc or bb-bb.
+
+        Some duplicates don't just have the residue order swapped but as they are of type:
+        sc-bb or bb-sc the test for a duplicate needs to be different.
+        Here, "contact_parts[5]" will NOT be identical if they are duplicates because
+        the residue ordering is swapped in the duplicates!
 
         Parameters
         ----------
@@ -186,15 +193,27 @@ class PyContactInitializer():
             True if contact is a duplicate.
         """
         duplicate = False
+
         for saved_contact in contacts_to_keep:
-            if (
+            if contact_parts[5] in ("sc-sc", "bb-bb"):
+                if (
                     (contact_parts[2] == saved_contact[0]) and
                     (contact_parts[0] == saved_contact[2]) and
                     (contact_parts[4] == saved_contact[4]) and
                     (contact_parts[5] == saved_contact[5])
-            ):
-                duplicate = True
-                break
+                ):
+                    duplicate = True
+                    break
+
+            else:
+                if (
+                    (contact_parts[2] == saved_contact[0]) and
+                    (contact_parts[0] == saved_contact[2]) and
+                    (contact_parts[4] == saved_contact[4]) and
+                    (contact_parts[5] != saved_contact[5])
+                ):
+                    duplicate = True
+                    break
 
         return duplicate
 
