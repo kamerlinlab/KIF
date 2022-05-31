@@ -198,6 +198,11 @@ class ClassificationStatModel(_ProteinStatModel):
         """Filter, rescale and calc the probability distributions for each feature."""
         self.out_dir = _prep_out_dir(self.out_dir)
 
+        self.x_values = np.empty(shape=(0, 0))
+        self.probability_distributions = {}
+        self.js_distances = {}
+        self.mutual_infos = {}
+
         if sorted(self.interaction_types_included) != sorted(
                 ["Hbond", "Hydrophobic", "Saltbr", "Other"]):
             self.dataset = _filter_features_by_strings(
@@ -216,11 +221,7 @@ class ClassificationStatModel(_ProteinStatModel):
                 "The number of classes to compare should be 2. \n" +
                 "Please use a list of 2 items for the parameter: 'class_names'.")
 
-        self.x_values = np.empty(shape=(0, 0))
-        self.probability_distributions = {}
-        self.js_distances = {}
 
-        self.mutual_infos = {}
 
     def calc_mutual_info_to_target(self):
         """
