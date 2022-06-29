@@ -4,17 +4,19 @@
  **In short, this package allows you to:**
  1. Identify important non-covalent interactions and residues that modulate a descriptor of interest to you and your system. This can be done with either:
      * Supervised machine learning (both classification and regression are supported). (There is limited support for unsuperivsed learning, see section TODO below). 
-     * Statistical analysis to identify how different/similar each non-covalent interaction is in 2 states. The metrics available are the mutual information and the Jensen-Shannon distance.  
+     * Statistical analysis to identify how different/similar each non-covalent interaction is against a target variable. The metrics available are the mutual information and the Jensen-Shannon distance. The target variable can be binary (i.e. classification of 2 states) or continous.
 
- 2. Generate per residue correlation and distance matrices that can be easily applied to graph theory methods in order to study protein contact networks/allostery.   
+Further, the data generated above can be readily visualised on your protein structure with [PyMOL](https://pymol.org/2/) 
+
+ 2. Generate per residue correlation and distance matrices that can be easily applied to the many graph theory methods available in order to study protein contact networks/allostery.   
  
- Further, all data generated can be readily visualised on your protein structure with [PyMOL](https://pymol.org/2/)
+ 
 
 
 
 ## Description/ How it Works
 
-This package is designed to 
+Please note that a full description of how this works alongside its application to some example use can be found in our preprint: TODO. 
 
 #### The Workflow for this package is as follows: 
 1. Run MD simulations on your system(s) of interest with whatever MD engine you want. 
@@ -31,25 +33,23 @@ TODO - comment on PyContact python script available.
 
 
 ## Dependancies and Install 
-Python3
-Fill in. 
+Python3 
 Python 3.7 - because using dataclasses. 
+
 
 ## Getting Started and Tutorials
 This repostory contains several juputer notebooks that showcase the major things you can do with this package. 
 
 It would also be a good idea to check out our pre-print (TODO, add) on the package 
 
-Before beginning you'll need to 
+
 
 
 ## Choosing an Appropriate Target variable.  
 
-To perform either the machine learning or statistical analysis methods available in this package you will most likely need to calculate a target varaible to go alongside the input features (non-covalent interactions generated with PyContact). 
+To perform either the machine learning or statistical analysis methods available in this package you will most likely want to calculate a target variable to go alongside the features (non-covalent interactions generated with PyContact). 
 
-Most of the analysis possible with this package uses some kind of target feature to determine 
-
-Some examples:
+Below are some examples of what could work for you. Of course, this is use case specific so feel free to select what makes sense for your problem.
 
 **Enzyme catalysis** - A per frame reacting atom distance for regression or define a max reacting atom distance cut-off to classify the frame as either "active" or "inactive". 
 
@@ -59,13 +59,11 @@ Some examples:
 * if RMSD to "State 1" <= 1.5 Å and an RMSD to "State 2" >= 1.5 Å --> assign frame as "State 1".
 * if RMSD to "State 1" => 1.5 Å and an RMSD to "State 2" <= 1.5 Å --> assign frame as "State 2".
 * else --> assign frame as "neither".
+You can also consider dropping the frames with state "neither" from your analysis to make the calculation cleaner (i.e., turn it into binary classification).
 
-You can also consider dropping the frames with state "neither" from your analysis to make the calculation cleaner. 
-
-Of course, the above are suggestions, feel free select what makes sense for your problem. 
 
 ## Citing this work
-If you make use of this package please cite the following manuscript: 
+If you make use of this package please cite our preprint: 
 
 When accepted/published the above link will be updated. 
 
