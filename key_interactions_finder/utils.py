@@ -71,6 +71,82 @@ def per_residue_distance_to_site(pdb_file: str,
     return min_dists
 
 
+def per_residue_side_chain_distance_to_site(pdb_file: str,
+                                            site_defintion: str,
+                                            first_residue: int,
+                                            last_residue: int,
+                                            out_file,
+                                            ) -> dict:
+    """
+    Calculate the closest heavy atom distance of each residue's side chain to an mdtraj defined
+    selection of a site of interest. You can write the results to file if desired.
+
+    Glycine residues of course do not have a side chain,
+    so in the case of a glycine residue the CA atom is used instead.
+
+    Parameters
+    ----------
+    pdb_file : str
+        Path to pdb file to use for the distance calculation.
+
+    site_defintion : str
+        mdtraj compatable defintion of the site of interest
+        (i.e. binding site, active site etc..)
+        See here for examples: https://mdtraj.org/1.9.3/atom_selection.html
+
+    first_residue : int
+        First residue to measure the distance from.
+
+    last_residue : int
+        Last residue to measure the distance to.
+
+    out_file : Optional[str]
+        Path to output file to write out data.
+
+    Returns
+    ----------
+    dict
+        Residue numbers are the keys and minimum distances are the values.
+    """
+    universe = mda.Universe(pdb_file)
+
+    group2 = universe.select_atoms(site_defintion)
+
+    min_dists = {}
+    for residue in range(first_residue, last_residue+1):
+        selection_str = "not backbone and not name H* and resid " + \
+            str(residue)
+        group1 = universe.select_atoms(selection_str)
+
+        res_dist_arr = distances.distance_array(
+            group1.positions, group2.positions, box=universe.dimensions)
+
+        try:
+            min_res_dist = np.round(res_dist_arr.min(), 2)
+
+        except ValueError:  # zero-size array to reduction operation minimum which has no identity
+            # This happens for glycines which have no side chain...
+            selection_str = "name CA and resid " + str(residue)
+            group1 = universe.select_atoms(selection_str)
+
+            res_dist_arr = distances.distance_array(
+                group1.positions, group2.positions, box=universe.dimensions)
+
+            min_res_dist = np.round(res_dist_arr.min(), 2)
+
+        min_dists.update({residue: min_res_dist})
+
+    if out_file is None:
+        return min_dists
+
+    with open(out_file, "w", newline="") as file_out:
+        csv_out = csv.writer(file_out)
+        csv_out.writerow(["Residue Number", "Minimum Distance"])
+        csv_out.writerows(min_dists.items())
+        print(f"{out_file} written to disk.")
+    return min_dists
+
+
 def _prep_out_dir(out_dir: str) -> str:
     """
     Makes the folder if it doesn't exist and appends a '/' if not present at end of a string.
