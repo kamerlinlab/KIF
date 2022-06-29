@@ -541,8 +541,8 @@ class StatClassificationPostProcessor(PostProcessor):
         statistical method.
 
     get_probability_distributions(number_features)
-        Gets the probability distributions for each feature. Features returned
-        are ordered by the jensen shannon distance scores.
+        Gets the probability distributions for each feature. The order in which features are returned
+        is controlled by their jensen-shannon distance scores.
 
     estimate_feature_directions()
         Estimate the direction each feature favours by calculating the average
@@ -615,14 +615,16 @@ class StatClassificationPostProcessor(PostProcessor):
                                       number_features: Union[int, str]
                                       ) -> Tuple[np.ndarray, dict]:
         """
-        TODO - Limit to only Classification Model.
+        Gets the probability distributions for each feature. The order in which features are returned
+        is controlled by their jensen-shannon distance scores. Meaning if you ask for 10 features you'll recieve
+        the 10 most different features according to their jensen-shannon distance.
 
         Parameters
         ----------
         number_features : int or str
             The number of features to return (those with the highest jensen-shannon
             distances taken forward).
-            If "all" is used instead then all features are returned.
+            If "all" is used instead then all features are returned unordered.
 
         Returns
         ----------
@@ -635,7 +637,7 @@ class StatClassificationPostProcessor(PostProcessor):
         """
         tot_numb_features = len(self.stat_model.js_distances.keys())
 
-        # prevents issue if user hasn't already determined js_distances
+        # prevents issue if user hasn't already determined js_distances.
         if tot_numb_features == 0:
             self.stat_model.calc_js_distances()
             tot_numb_features = len(self.stat_model.js_distances.keys())

@@ -51,7 +51,6 @@ def project_pymol_per_res_scores(per_res_scores: dict,
     all_spheres_str = '+'.join(map(str, all_spheres_list))
     per_res_import_out += f"sele All_Spheres, resi {all_spheres_str} and name CA\n"
 
-
     out_file = out_dir + model_name + "_Pymol_Per_Res_Scores.py"
     _write_file(out_file, per_res_import_out)
     print(f"The file: {out_file} was written to disk.")
@@ -98,7 +97,7 @@ def project_pymol_top_features(per_feature_scores: dict,
         Keys are the names of the features and values are their importances.
 
     model_name : str
-        What name to appended to start of output file name to identify it.
+        What name to appended to the start of the output file name to help identify it.
 
     numb_features : int or str
         The max number of top scoring features to determine (specified by an int).
@@ -196,7 +195,7 @@ def project_multiple_per_feature_scores(all_feature_scores: dict,
 
 def _extract_residue_lists(input_df: pd.DataFrame) -> Tuple[list, list]:
     """
-    Extract the lists of residues for each each feature.
+    Extract two list of residues that are present in each feature.
 
     Parameters
     ----------
