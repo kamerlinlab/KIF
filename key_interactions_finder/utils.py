@@ -1,6 +1,20 @@
 """
 Random helper functions.
-TODO - list functions with mini description here.
+
+Functions Available:
+per_residue_distance_to_site()
+    Calculate the closest heavy atom distance of each residue to an mdtraj defined
+    selection of a site of interest. You can write the results to file if desired.
+    Optionally can choose to only calculate minimum side chain distances.
+
+
+### The functions below should not be called directly by an end user ###
+_prep_out_dir()
+    Makes the folder if it doesn't exist and appends a '/' if not present at end of a string.
+
+_filter_features_by_strings()
+    Filter features to only include those that match one of the strings in the list provided.
+
 """
 from typing import Optional
 import csv
