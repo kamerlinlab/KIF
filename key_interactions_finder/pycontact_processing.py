@@ -6,18 +6,18 @@ Reformats and (optionally) merges PyContact datafiles generated using the custom
  keyword arg when making class defines input choice....
 
 Special Notes:
-
 1. A pycontact job run with overlapping residue selections can obtain many false interactions such as:
     - A vdw interaction with a residue to itself.
     - Duplicate interactions with the only difference being residue ordering swapped.
 
-2. If a job is run in the above way, the 'remove_false_interactions' parameter must be set
-to True (default) when the class is initialised in order to remove these false interactions.
-There is no harm if a PyContact job is not run in this way but 'remove_false_interactions' is True anyway.
+If a job is therefore run in the above way, the 'remove_false_interactions' parameter must be set
+to True (the default) when the class is initialised in order to remove these false interactions.
+There is no harm if a PyContact job is not run in this way
+but 'remove_false_interactions' is set to True anyway.
 
-3. Depending on the md trajectory format used, the residue numbers assigned by PyContact can be off by
-1 residue number. If this happens to you, you can use the function "modify_column_residue_numbers" to edit
-renumber all the features in your dataframe.
+2. Depending on the md trajectory format used, the residue numbers assigned by PyContact
+can be off by 1 residue number. If this happens to you, you can use the
+function "modify_column_residue_numbers" to edit/renumber all the features in your dataframe.
 
 """
 import re
@@ -273,7 +273,7 @@ def modify_column_residue_numbers(dataset: pd.DataFrame, constant_to_add: int = 
     may renumber residue numbers to start from 0 as opposed to most MD engines which
     start from 1.
 
-    This function will NOT update the class attribute ".prepared_df" from the dataset!
+    This function will NOT update the class attribute ".prepared_df".
     Instead it returns a new dataframe with the updated residue numbers.
 
     Parameters
@@ -282,9 +282,9 @@ def modify_column_residue_numbers(dataset: pd.DataFrame, constant_to_add: int = 
         Input dataframe with Pycontact features you wish to modify.
 
     constant_to_add: int
-        Value of the constant you want to add to each residue.
+        Value of the constant you want to add from each residue.
+        You can use negative numbers to subtract.
         Default = 1
-        # TODO - CHECK if minus values are okay.
 
     Returns
     ----------
@@ -308,5 +308,7 @@ def modify_column_residue_numbers(dataset: pd.DataFrame, constant_to_add: int = 
             str(res2_numb) + remainder
         updated_names.append(updated_name)
 
-    dataset.columns = updated_names
-    return dataset
+    # don't want to overwrite class dataframe in case user runs twice or by accident etc...
+    new_dataset = dataset.copy(deep=True)
+    new_dataset.columns = updated_names
+    return new_dataset
