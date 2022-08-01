@@ -10,8 +10,6 @@ import numpy as np
 import MDAnalysis as mda
 from MDAnalysis.analysis import distances
 
-from key_interactions_finder.utils import _prep_out_dir
-
 
 @dataclass
 class CorrelationNetwork:
@@ -23,10 +21,6 @@ class CorrelationNetwork:
     ----------
     dataset : pd.DataFrame
         Input Dataframe containing all features to be studied.
-
-    out_dir : str
-        Directory path to store results files to.
-        Default = ""
 
     feature_corr_matrix : pd.DataFrame
         Correlation matrix for the dataset provided.
@@ -43,14 +37,12 @@ class CorrelationNetwork:
         correlation matrix.
     """
     dataset: pd.DataFrame
-    out_dir: str = ""
 
     # Generated during init.
     feature_corr_matrix: pd.DataFrame = field(init=False)
 
     def __post_init__(self):
         """Filter features and generate the full correlation matrix."""
-        self.out_dir = _prep_out_dir(self.out_dir)
 
         try:
             self.dataset = self.dataset.drop(["Target"], axis=1)
