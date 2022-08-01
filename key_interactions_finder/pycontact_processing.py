@@ -197,20 +197,20 @@ class PyContactInitializer():
         for saved_contact in contacts_to_keep:
             if contact_parts[5] in ("sc-sc", "bb-bb"):
                 if (
-                    (contact_parts[2] == saved_contact[0]) and
-                    (contact_parts[0] == saved_contact[2]) and
-                    (contact_parts[4] == saved_contact[4]) and
-                    (contact_parts[5] == saved_contact[5])
+                        (contact_parts[2] == saved_contact[0]) and
+                        (contact_parts[0] == saved_contact[2]) and
+                        (contact_parts[4] == saved_contact[4]) and
+                        (contact_parts[5] == saved_contact[5])
                 ):
                     duplicate = True
                     break
 
             else:
                 if (
-                    (contact_parts[2] == saved_contact[0]) and
-                    (contact_parts[0] == saved_contact[2]) and
-                    (contact_parts[4] == saved_contact[4]) and
-                    (contact_parts[5] != saved_contact[5])
+                        (contact_parts[2] == saved_contact[0]) and
+                        (contact_parts[0] == saved_contact[2]) and
+                        (contact_parts[4] == saved_contact[4]) and
+                        (contact_parts[5] != saved_contact[5])
                 ):
                     duplicate = True
                     break
