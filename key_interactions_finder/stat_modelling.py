@@ -373,9 +373,9 @@ class RegressionStatModel(_ProteinStatModel):
         self.linear_correlations = sorted_correlations.to_dict(orient='dict')[
             0]
 
-        print("Pearson correlations calculated.")
+        print("Linear correlations calculated.")
 
-        out_file = self.out_dir + "Pearson_Correlations_Per_Feature_Scores.csv"
+        out_file = self.out_dir + "Linear_Correlations_Per_Feature_Scores.csv"
         self._per_feature_importances_to_file(
             per_feat_values=self.linear_correlations,
             out_file=out_file
