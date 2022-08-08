@@ -35,8 +35,21 @@ TODO
 ## Getting Started and Tutorials
 This repostory contains several juputer notebooks that showcase the major things you can do with this package. 
 
-It would also be a good idea to check out our pre-print (TODO) if you have not yet. 
+It would also be a good idea to check out our pre-print (TODO - link) if you have not yet as the pre-print presents and interprets the results generated from these tutorials.  
 
+#### Tutorials Available
+(All tutorials include the setup and post-processing steps used on each system.)
+
+1. **[Title of notebook wih link]**  - Binary classification machine learning on simulations of the enzyme PTP1B.  
+
+2. **[Title of notebook wih link]** - Binary classification statistical analysis on simulations of the PDZ3 domain. 
+
+3. **[Title of notebook wih link]** - Regression machine learning on simulations of a Retro-aldol lase enzyme 
+
+4. **[Title of notebook wih link]** - Regression statistical analysis  on simulations of a Retro-aldol lase enzyme 
+
+5. **[Title of notebook wih link - should be a folder this one]** - Preperation of PTP1B inputs required for graph theory based calculations. 
+(Included in this tutorial is the R script used to perform WISP and a python script I used to convert the VMD comptabile WISP output to a PyMOL style output.)
 
 
 
