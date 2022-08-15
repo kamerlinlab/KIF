@@ -1,10 +1,11 @@
 """
-Post processes the results generated with machine learning (from model_building.py) and
-from the statistical modelling (with stat_modelling.py) packages.
+Post processes the results generated from either the
+(1) machine learning (from model_building.py) or the
+(2) statistical modelling (from stat_modelling.py) modules.
 
 Provides users with the ability to:
 
-1. Obtain and/or save the per feature/interaction importances to disk.
+1. Extract and/or save the per feature/interaction importances to disk.
 
 2. Generate per residue importances from the per feature importances.
 (This is done by summing all the feature importances that a residue is present in
@@ -14,9 +15,8 @@ and the normalizing the results so that the top residue has an importance of 1).
 (only available for binary classification.)
 
 4. Estimate the "direction" each feature favors by calculating the average PyContact score
-for each feature and each class (only for binary classification).
+for each feature and each class (only available for binary classification).
 Whatever feature has the highest average score is chosen (warning, very approximate method).
-
 """
 from dataclasses import dataclass, field
 from typing import Optional, Tuple, Union
@@ -62,7 +62,7 @@ class PostProcessor(ABC):
         res1, res2, values = [], [], []
         res1 = (df_feat_import_res[0].str.extract("(\d+)")).astype(int)
         res2 = (df_feat_import_res[1].str.extract("(\d+)")).astype(int)
-        # absolute values required as want to be able to sum linear correlations...
+        # absolute values required as want to be able to sum linear correlations.
         values = df_feat_import[1].abs()
 
         per_res_import = pd.concat(
@@ -155,9 +155,9 @@ class PostProcessor(ABC):
 class SupervisedPostProcessor(PostProcessor):
     """
     Processes the supervised machine learning results.
+
     Data to process can be loaded from disk or using an instance of a
     supervised model class, ("ClassificationModel" or "RegressionModel").
-
     See the class methods "load_models_from_instance()" and/or "load_models_from_disk"
     for further information.
 
@@ -169,12 +169,10 @@ class SupervisedPostProcessor(PostProcessor):
 
     feat_names : np.ndarray
         All feature names/labels.
-        Generated at class initialization
 
     best_models : dict
         Keys are the model name/method and values are the instance of the
-        built model.
-        Generated at class initialization
+        best built model.
 
     all_feature_importances : dict
         Nested dictionary with outer keys the model used. Inner keys
@@ -300,11 +298,11 @@ class SupervisedPostProcessor(PostProcessor):
                 out_file=out_file
             )
 
-            # Save to Class.
+            # Add to the class.
             self.all_feature_importances.update(
                 {model_name: sort_feat_importances})
 
-        print("All feature importances written to disk.")
+        print("All feature importances have now been saved to disk.")
 
     def get_per_res_importance(self) -> None:
         """Projects feature importances onto the per-residue level"""
@@ -329,7 +327,7 @@ class SupervisedPostProcessor(PostProcessor):
             # Save to Class.
             self.all_per_residue_scores.update({model_name: spheres})
 
-        print("All per residue feature importance scores were saved to disk.")
+        print("All per residue importance scores have now been saved to disk.")
 
 
 @dataclass
@@ -400,13 +398,13 @@ class UnsupervisedPostProcessor(PostProcessor):
         # Save models to disk.
         for model_name, feat_importances in self.all_feature_importances.items():
             out_file = self.out_dir + \
-                str(model_name) + "_Per_Residue_Importances.csv"
+                str(model_name) + "_Feature_Importances.csv"
 
             self._per_feature_importances_to_file(
                 feature_importances=feat_importances,
                 out_file=out_file)
 
-        print("All feature importances were saved to disk successfully.")
+        print("All feature importances have now been saved to disk.")
 
     def get_per_res_importance(self) -> None:
         """Projects feature importances onto the per-residue level."""
@@ -431,7 +429,7 @@ class UnsupervisedPostProcessor(PostProcessor):
             # Save to Class
             self.all_per_residue_scores.update({model_name: spheres})
 
-        print("All per residue feature importances were written to disk successfully.")
+        print("All per residue importance scores have now been saved to disk.")
 
     def _get_pca_importances(self, variance_explained_cutoff: float = 0.95) -> dict:
         """
@@ -488,8 +486,8 @@ class UnsupervisedPostProcessor(PostProcessor):
 
         print(
             "The total variance described by the principal components (PCs) used " +
-            f"for feature importance analysis is: {variance_described:.1f}%. \n" +
-            f"This is the first {idx_position} PCs from a total of {len(variances)} PCs."
+            f"for feature importance analysis is: {variance_described:.1f}%. This was \n" +
+            f"determined from the first {idx_position} PCs from a total of {len(variances)} PCs."
         )
 
         return pca_importances
@@ -615,7 +613,7 @@ class StatClassificationPostProcessor(PostProcessor):
             self.per_residue_js_distances = (
                 self._per_res_importance(per_res_import))
 
-            out_file = self.out_dir + "Jensen_Shannon_Distances_Per_Residue.csv"
+            out_file = self.out_dir + "Jensen_Shannon_Distance_Scores_Per_Residue.csv"
             self._per_res_importances_to_file(
                 per_res_values=self.per_residue_js_distances,
                 out_file=out_file
@@ -719,7 +717,7 @@ class StatClassificationPostProcessor(PostProcessor):
             else:
                 self.feature_directions.update({feature_name: class_1_name})
 
-        out_file = self.out_dir + "feature_direction_estimates.csv"
+        out_file = self.out_dir + "Feature_Direction_Estimates.csv"
 
         self._save_feature_residue_direction(
             dict_to_save=self.feature_directions,
@@ -846,7 +844,7 @@ class StatRegressorPostProcessor(PostProcessor):
             self.per_residue_linear_correlations = (
                 self._per_res_importance(per_res_import))
 
-            out_file = self.out_dir + "Jensen_Shannon_Distances_Per_Residue.csv"
+            out_file = self.out_dir + "Linear_Correlation_Scores_Per_Residue.csv"
             self._per_res_importances_to_file(
                 per_res_values=self.per_residue_linear_correlations,
                 out_file=out_file
