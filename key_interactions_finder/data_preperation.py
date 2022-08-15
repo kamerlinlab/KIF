@@ -5,6 +5,17 @@ supervised/unsupervised learning.
 Main responsibilities:
 1. Add target variable data to supervised learning datasets.
 2. Offer several filtering methods for the PyContact features.
+
+There are 2 classes for end user usage:
+
+1. SupervisedFeatureData
+    For supervised datasets where (there is a target variable)
+
+2. UnsupervisedFeatureData
+    For unsupervised datasets where (no target variable)
+
+These classes both inherit from the class "_FeatureData", which abstracts
+as much as their shared behaviour as possible.
 """
 from dataclasses import dataclass, field
 import pandas as pd

@@ -1,7 +1,10 @@
 """
 Perform correlation analysis on the PyContact interactions/features and outputs
-the results in ways such that can easily be read into various network/correlation
+the results in such a way that it can easily be read into various network/correlation
 based analyses tools in different programs.
+
+There is only a single class in this module (CorrelationNetwork) as this module
+does not require a target variable and if you have one it does not need it.
 """
 from dataclasses import dataclass, field
 from typing import Optional

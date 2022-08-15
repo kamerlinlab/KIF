@@ -1,5 +1,22 @@
 """
-Creates PyMOL compatable python scripts to visualise user generated results.
+Creates PyMOL compatible python scripts to visualise user generated results
+on a 3D model of the protein.
+
+4 Functions available for the end user:
+
+1. project_pymol_per_res_scores(per_res_scores, model_name, out_dir)
+    Write out a PyMOL compatible python script to project per residue scores.
+
+2. project_multiple_per_res_scores(all_per_res_scores, out_dir)
+    Write out multiple PyMOL compatible per residue importance visualisation
+    scripts for the different models used.
+
+3. project_pymol_top_features()
+    Write out a PyMOL compatible python script to project the top features.
+
+4. project_multiple_per_feature_scores(all_feature_scores, numb_features, out_dir)
+    Write out multiple PyMOL compatible scripts for different models.
+
 """
 from typing import Union, Tuple
 import pandas as pd
@@ -11,7 +28,7 @@ def project_pymol_per_res_scores(per_res_scores: dict,
                                  out_dir: str = ""
                                  ) -> None:
     """
-    Write out a PyMOL compatabile python script to project per residue scores.
+    Write out a PyMOL compatible python script to project per residue scores.
 
     Parameters
     ----------
@@ -60,7 +77,8 @@ def project_multiple_per_res_scores(all_per_res_scores: dict,
                                     out_dir: str = ""
                                     ) -> None:
     """
-    Write out multiple PyMOL compatabile scripts for different models.
+    Write out multiple PyMOL compatible per residue importance visualisation
+    scripts for the different models used.
 
     Parameters
     ----------
@@ -86,7 +104,7 @@ def project_pymol_top_features(per_feature_scores: dict,
                                out_dir: str = ""
                                ) -> None:
     """
-    Write out a PyMOL compatabile python script to project the top X features.
+    Write out a PyMOL compatible python script to project the top X features.
     Features will be shown as cylinders between each residue pair,
     with cylinder size controlled according to relative importance and
     cylinder colour controlled by interaction type.
@@ -168,7 +186,7 @@ def project_multiple_per_feature_scores(all_feature_scores: dict,
                                         out_dir: str = ""
                                         ) -> None:
     """
-    Write out multiple PyMOL compatabile scripts for different models.
+    Write out multiple PyMOL compatible scripts for different models.
 
     Parameters
     ----------

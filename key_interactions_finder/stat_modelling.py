@@ -1,7 +1,19 @@
 """
-Calculates differences in the probabilty distributions of each feature
+Calculates differences in the probability distributions of each feature
 for the different classes.
 This is only available to supervised datasets (i.e. data must has class labels).
+
+2 Classes for end user usage:
+
+1. ClassificationStatModel
+    For analysis when the target data is categorical (classification).
+    Can only use two classes at a time (i.e., binary classification)
+
+2. RegressionStatModel
+    For analysis when the target data is continuous (regression).
+
+These classes both inherit from a parent class called "_ProteinStatModel" which abstracts
+as much as their shared behavior as possible.
 """
 from typing import Tuple
 from dataclasses import dataclass, field
