@@ -115,15 +115,6 @@ class _SupervisedRunner(_MachineLearnModel):
         Options are: "none", "quick", "moderate", "exhaustive" or custom.
         Default = "quick"
 
-    loss_function : Optional[str]
-        Select the loss function you want to use.
-        Options are all those available in the sci-kit learn library assuming it is compatabile
-        with your model.
-        Default is whatever the default is for the model(s) you have chosen.
-
-    # TODO
-    # Add a loss function selection option - if people have poorly chosen data?
-
     Methods
     -------
     describe_ml_planned()
@@ -147,7 +138,6 @@ class _SupervisedRunner(_MachineLearnModel):
     cross_validation_splits: Optional[int] = 5
     cross_validation_repeats: Optional[int] = 3
     search_approach: Optional[str] = "none"
-    loss_function: Optional[str] = None
 
     # Generated later by method calls.
     ml_models: dict = field(init=False)
@@ -171,8 +161,6 @@ class _SupervisedRunner(_MachineLearnModel):
 
         out_text = "\n"
         out_text += "Below is a summary of the machine learning you have planned.\n"
-
-        # TODO - add optional loss function desription.
 
         out_text += f"You will use {self.cross_validation_splits}-fold cross validation "
         out_text += f"and perform {self.cross_validation_repeats} repeats.\n"
@@ -225,10 +213,6 @@ class _SupervisedRunner(_MachineLearnModel):
                 "best_standard_deviation": clf.cv_results_['std_test_score'][clf.best_index_]
             })
             self.ml_models[model_name] = clf
-
-            if self.loss_function is not None:
-                # TODO add logic.
-                print("to be done ")
 
             if save_models:
                 if not os.path.exists("temporary_files"):
