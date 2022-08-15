@@ -21,13 +21,43 @@ from key_interactions_finder.utils import _prep_out_dir, _filter_features_by_str
 class _ProteinStatModel():
     """
     Generic class to unify the construction of the classiciation and regression
-    classes used by the user.
+    classes used by the user. There is no __post_init__ method called by this class
+    because each inheriting class has its own instead.
 
-    TODO add documentation.
+    Attributes
+    ----------
+    dataset : pd.DataFrame
+        Input dataframe.
 
-    Note that there is no __post_init__ method called here because each
-    inheriting class is given their own instead.
+    out_dir : str
+        Directory path to store results files to.
+        Default = ""
 
+    interaction_types_included : list, optional
+        What types of molecular interactions to generate the correlation matrix for.
+        options are one or more of: ["Hbond", "Hydrophobic", "Saltbr", "Other"]
+        Default is to include all 4 types.
+
+    scaled_dataset : pd.DataFrame
+        Input dataset with all features scaled.
+
+    feature_list : list
+        List of all feature labels in the dataset.
+
+    mutual_infos : dict
+        Dictionary with each feature's (keys) and mutual informations (values).
+        Dictionary is sorted from largest mutual information to smallest.
+
+    Methods
+    -------
+    _gen_prob_distributions(input_features, kde_bandwidth)
+        Generates probability distributions for each feature for a single class.
+
+    _scale_features()
+        Scale features with MinMaxScaler so that they are all between 0 and 1.
+
+    _per_feature_importances_to_file(per_feat_values, out_file)
+        Write out the per feature importances to a file.
     """
     # Generated at initialization.
     dataset: pd.DataFrame
@@ -42,17 +72,17 @@ class _ProteinStatModel():
 
     def _gen_prob_distributions(self, input_features: pd.DataFrame, kde_bandwidth: float) -> Tuple[np.ndarray, dict]:
         """
-        Generate probability distributions for each feauture.
-        Further, optionally generates a probabilty dist
+        Generates probability distributions for each feature for a single class.
 
         Input feature sets are pre-normalised to ranges between 0 and 1,
-        allowing for the approximation that using the same bandwith in the
+        allowing for the approximation that using the same bandwidth in the
         kernel density estimation is okay.
 
         Parameters
         ----------
         input_features : pd.DataFrame
-            TODO
+            A dataframe containing all features but with observations for only a single class.
+            This can be used to calculate a probabilty distribtion for each feature for each class.
 
         kde_bandwidth : float
             Bandwidth used to generate the probabilty distribtions for each feature set.
@@ -135,6 +165,8 @@ class ClassificationStatModel(_ProteinStatModel):
     Handles the generation of statistical models for PyContact data sets
     when the target is made up of two unqiue class labels.
 
+    Note that most attributes are inherited from _ProteinStatModel.
+
     Attributes
     ----------
     dataset : pd.DataFrame
@@ -184,7 +216,6 @@ class ClassificationStatModel(_ProteinStatModel):
         Calculate the Jensen-Shannon (JS) distance (metric) between each feature to
         the target classes.
     """
-    # Note that most attributes are inherited from _ProteinStatModel.
 
     # Generated at initialization.
     class_names: list = field(default_factory=[])
@@ -303,8 +334,44 @@ class RegressionStatModel(_ProteinStatModel):
     Handles the generation of statistical models for PyContact data sets
     when the target variable is continous.
 
+    Note that several attributes listed below are inherited from _ProteinStatModel.
+
+    Attributes
+    ----------
+    dataset : pd.DataFrame
+        Input dataframe.
+
+    out_dir : str
+        Directory path to store results files to.
+        Default = ""
+
+    interaction_types_included : list, optional
+        What types of molecular interactions to generate the correlation matrix for.
+        options are one or more of: ["Hbond", "Hydrophobic", "Saltbr", "Other"]
+        Default is to include all 4 types.
+
+    scaled_dataset : pd.DataFrame
+        Input dataset with all features scaled.
+
+    feature_list : list
+        List of all feature labels in the dataset.
+
+    mutual_infos : dict
+        Dictionary with each feature's (keys) and mutual informations (values).
+        Dictionary is sorted from largest mutual information to smallest.
+
+    linear_correlations : dict
+        Dictionary with each feature's (keys) and linear correlations (values).
+        Dictionary is sorted from largest (absolute) linear correlation to smallest.
+
+    Methods
+    -------
+    calc_mutual_info_to_target()
+        Calculate the mutual information between each feature and the target.
+
+    calc_linear_correl_to_target()
+        Calculate the pearson correlation coeffcient between each feature and the target.
     """
-    # Note that several attributes are inherited from _ProteinStatModel.
 
     # Attribute is generated after initiziliation.
     linear_correlations: dict = field(init=False)
@@ -332,8 +399,8 @@ class RegressionStatModel(_ProteinStatModel):
 
     def calc_mutual_info_to_target(self) -> None:
         """
-        Calculate the mutual information between each feature to target.
-        The target variable should be continous.
+        Calculate the mutual information between each feature and the target.
+        The target variable should be continuous.
         Note that Sklearns implementation (used here) is designed for "raw datasets"
         (i.e., do not feed in a probability distribution, instead feed in the observations).
 
@@ -363,15 +430,15 @@ class RegressionStatModel(_ProteinStatModel):
         print("You can also access these results via the class attribute: 'mutual_infos'.")
 
     def calc_linear_correl_to_target(self) -> None:
-        """Calculate the pearson correlation coeffcient between each feature to the target variable."""
+        """Calculate the pearson correlation coeffcient between each feature and the target."""
         target = self.dataset["Target"]
         features = self.dataset.drop(["Target"], axis=1)
 
         correlations = features.corrwith(target).to_frame()
         sorted_correlations = correlations.sort_values(
             by=0, key=abs, ascending=False)
-        self.linear_correlations = sorted_correlations.to_dict(orient='dict')[
-            0]
+        self.linear_correlations = sorted_correlations.to_dict(
+            orient='dict')[0]
 
         print("Linear correlations calculated.")
 
