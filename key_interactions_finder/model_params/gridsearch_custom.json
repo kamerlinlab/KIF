@@ -1,0 +1,9 @@
+This file is intentionally empty!
+
+If you wish to add you're own custom grid search cv parameter set you can do it here.
+
+Then when you make an instance of either the class "ClassificationModel" or "RegressionModel" you can set the "search_approach" parameter to "custom"
+and this file will be read in.
+
+See the other .json files in this folder to figure out how to structure your grid search cv parameters.
+

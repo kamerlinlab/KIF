@@ -1,0 +1,124 @@
+{
+    "classification_models": {
+        "CatBoost": {
+            "params": {
+                "iterations": [
+                    50,
+                    100,
+                    250,
+                    300,
+                    400,
+                    500
+                ],
+                "learning_rate": [
+                    0.01,
+                    0.1,
+                    0.3
+                ]
+            }
+        },
+        "XGBoost": {
+            "params": {
+                "n_estimators": [
+                    50,
+                    100,
+                    250,
+                    300,
+                    400,
+                    500
+                ],
+                "learning_rate": [
+                    0.01,
+                    0.05,
+                    0.1,
+                    0.2,
+                    0.3
+                ]
+            }
+        },
+        "Random_Forest": {
+            "params": {
+                "n_estimators": [
+                    50,
+                    100,
+                    250,
+                    300,
+                    400,
+                    500
+                ],
+                "max_depth": [
+                    50,
+                    75,
+                    100,
+                    125,
+                    150
+                ],
+                "max_features": [
+                    "auto",
+                    "sqrt"
+                ]
+            }
+        }
+    },
+    "regression_models": {
+        "CatBoost": {
+            "params": {
+                "iterations": [
+                    50,
+                    100,
+                    250,
+                    300,
+                    400,
+                    500
+                ],
+                "learning_rate": [
+                    0.01,
+                    0.1,
+                    0.3
+                ]
+            }
+        },
+        "XGBoost": {
+            "params": {
+                "n_estimators": [
+                    50,
+                    100,
+                    250,
+                    300,
+                    400,
+                    500
+                ],
+                "learning_rate": [
+                    0.01,
+                    0.05,
+                    0.1,
+                    0.2,
+                    0.3
+                ]
+            }
+        },
+        "Random_Forest": {
+            "params": {
+                "n_estimators": [
+                    50,
+                    100,
+                    250,
+                    300,
+                    400,
+                    500
+                ],
+                "max_depth": [
+                    50,
+                    75,
+                    100,
+                    125,
+                    150
+                ],
+                "max_features": [
+                    "auto",
+                    "sqrt"
+                ]
+            }
+        }
+    }
+}
