@@ -50,12 +50,18 @@ class PyContactInitializer():
         Default is True.
 
     in_dir : str
-        Directory where input files are stored.
+        Directory where the input files are stored.
         Default is "".
+
+    pycontact_output_type : str
+        Define whether the PyContact output files were made using the custom script provided
+        by us (recommended) or using the PyContact GUI.
+        Options are: "custom_script" or "GUI".
+        Default is "custom_script"
 
     prepared_df : pd.DataFrame
         Final processed dataframe of all PyContact features.
-        Generated dynamically.
+        Generated once class is initialized.
     """
     # Generated when instantiated.
     pycontact_files: Union[str, list]
@@ -63,6 +69,7 @@ class PyContactInitializer():
     merge_files_method: Optional[str]
     remove_false_interactions: bool = True
     in_dir: str = ""
+    pycontact_output_type: str = "custom_script"
 
     # Generated later.
     prepared_df: pd.DataFrame = field(init=False)
@@ -105,8 +112,21 @@ class PyContactInitializer():
 
     def _load_pycontact_dataset(self, input_file) -> pd.DataFrame:
         """Load a single PyContact dataset."""
-        file_in_path = self.in_dir + input_file
-        return pd.read_csv(file_in_path)
+        # TODO
+
+        if self.pycontact_output_type == "custom_script":
+            file_in_path = self.in_dir + input_file
+            return pd.read_csv(file_in_path)
+
+        if self.pycontact_output_type == "GUI":
+
+            return "TODO"
+
+        error_message = (
+            "You must choose between either 'custom_script' or 'GUI' " +
+            "for the parameter pycontact_output_type."
+        )
+        raise ValueError(error_message)
 
     @staticmethod
     def _merge_pycontact_datasets_horizontally(individ_dfs) -> pd.DataFrame:
@@ -220,7 +240,7 @@ class PyContactInitializer():
     def _rm_false_interactions(self, full_df) -> pd.DataFrame:
         """
         Remove non-meaningful (too close to one another) or duplicate contacts/features.
-        Required if in the PyContact job run a user sets the second residue selection.
+        Required if in the PyContact job run a user sets the second residue selection
         group to be something other than "self" and the residue selections overlap.
         Doesn't hurt to be run if not anyway.
 
@@ -238,6 +258,7 @@ class PyContactInitializer():
         contacts_to_del = []
         contacts_to_keep = []
         column_names = full_df.columns
+
         for idx, contact in enumerate(column_names):
             contact_parts = re.split("(\d+|\s)", contact)
             # remove the list items with empty or single spaces from the above regex.
@@ -264,6 +285,39 @@ class PyContactInitializer():
         prepared_df = full_df.drop(
             full_df.columns[contacts_to_del], axis=1)
         return prepared_df
+
+    def _clean_GUI_feature_name(feature_name: str) -> str:
+        """
+        Reformats a feature name from how it is labelled in the GUI output of PyContact
+        to the standardized way that is expected throughout this program.
+
+        Note that with the GUI, it is not possible to save whether the interaction
+        is between the sidechain or backbone for both residues,
+        so for consistency with the rest of program, all features
+        are assinged as "bb-bb" (backbone-backbone) interactions.
+
+        Parameters
+        ----------
+        feature_name: str
+            GUI formatted feature to reformat.
+
+        Returns
+        ----------
+        str
+            Reformatted feature name.
+        """
+        res1 = feature_name.split('-')[0]
+        res1_numb = re.findall(r'\d+', res1)[0]
+        res1_name = (re.findall(r'[A-Z|a-z]+', res1)[0]).capitalize()
+
+        res2_plus_info = feature_name.split('-')[1]
+        res2_numb = re.findall(r'\d+', res2_plus_info)[0]
+        res2_name = (re.findall(r'[A-Z|a-z]+', res2_plus_info)[0]).capitalize()
+
+        # info is interaction type (e.g. Hbond, Vdw etc...)
+        info = (re.findall(r'[A-Z|a-z]+', res2_plus_info)[1]).capitalize()
+
+        return res1_numb + res1_name + " " + res2_numb + res2_name + " " + info + " bb-bb"
 
 
 def modify_column_residue_numbers(dataset: pd.DataFrame, constant_to_add: int = 1) -> pd.DataFrame:
