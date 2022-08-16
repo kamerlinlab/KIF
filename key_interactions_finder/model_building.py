@@ -34,12 +34,11 @@ import numpy as np
 from xgboost import XGBRegressor, XGBClassifier
 from catboost import CatBoostClassifier, CatBoostRegressor
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.decomposition import PCA
 
 # sklearn bits and bobs
 import sklearn.metrics as metrics
+from sklearn.utils.class_weight import compute_class_weight
 from sklearn.model_selection import train_test_split, RepeatedStratifiedKFold, RepeatedKFold, GridSearchCV
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, LabelEncoder
 
@@ -140,6 +139,7 @@ class _SupervisedRunner(_MachineLearnModel):
     search_approach: Optional[str] = "none"
 
     # Generated later by method calls.
+    available_models: dict = field(init=False)
     ml_models: dict = field(init=False)
     all_model_params: dict = field(init=False)
     ml_datasets: dict = field(init=False)
@@ -409,6 +409,13 @@ class ClassificationModel(_SupervisedRunner):
         Options are: "none", "quick", "moderate", "exhaustive" or "custom".
         Default = "quick"
 
+    use_class_weights : bool
+        Choose to weight each class according to the number of observations.
+        (This can be used in the case of an imbalanced dataset.)
+        The weights that will be used are the inverse of the class distribution so
+        each class has effective weight 1 at the end.
+        Default = False
+
     all_model_params : dict
         Nested dictionary of model parameters that can be read directly into
         Scikit-learn's implementation of grid search cv.
@@ -446,18 +453,10 @@ class ClassificationModel(_SupervisedRunner):
     generate_confusion_matrix()
         For each ml model used, determine the confusion matrix from the validation dataset.
     """
-    available_models = {
-        "CatBoost": {"model": CatBoostClassifier(), "params": {}},
-        "XGBoost": {"model": XGBClassifier(
-            use_label_encoder=False, eval_metric="logloss"), "params": {}},
-        "Random_Forest": {"model": RandomForestClassifier(), "params": {}},
-        "Ada_Boost": {"model": AdaBoostClassifier(), "params": {}},
-        "GBoost": {"model": GradientBoostingClassifier(), "params": {}}
-    }
-
     # Only non-shared parameters between classificaiton and regression.
     label_encoder: LabelEncoder = LabelEncoder()
     classes_to_use: list = field(default_factory=[])
+    use_class_weights: bool = False
 
     def __post_init__(self):
         """Setup the provided dataset and params for ML."""
@@ -496,6 +495,41 @@ class ClassificationModel(_SupervisedRunner):
         self.ml_datasets["eval_data_scaled"] = eval_data_scaled
         self.ml_datasets["y_train"] = y_train
         self.ml_datasets["y_eval"] = y_eval
+
+        if self.use_class_weights:
+
+            # For CatBoostClassifier
+            classes = np.unique(y_train)
+            weights = compute_class_weight(
+                class_weight='balanced', classes=classes, y=y_train)
+            class_weights = dict(zip(classes, weights))
+
+            # For XGBClassifier, I need the total number of examples in the majority class
+            # divided by the total number of examples in the minority class.
+            majority = self.dataset["Target"].value_counts()[0]
+            minority = self.dataset["Target"].value_counts()[1]
+            scaled_weight = round((majority / minority), 2)
+
+            self.available_models = {
+                "CatBoost": {"model": CatBoostClassifier(class_weights=class_weights
+                                                         ), "params": {}},
+                "XGBoost": {"model": XGBClassifier(
+                    use_label_encoder=False, eval_metric="logloss", scale_pos_weight=scaled_weight
+                ), "params": {}},
+                "Random_Forest": {"model": RandomForestClassifier(
+                    class_weight="balanced"), "params": {}}}
+
+            print("Class weights have now been added to your dataset.")
+            print(
+                f"The class imbalance in your dataset was: 1 : {1/scaled_weight:.2f}")
+
+        else:
+            self.available_models = {
+                "CatBoost": {"model": CatBoostClassifier(), "params": {}},
+                "XGBoost": {"model": XGBClassifier(
+                    use_label_encoder=False, eval_metric="logloss"), "params": {}},
+                "Random_Forest": {"model": RandomForestClassifier(), "params": {}},
+            }
 
         # Define ML Pipeline:
         self.cross_validation_approach = RepeatedStratifiedKFold(
