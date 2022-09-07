@@ -212,14 +212,15 @@ class _SupervisedRunner(_MachineLearnModel):
                     self.ml_datasets["y_train"])
 
             end_time = time.monotonic()
-            time_taken = timedelta(minutes=end_time - start_time)
+            time_taken = timedelta(seconds=end_time - start_time)
+            time_taken_mins = round((time_taken.seconds/60), 2)
 
             scores.append({
                 "model": model_name,
                 "best_params": clf.best_params_,
                 "best_score": clf.best_score_,
                 "best_standard_deviation": clf.cv_results_['std_test_score'][clf.best_index_],
-                "Time taken to build model": time_taken
+                "Time taken to build model (minutes)": time_taken_mins
             })
             self.ml_models[model_name] = clf
 
@@ -239,7 +240,7 @@ class _SupervisedRunner(_MachineLearnModel):
 
         final_results_df = pd.DataFrame(scores, columns=[
             "model", "best_params", "best_score", "best_standard_deviation",
-            "Time taken to build model"])
+            "Time taken to build model (minutes)"])
 
         return final_results_df
 
