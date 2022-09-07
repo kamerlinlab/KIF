@@ -27,6 +27,8 @@ from typing import Tuple, Optional
 import os
 import json
 import pickle
+import time
+from datetime import timedelta
 import pandas as pd
 import numpy as np
 
@@ -202,15 +204,22 @@ class _SupervisedRunner(_MachineLearnModel):
         """
         scores = []
         for model_name, mod_params in self.all_model_params.items():
+            start_time = time.monotonic()
+
             clf = GridSearchCV(mod_params["model"], mod_params["params"],
                                cv=self.cross_validation_approach, refit=True)
             clf.fit(self.ml_datasets["train_data_scaled"],
                     self.ml_datasets["y_train"])
+
+            end_time = time.monotonic()
+            time_taken = timedelta(minutes=end_time - start_time)
+
             scores.append({
                 "model": model_name,
                 "best_params": clf.best_params_,
                 "best_score": clf.best_score_,
-                "best_standard_deviation": clf.cv_results_['std_test_score'][clf.best_index_]
+                "best_standard_deviation": clf.cv_results_['std_test_score'][clf.best_index_],
+                "Time taken to build model": time_taken
             })
             self.ml_models[model_name] = clf
 
@@ -229,7 +238,8 @@ class _SupervisedRunner(_MachineLearnModel):
         print("Model building complete, returning final results with train/test datasets to you.")
 
         final_results_df = pd.DataFrame(scores, columns=[
-            "model", "best_params", "best_score", "best_standard_deviation"])
+            "model", "best_params", "best_score", "best_standard_deviation",
+            "Time taken to build model"])
 
         return final_results_df
 
