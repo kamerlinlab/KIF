@@ -40,15 +40,20 @@ It would also be a good idea to check out our pre-print (TODO - link) if you hav
 #### Tutorials Available
 (All tutorials include the setup and post-processing steps used on each system.)
 
-1. **[Title of notebook wih link]**  - Binary classification machine learning on simulations of the enzyme PTP1B.  
+1. **[Title of notebook wih link]**  - Binary classification ML on simulations of the enzyme PTP1B.  
 
 2. **[Title of notebook wih link]** - Binary classification statistical analysis on simulations of the PDZ3 domain. 
 
-3. **[Title of notebook wih link]** - Regression machine learning on simulations of a Retro-aldol lase enzyme 
+3. **[Title of notebook wih link]** - Regression ML on simulations of two kemp eliminases R1 and R4.  
 
-4. **[Title of notebook wih link]** - Regression statistical analysis  on simulations of a Retro-aldol lase enzyme 
+4. **[Title of notebook wih link]** - Regression statistical analysis on simulations of two kemp eliminases R1 and R4.  
 
-5. **[Title of notebook wih link - should be a folder this one]** - Preperation of PTP1B inputs required for graph theory based calculations. 
+5. **[Title of notebook wih link - should be a folder this one]** - Preperation of PTP1B inputs required for graph theory based calculations. Alongside the notebook, this tutorial contains an example R script to peform the WISP analysis and a python script to generate PyMOL comptabile figures depicting the results from the WISP calculation. 
+
+6. **[Title of notebook wih link]** - How to process a dataset generated with the PyContact GUI (instead of using the recommended approach which uses the script: ["run_pycontact.py"](https://github.com/kamerlinlab/key-interactions-finder/blob/main/key_interactions_finder/run_pycontact.py) provided in this repo). 
+
+
+
 (Included in this tutorial is the R script used to perform WISP and a python script I used to convert the VMD comptabile WISP output to a PyMOL style output.)
 
 
