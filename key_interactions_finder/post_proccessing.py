@@ -11,12 +11,13 @@ Provides users with the ability to:
 (This is done by summing all the feature importances that a residue is present in
 and the normalizing the results so that the top residue has an importance of 1).
 
-3. Obtain (and/or save) the probability distributions made for each feature.
+3. Obtain (and/or save) the kernel density estimations made for each feature.
 (only available for binary classification.)
 
 4. Estimate the "direction" each feature favors by calculating the average PyContact score
 for each feature and each class (only available for binary classification).
 Whatever feature has the highest average score is chosen (warning, very approximate method).
+
 """
 from dataclasses import dataclass, field
 from typing import Optional, Tuple, Union
@@ -552,8 +553,8 @@ class StatClassificationPostProcessor(PostProcessor):
         Projects feature importances onto the per-residue level for a single user selected
         statistical method.
 
-    get_probability_distributions(number_features)
-        Gets the probability distributions for each feature. The order in which features
+    get_kdes(number_features)
+        Gets the kernel density estimations made for each feature. The order in which features
         are returned is controlled by their Jensen-Shannon distance scores.
 
     estimate_feature_directions()
@@ -623,11 +624,11 @@ class StatClassificationPostProcessor(PostProcessor):
         raise ValueError("""You did not select one of either 'jensen_shannon'
         or 'mutual_information' for the 'stat_method' parameter.""")
 
-    def get_probability_distributions(self,
-                                      number_features: Union[int, str]
-                                      ) -> Tuple[np.ndarray, dict]:
+    def get_kdes(self,
+                 number_features: Union[int, str]
+                 ) -> Tuple[np.ndarray, dict]:
         """
-        Gets the probability distributions for each feature.
+        Gets the kernel density estimations made for each feature.
         If you don't ask for all features then the features returned will be the top X
         features, where X is the number you request.
         The "top features" are defined by their Jensen-Shannon distances.
@@ -642,11 +643,11 @@ class StatClassificationPostProcessor(PostProcessor):
         Returns
         ----------
         np.ndarray
-            X values between 0 and 1 to match the probability distributions.
+            X values between 0 and 1 to match the kernel density estimations.
 
         dict
-            Nested dictionary of probabily distributions. Outer keys are the class names,
-            inner keys are the feature and inner values are the probability distributions.
+            Nested dictionary of kernel density estimations. Outer keys are the class names,
+            inner keys are the feature and inner values are the kernel density estimations.
         """
         tot_numb_features = len(self.stat_model.js_distances.keys())
 
@@ -656,10 +657,10 @@ class StatClassificationPostProcessor(PostProcessor):
             tot_numb_features = len(self.stat_model.js_distances.keys())
 
         if (number_features == "all") or (number_features >= tot_numb_features):
-            return self.stat_model.x_values, self.stat_model.probability_distributions
+            return self.stat_model.x_values, self.stat_model.kdes
 
         if number_features < tot_numb_features:
-            # first have to decide which prob distributions to ouput by JS distances
+            # first have to decide which kdes to ouput by JS distances
             features_to_output = list(self.stat_model.js_distances.keys())[
                 0:number_features]
             print(features_to_output)
@@ -668,7 +669,7 @@ class StatClassificationPostProcessor(PostProcessor):
             for class_name in self.stat_model.class_names:
                 one_feature_prob_distribs = {}
                 for feature in features_to_output:
-                    distrib = self.stat_model.probability_distributions[class_name][feature]
+                    distrib = self.stat_model.kdes[class_name][feature]
                     one_feature_prob_distribs[feature] = distrib
 
                 selected_prob_distribs[class_name] = one_feature_prob_distribs

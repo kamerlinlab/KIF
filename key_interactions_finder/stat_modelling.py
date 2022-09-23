@@ -62,8 +62,8 @@ class _ProteinStatModel():
 
     Methods
     -------
-    _gen_prob_distributions(input_features, kde_bandwidth)
-        Generates probability distributions for each feature for a single class.
+    _gen_kdes(input_features, kde_bandwidth)
+        Generates kernel density estimations for each feature for a single class.
 
     _scale_features()
         Scale features with MinMaxScaler so that they are all between 0 and 1.
@@ -82,9 +82,9 @@ class _ProteinStatModel():
     feature_list: list = field(init=False)
     mutual_infos: dict = field(init=False)
 
-    def _gen_prob_distributions(self, input_features: pd.DataFrame, kde_bandwidth: float) -> Tuple[np.ndarray, dict]:
+    def _gen_kdes(self, input_features: pd.DataFrame, kde_bandwidth: float) -> Tuple[np.ndarray, dict]:
         """
-        Generates probability distributions for each feature for a single class.
+        Generates kernel density estimations (kdes) for each feature for a single class.
 
         Input feature sets are pre-normalised to ranges between 0 and 1,
         allowing for the approximation that using the same bandwidth in the
@@ -105,16 +105,16 @@ class _ProteinStatModel():
         ----------
         x_values : np.ndarray
             x values for probabilities over the range 0 to 1. Spacing consistent with
-            the probability distributions generated in this function.
+            the kernel density estimations generated in this function.
 
-        probability_distributions : dict
-            Keys are features and values are an array of probabilities.
+        kdes : dict
+            Keys are features and values are an array of kernel density estimations (kdes).
         """
         x_values = np.asarray(
             [value for value in np.arange(0.0, 1.0, kde_bandwidth)])
         x_values = x_values.reshape((int(1/kde_bandwidth)), 1)
 
-        probability_distributions = {}
+        kdes = {}
 
         for feature in self.feature_list:
             model = KernelDensity(
@@ -126,9 +126,9 @@ class _ProteinStatModel():
             model.fit(feature_values)
 
             probablities = np.exp(model.score_samples(x_values))
-            probability_distributions[feature] = probablities
+            kdes[feature] = probablities
 
-        return x_values, probability_distributions
+        return x_values, kdes
 
     def _scale_features(self) -> pd.DataFrame:
         """
@@ -204,12 +204,12 @@ class ClassificationStatModel(_ProteinStatModel):
         List of all feature labels in the dataset.
 
     x_values : np.ndarray
-        Values on the x-axis for plotting the probability distrubitons.
+        Values on the x-axis for plotting the kernel density estimations.
 
-    probability_distributions : dict
+    kdes : dict
         Nested dictionary. Outer layer keys are class names, and values
         are a dictionary of each feature (as inner key) and values of a
-        nested array of probabilities.
+        nested array of kernel density estimations (kdes).
 
     js_distances : dict
         Dictionary with each feature's (keys) and Jensen Shannon distance (values).
@@ -233,16 +233,16 @@ class ClassificationStatModel(_ProteinStatModel):
     class_names: list = field(default_factory=[])
     # Generated later.
     x_values: np.ndarray = field(init=False)
-    probability_distributions: dict = field(init=False)
+    kdes: dict = field(init=False)
     js_distances: dict = field(init=False)
 
     # Called at the end of the dataclass's initialization procedure.
     def __post_init__(self) -> None:
-        """Filter, rescale and calc the probability distributions for each feature."""
+        """Filter, rescale and calc the kdes for each feature."""
         self.out_dir = _prep_out_dir(self.out_dir)
 
         self.x_values = np.empty(shape=(0, 0))
-        self.probability_distributions = {}
+        self.kdes = {}
         self.js_distances = {}
         self.mutual_infos = {}
 
@@ -313,15 +313,15 @@ class ClassificationStatModel(_ProteinStatModel):
             per_class_dataset = self.scaled_dataset[(
                 self.scaled_dataset["Target"] == class_name)]
 
-            # generate probability distr. for each class.
-            self.x_values, self.probability_distributions[class_name] = self._gen_prob_distributions(
+            # generate kdes for each class.
+            self.x_values, self.kdes[class_name] = self._gen_kdes(
                 input_features=per_class_dataset,
                 kde_bandwidth=kde_bandwidth)
 
         # iterate through each feature and calc js dist.
         for feature in self.feature_list:
-            distrib_1 = self.probability_distributions[self.class_names[0]][feature]
-            distrib_2 = self.probability_distributions[self.class_names[1]][feature]
+            distrib_1 = self.kdes[self.class_names[0]][feature]
+            distrib_2 = self.kdes[self.class_names[1]][feature]
 
             js_dist = np.around(jensenshannon(distrib_1, distrib_2, base=2), 5)
 
