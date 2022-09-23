@@ -522,8 +522,8 @@ class ClassificationModel(_SupervisedRunner):
             scaled_weight = round((majority / minority), 2)
 
             self.available_models = {
-                "CatBoost": {"model": CatBoostClassifier(class_weights=class_weights
-                                                         ), "params": {}},
+                "CatBoost": {"model": CatBoostClassifier(
+                    class_weights=class_weights, logging_level="Silent"), "params": {}},
                 "XGBoost": {"model": XGBClassifier(
                     use_label_encoder=False, eval_metric="logloss", scale_pos_weight=scaled_weight
                 ), "params": {}},
@@ -536,7 +536,7 @@ class ClassificationModel(_SupervisedRunner):
 
         else:
             self.available_models = {
-                "CatBoost": {"model": CatBoostClassifier(), "params": {}},
+                "CatBoost": {"model": CatBoostClassifier(logging_level="Silent"), "params": {}},
                 "XGBoost": {"model": XGBClassifier(
                     use_label_encoder=False, eval_metric="logloss"), "params": {}},
                 "Random_Forest": {"model": RandomForestClassifier(), "params": {}},
@@ -704,7 +704,7 @@ class RegressionModel(_SupervisedRunner):
         and provides the user with a summary of the results.
     """
     available_models = {
-        "CatBoost": {"model": CatBoostRegressor(), "params": {}},
+        "CatBoost": {"model": CatBoostRegressor(logging_level="Silent"), "params": {}},
         "XGBoost": {"model": XGBRegressor(objective="reg:squarederror"), "params": {}},
         "Random_Forest": {"model": RandomForestRegressor(), "params": {}},
     }
