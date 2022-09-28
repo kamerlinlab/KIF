@@ -76,7 +76,7 @@ class PyContactInitializer():
     # This is called at the end of the dataclass's initialization procedure.
     def __post_init__(self):
         """Processes the provided PyContact files."""
-        if self.in_dir[-1] != "/":
+        if (self.in_dir != "") and (self.in_dir[-1] != "/"):
             self.in_dir += "/"
 
         if self.multiple_files:
