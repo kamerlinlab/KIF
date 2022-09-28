@@ -20,6 +20,7 @@ Whatever feature has the highest average score is chosen (warning, very approxim
 
 """
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional, Tuple, Union
 from abc import ABC, abstractmethod
 import warnings
@@ -265,14 +266,18 @@ class SupervisedPostProcessor(PostProcessor):
         models_to_use : list
             List of machine learning models/algorithims to do the postprocessing on.
         """
+        temp_folder = Path("temporary_files")
+        feat_names_file = Path(temp_folder, "feature_names.npy")
+
         try:
-            self.feat_names = np.load(
-                "temporary_files/feature_names.npy", allow_pickle=True)
+            self.feat_names = np.load(feat_names_file, allow_pickle=True)
 
             self.best_models = {}
             for model_name in models_to_use:
-                model = pickle.load(
-                    open(f"temporary_files/{model_name}_Model.pickle", 'rb'))
+                model_file_name = str(model_name) + "_Model.pickle"
+                model_in_path = Path(temp_folder, model_file_name)
+
+                model = pickle.load(open(model_in_path, 'rb'))
                 self.best_models.update({model_name: model})
 
         except FileNotFoundError:
@@ -292,11 +297,12 @@ class SupervisedPostProcessor(PostProcessor):
                 feat_importances, key=lambda x: x[1], reverse=True))
 
             # Save to disk
-            out_file = self.out_dir + \
-                str(model_name) + "_Feature_Importances.csv"
+            model_file_name = str(model_name) + "_Feature_Importances.csv"
+            out_file_path = Path(self.out_dir, model_file_name)
+
             self._per_feature_importances_to_file(
                 feature_importances=sort_feat_importances,
-                out_file=out_file
+                out_file=out_file_path
             )
 
             # Add to the class.
@@ -318,11 +324,12 @@ class SupervisedPostProcessor(PostProcessor):
             spheres = self._per_res_importance(per_res_import)
 
             # Save to disk
-            out_file = self.out_dir + \
-                str(model_name) + "_Per_Residue_Importances.csv"
+            model_file_name = str(model_name) + "_Per_Residue_Importances.csv"
+            out_file_path = Path(self.out_dir, model_file_name)
+
             self._per_res_importances_to_file(
                 per_res_values=spheres,
-                out_file=out_file
+                out_file=out_file_path
             )
 
             # Save to Class.
@@ -396,14 +403,15 @@ class UnsupervisedPostProcessor(PostProcessor):
 
         # If more models are to be added beyond PCA, append here.
 
-        # Save models to disk.
+        # Save to disk
         for model_name, feat_importances in self.all_feature_importances.items():
-            out_file = self.out_dir + \
-                str(model_name) + "_Feature_Importances.csv"
+
+            model_file_name = str(model_name) + "_Feature_Importances.csv"
+            out_file_path = Path(self.out_dir, model_file_name)
 
             self._per_feature_importances_to_file(
                 feature_importances=feat_importances,
-                out_file=out_file)
+                out_file=out_file_path)
 
         print("All feature importances have now been saved to disk.")
 
@@ -420,11 +428,12 @@ class UnsupervisedPostProcessor(PostProcessor):
             spheres = self._per_res_importance(per_res_import)
 
             # Save to disk
-            out_file = self.out_dir + \
-                str(model_name) + "_Per_Residue_Importances.csv"
+            model_file_name = str(model_name) + "_Per_Residue_Importances.csv"
+            out_file_path = Path(self.out_dir, model_file_name)
+
             self._per_res_importances_to_file(
                 per_res_values=spheres,
-                out_file=out_file
+                out_file=out_file_path
             )
 
             # Save to Class
@@ -601,10 +610,13 @@ class StatClassificationPostProcessor(PostProcessor):
             self.per_residue_mutual_infos = (
                 self._per_res_importance(per_res_import))
 
-            out_file = self.out_dir + "Mutual_Information_Scores_Per_Residue.csv"
+            # Save to disk
+            model_file_name = "Mutual_Information_Scores_Per_Residue.csv"
+            out_file_path = Path(self.out_dir, model_file_name)
+
             self._per_res_importances_to_file(
                 per_res_values=self.per_residue_mutual_infos,
-                out_file=out_file
+                out_file=out_file_path
             )
             return self.per_residue_mutual_infos
 
@@ -614,10 +626,13 @@ class StatClassificationPostProcessor(PostProcessor):
             self.per_residue_js_distances = (
                 self._per_res_importance(per_res_import))
 
-            out_file = self.out_dir + "Jensen_Shannon_Distance_Scores_Per_Residue.csv"
+            # Save to disk
+            model_file_name = "Jensen_Shannon_Distance_Scores_Per_Residue.csv"
+            out_file_path = Path(self.out_dir, model_file_name)
+
             self._per_res_importances_to_file(
                 per_res_values=self.per_residue_js_distances,
-                out_file=out_file
+                out_file=out_file_path
             )
             return self.per_residue_js_distances
 
@@ -663,7 +678,6 @@ class StatClassificationPostProcessor(PostProcessor):
             # first have to decide which kdes to ouput by JS distances
             features_to_output = list(self.stat_model.js_distances.keys())[
                 0:number_features]
-            print(features_to_output)
 
             selected_prob_distribs = {}
             for class_name in self.stat_model.class_names:

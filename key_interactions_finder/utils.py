@@ -18,7 +18,7 @@ _filter_features_by_strings()
 """
 from typing import Optional
 import csv
-import os
+from pathlib import Path
 import pandas as pd
 import numpy as np
 from MDAnalysis.analysis import distances
@@ -115,6 +115,13 @@ def per_residue_distance_to_site(pdb_file: str,
     return min_dists
 
 
+def download_prep_tutorial_dataset():
+    """
+    TODO.
+
+    """
+
+
 def _prep_out_dir(out_dir: str) -> str:
     """
     Makes the folder if it doesn't exist and appends a '/' if not present at end of a string.
@@ -130,8 +137,9 @@ def _prep_out_dir(out_dir: str) -> str:
         Corrected name of output directory to meet standardization criteria.
     """
     if out_dir != "":
-        if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+        out_dir_path = Path(out_dir)
+        if not out_dir_path.exists():
+            Path.mkdir(out_dir_path)
 
     if out_dir[-1] != "/":
         out_dir += "/"

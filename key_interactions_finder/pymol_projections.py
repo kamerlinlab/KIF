@@ -18,6 +18,7 @@ on a 3D model of the protein.
     Write out multiple PyMOL compatible scripts for different models.
 
 """
+from pathlib import Path
 from typing import Union, Tuple
 import pandas as pd
 from key_interactions_finder.utils import _prep_out_dir
@@ -68,9 +69,10 @@ def project_pymol_per_res_scores(per_res_scores: dict,
     all_spheres_str = '+'.join(map(str, all_spheres_list))
     per_res_import_out += f"sele All_Spheres, resi {all_spheres_str} and name CA\n"
 
-    out_file = out_dir + model_name + "_Pymol_Per_Res_Scores.py"
-    _write_file(out_file, per_res_import_out)
-    print(f"The file: {out_file} was written to disk.")
+    out_file_name = model_name + "_Pymol_Per_Res_Scores.py"
+    out_file_path = Path(out_dir, out_file_name)
+    _write_file(out_file_path, per_res_import_out)
+    print(f"The file: {out_file_path} was written to disk.")
 
 
 def project_multiple_per_res_scores(all_per_res_scores: dict,
@@ -176,9 +178,10 @@ def project_pymol_top_features(per_feature_scores: dict,
     # Finally, group all cylinders made together - easier for user to handle in PyMOL
     top_feats_out += "group All_Features, link*\n"
 
-    out_file = out_dir + model_name + "_Pymol_Per_Feature_Scores.py"
-    _write_file(out_file, top_feats_out)
-    print(f"The file: {out_file} was written to disk.")
+    out_file_name = model_name + "_Pymol_Per_Feature_Scores.py"
+    out_file_path = Path(out_dir, out_file_name)
+    _write_file(out_file_path, top_feats_out)
+    print(f"The file: {out_file_path} was written to disk.")
 
 
 def project_multiple_per_feature_scores(all_feature_scores: dict,

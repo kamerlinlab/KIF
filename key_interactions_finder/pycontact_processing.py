@@ -17,6 +17,7 @@ but 'remove_false_interactions' is set to True anyway.
 can be off by 1 residue number. If this happens to you, you can use the
 function "modify_column_residue_numbers" to edit/renumber all the features in your dataframe.
 """
+from pathlib import Path
 import re
 from typing import Union, Optional
 from dataclasses import dataclass, field
@@ -118,14 +119,14 @@ class PyContactInitializer():
         Parameters
         ----------
         input_file: str
-            complete file path to the input file.
+            Input file name.
 
         Returns
         ----------
         pd.DataFrame
-            A dataframe with each interaction found by PyContact being a row in the dataframe.
+            A df with each interaction found by PyContact a row in the dataframe.
         """
-        file_in_path = self.in_dir + input_file
+        file_in_path = Path(self.in_dir, input_file)
 
         if self.pycontact_output_type == "custom_script":
             return pd.read_csv(file_in_path)

@@ -15,6 +15,7 @@ This is only available to supervised datasets (i.e. data must has class labels).
 These classes both inherit from a parent class called "_ProteinStatModel" which abstracts
 as much as their shared behavior as possible.
 """
+from pathlib import Path
 from typing import Tuple
 from dataclasses import dataclass, field
 import csv
@@ -288,10 +289,11 @@ class ClassificationStatModel(_ProteinStatModel):
 
         print("Mutual information scores calculated.")
 
-        out_file = self.out_dir + "Mutual_Information_Per_Feature_Scores.csv"
+        out_file_path = Path(
+            self.out_dir, "Mutual_Information_Per_Feature_Scores.csv")
         self._per_feature_importances_to_file(
             per_feat_values=self.mutual_infos,
-            out_file=out_file
+            out_file=out_file_path
         )
         print("You can also access these results via the class attribute: 'mutual_infos'.")
 
@@ -332,11 +334,13 @@ class ClassificationStatModel(_ProteinStatModel):
 
         print("Jensen-Shannon (JS) distances calculated.")
 
-        out_file = self.out_dir + "Jensen_Shannon_Per_Feature_Scores.csv"
+        out_file_path = Path(
+            self.out_dir, "Jensen_Shannon_Per_Feature_Scores.csv")
         self._per_feature_importances_to_file(
             per_feat_values=self.js_distances,
-            out_file=out_file
+            out_file=out_file_path
         )
+
         print("You can also access these results via the class attribute: 'js_distances'.")
 
 
@@ -434,11 +438,13 @@ class RegressionStatModel(_ProteinStatModel):
 
         print("Mutual information scores calculated.")
 
-        out_file = self.out_dir + "Mutual_Information_Per_Feature_Scores.csv"
+        out_file_path = Path(
+            self.out_dir, "Mutual_Information_Per_Feature_Scores.csv")
         self._per_feature_importances_to_file(
             per_feat_values=self.mutual_infos,
-            out_file=out_file
+            out_file=out_file_path
         )
+
         print("You can also access these results via the class attribute: 'mutual_infos'.")
 
     def calc_linear_correl_to_target(self) -> None:
@@ -454,9 +460,11 @@ class RegressionStatModel(_ProteinStatModel):
 
         print("Linear correlations calculated.")
 
-        out_file = self.out_dir + "Linear_Correlations_Per_Feature_Scores.csv"
+        out_file_path = Path(
+            self.out_dir, "Linear_Correlations_Per_Feature_Scores.csv")
         self._per_feature_importances_to_file(
             per_feat_values=self.linear_correlations,
-            out_file=out_file
+            out_file=out_file_path
         )
+
         print("You can also access these results via the class attribute: 'linear_correlations'.")
