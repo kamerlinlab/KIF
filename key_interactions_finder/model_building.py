@@ -24,7 +24,7 @@ as much as their shared behaviour as possible.
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 from typing import Tuple, Optional
-import os
+from pathlib import Path
 import json
 import pickle
 import time
@@ -225,15 +225,18 @@ class _SupervisedRunner(_MachineLearnModel):
             self.ml_models[model_name] = clf
 
             if save_models:
-                if not os.path.exists("temporary_files"):
-                    os.makedirs("temporary_files")
+                temp_folder = Path("temporary_files")
+                if not temp_folder.exists():
+                    Path.mkdir(temp_folder)
 
-                np.save("temporary_files/feature_names.npy", self.feat_names)
+                feat_names_file = Path(temp_folder, "feature_names.npy")
+                np.save(feat_names_file, self.feat_names)
 
-                temp_out_path = "temporary_files" + "/" +  \
-                    str(model_name) + "_Model.pickle"
+                model_file_name = str(model_name) + "_Model.pickle"
+                model_out_path = Path(temp_folder, model_file_name)
+
                 self._save_best_models(
-                    best_model=clf.best_estimator_, out_path=temp_out_path)
+                    best_model=clf.best_estimator_, out_path=model_out_path)
 
         # Provide a model summary with the train/test data.
         print("Model building complete, returning final results with train/test datasets to you.")
@@ -316,10 +319,10 @@ class _SupervisedRunner(_MachineLearnModel):
         """
         # doing this so the .json files can be found regardless of users working directory
         # location. There might be a better way to do this...
-        module_relative_path = os.path.dirname(data_preperation.__file__)
 
-        hyper_params_file = module_relative_path + "/model_params/gridsearch_" + \
-            search_approach + ".json"
+        file_name = "gridsearch_" + search_approach + ".json"
+        module_path = Path(data_preperation.__file__).parent
+        hyper_params_file = Path(module_path, "model_params", file_name)
 
         with open(hyper_params_file) as file_in:
             hyper_params = json.load(file_in)
@@ -925,9 +928,12 @@ class UnsupervisedModel(_MachineLearnModel):
         print("All models built.")
 
         if save_models:
-            if not os.path.exists("temporary_files"):
-                os.makedirs("temporary_files")
-            np.save("temporary_files/feature_names.npy", self.feat_names)
+            temp_folder = Path("temporary_files")
+            if not temp_folder.exists():
+                Path.mkdir(temp_folder)
 
-            temp_out_path = "temporary_files" + "/" + "PCA" + "_Model.pickle"
-            self._save_best_models(best_model=pca, out_path=temp_out_path)
+            feat_names_file = Path(temp_folder, "feature_names.npy")
+            np.save(feat_names_file, self.feat_names)
+
+            model_out_path = Path(temp_folder, "PCA_Model.pickle")
+            self._save_best_models(best_model=pca, out_path=model_out_path)
