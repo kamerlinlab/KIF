@@ -124,7 +124,7 @@ def download_prep_tutorial_dataset():
 
 def _prep_out_dir(out_dir: str) -> str:
     """
-    Makes the folder if it doesn't exist and appends a '/' if not present at end of a string.
+    Makes the folder if it doesn't exist.
 
     Parameters
     ----------
@@ -140,9 +140,6 @@ def _prep_out_dir(out_dir: str) -> str:
         out_dir_path = Path(out_dir)
         if not out_dir_path.exists():
             Path.mkdir(out_dir_path)
-
-    if out_dir[-1] != "/":
-        out_dir += "/"
 
     return out_dir
 
