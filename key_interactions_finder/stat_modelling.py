@@ -222,10 +222,10 @@ class ClassificationStatModel(_ProteinStatModel):
 
     Methods
     -------
-    calc_mutual_info_to_target()
+    calc_mutual_info_to_target(save_result=True)
         Calculate the mutual information between each feature to the target classes.
 
-    calc_js_distances(kde_bandwidth=0.02)
+    calc_js_distances(kde_bandwidth=0.02, save_result=True)
         Calculate the Jensen-Shannon (JS) distance (metric) between each feature to
         the target classes.
     """
@@ -265,7 +265,7 @@ class ClassificationStatModel(_ProteinStatModel):
                 "The number of classes to compare should be 2. \n" +
                 "Please use a list of 2 items for the parameter: 'class_names'.")
 
-    def calc_mutual_info_to_target(self):
+    def calc_mutual_info_to_target(self, save_result: bool = True):
         """
         Calculate the mutual information between each feature to the 2 target classes.
         Note that Sklearns implementation (used here) is designed for "raw datasets"
@@ -274,6 +274,12 @@ class ClassificationStatModel(_ProteinStatModel):
         Further, the mutual information values calculated from Sklearns implementation are
         scaled by the natural logarithm of 2. In this implementation,
         the results are re-scaled to be linear.
+
+        Parameters
+        ----------
+        save_result : Optional[bool] = True
+            Save result to disk or not.
+            Optional, default is to save.
         """
         df_features = self.scaled_dataset.drop("Target", axis=1)
         features_array = df_features.to_numpy()
@@ -289,15 +295,17 @@ class ClassificationStatModel(_ProteinStatModel):
 
         print("Mutual information scores calculated.")
 
-        out_file_path = Path(
-            self.out_dir, "Mutual_Information_Per_Feature_Scores.csv")
-        self._per_feature_importances_to_file(
-            per_feat_values=self.mutual_infos,
-            out_file=out_file_path
-        )
-        print("You can also access these results via the class attribute: 'mutual_infos'.")
+        if save_result:
+            out_file_path = Path(
+                self.out_dir, "Mutual_Information_Per_Feature_Scores.csv")
+            self._per_feature_importances_to_file(
+                per_feat_values=self.mutual_infos,
+                out_file=out_file_path
+            )
+            print(
+                "You can also access these results via the class attribute: 'mutual_infos'.")
 
-    def calc_js_distances(self, kde_bandwidth: float = 0.02):
+    def calc_js_distances(self, kde_bandwidth: float = 0.02, save_result: bool = True):
         """
         Calculate the Jensen-Shannon (JS) distance (metric) between each feature to
         the target classes.
@@ -305,10 +313,14 @@ class ClassificationStatModel(_ProteinStatModel):
 
         Parameters
         ----------
-        kde_bandwidth : float
+        kde_bandwidth : Optional[float]
             Bandwidth used to generate the probabilty distribtions for each feature set.
             Note that features are all scaled to be between 0 and 1 before this step.
-            Default = 0.02
+            Optional, default = 0.02
+
+        save_result : Optional[bool] = True
+            Save result to disk or not.
+            Optional, default is to save.
         """
         for class_name in self.class_names:
             # split observations into each class first.
@@ -334,14 +346,16 @@ class ClassificationStatModel(_ProteinStatModel):
 
         print("Jensen-Shannon (JS) distances calculated.")
 
-        out_file_path = Path(
-            self.out_dir, "Jensen_Shannon_Per_Feature_Scores.csv")
-        self._per_feature_importances_to_file(
-            per_feat_values=self.js_distances,
-            out_file=out_file_path
-        )
+        if save_result:
+            out_file_path = Path(
+                self.out_dir, "Jensen_Shannon_Per_Feature_Scores.csv")
+            self._per_feature_importances_to_file(
+                per_feat_values=self.js_distances,
+                out_file=out_file_path
+            )
 
-        print("You can also access these results via the class attribute: 'js_distances'.")
+            print(
+                "You can also access these results via the class attribute: 'js_distances'.")
 
 
 @dataclass
@@ -382,10 +396,10 @@ class RegressionStatModel(_ProteinStatModel):
 
     Methods
     -------
-    calc_mutual_info_to_target()
+    calc_mutual_info_to_target(save_result=True)
         Calculate the mutual information between each feature and the target.
 
-    calc_linear_correl_to_target()
+    calc_linear_correl_to_target(save_result=True)
         Calculate the pearson correlation coeffcient between each feature and the target.
     """
 
@@ -413,7 +427,7 @@ class RegressionStatModel(_ProteinStatModel):
         # Features need to be scaled in order to use same bandwidth throughout.
         self.scaled_dataset = self._scale_features()
 
-    def calc_mutual_info_to_target(self) -> None:
+    def calc_mutual_info_to_target(self, save_result: bool = True) -> None:
         """
         Calculate the mutual information between each feature and the target.
         The target variable should be continuous.
@@ -423,6 +437,12 @@ class RegressionStatModel(_ProteinStatModel):
         Further, the mutual information values calculated from Sklearns implementation are
         scaled by the natural logarithm of 2. In this implementation,
         the results are re-scaled to be linear.
+
+        Parameters
+        ----------
+        save_result : Optional[bool] = True
+            Save result to disk or not.
+            Optional, default is to save.
         """
         df_features = self.scaled_dataset.drop("Target", axis=1)
         features_array = df_features.to_numpy()
@@ -438,17 +458,27 @@ class RegressionStatModel(_ProteinStatModel):
 
         print("Mutual information scores calculated.")
 
-        out_file_path = Path(
-            self.out_dir, "Mutual_Information_Per_Feature_Scores.csv")
-        self._per_feature_importances_to_file(
-            per_feat_values=self.mutual_infos,
-            out_file=out_file_path
-        )
+        if save_result:
+            out_file_path = Path(
+                self.out_dir, "Mutual_Information_Per_Feature_Scores.csv")
+            self._per_feature_importances_to_file(
+                per_feat_values=self.mutual_infos,
+                out_file=out_file_path
+            )
 
-        print("You can also access these results via the class attribute: 'mutual_infos'.")
+            print(
+                "You can also access these results via the class attribute: 'mutual_infos'.")
 
-    def calc_linear_correl_to_target(self) -> None:
-        """Calculate the pearson correlation coeffcient between each feature and the target."""
+    def calc_linear_correl_to_target(self, save_result: bool = True) -> None:
+        """
+        Calculate the pearson correlation coeffcient between each feature and the target.
+
+        Parameters
+        ----------
+        save_result : Optional[bool] = True
+            Save result to disk or not.
+            Optional, default is to save.
+        """
         target = self.dataset["Target"]
         features = self.dataset.drop(["Target"], axis=1)
 
@@ -460,11 +490,13 @@ class RegressionStatModel(_ProteinStatModel):
 
         print("Linear correlations calculated.")
 
-        out_file_path = Path(
-            self.out_dir, "Linear_Correlations_Per_Feature_Scores.csv")
-        self._per_feature_importances_to_file(
-            per_feat_values=self.linear_correlations,
-            out_file=out_file_path
-        )
+        if save_result:
+            out_file_path = Path(
+                self.out_dir, "Linear_Correlations_Per_Feature_Scores.csv")
+            self._per_feature_importances_to_file(
+                per_feat_values=self.linear_correlations,
+                out_file=out_file_path
+            )
 
-        print("You can also access these results via the class attribute: 'linear_correlations'.")
+            print(
+                "You can also access these results via the class attribute: 'linear_correlations'.")
