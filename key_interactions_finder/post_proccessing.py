@@ -38,8 +38,8 @@ class PostProcessor(ABC):
     """Abstract base class to unify the different postprocessing classes."""
 
     @abstractmethod
-    def get_per_res_importance(self):
-        """Projects feature importances onto the per-residue level"""
+    def get_per_res_importance(self, save_result):
+        """Projects feature importances onto the per-residue level."""
 
     @staticmethod
     def _dict_to_df_feat_importances(feat_importances) -> pd.DataFrame:
@@ -74,7 +74,7 @@ class PostProcessor(ABC):
         return per_res_import
 
     @staticmethod
-    def _per_res_importance(per_res_import) -> dict:
+    def _per_res_importance(per_res_import: pd.DataFrame) -> dict:
         """
         Sums together all the features importances/scores to determine the per-residue value.
 
@@ -114,7 +114,7 @@ class PostProcessor(ABC):
         return spheres
 
     @staticmethod
-    def _per_feature_importances_to_file(feature_importances: dict, out_file: str) -> None:
+    def _per_feature_importances_to_file(feature_importances: dict, out_file: Path) -> None:
         """
         Write out a per feature importances file.
 
@@ -123,7 +123,7 @@ class PostProcessor(ABC):
         feature_importances : dict
             Dictionary of feature names and there scores to write to disk.
 
-        out_file : str
+        out_file : Path
             The full path to write the file too.
         """
         with open(out_file, "w", newline="") as out:
@@ -134,7 +134,7 @@ class PostProcessor(ABC):
             print(f"{out_file} written to disk.")
 
     @staticmethod
-    def _per_res_importances_to_file(per_res_values: dict, out_file: str) -> None:
+    def _per_res_importances_to_file(per_res_values: dict, out_file: Path) -> None:
         """
         Write out a per residue importances file.
 
@@ -143,7 +143,7 @@ class PostProcessor(ABC):
         per_res_values : dict
             Dictionary of residue numbers and their scores to write to disk.
 
-        out_file : str
+        out_file : Path
             The full path to write the file too.
         """
         with open(out_file, "w", newline="") as file_out:
@@ -198,10 +198,10 @@ class SupervisedPostProcessor(PostProcessor):
     load_models_from_disk(models_to_use)
         Loads the generated machine learning models from disk.
 
-    get_feature_importance()
+    get_feature_importance(save_result=True)
         Gets the feature importances and saves them to disk.
 
-    get_per_res_importance()
+    get_per_res_importance(save_result=True)
         Projects feature importances onto the per-residue level.
     """
     out_dir: str = ""
@@ -287,8 +287,16 @@ class SupervisedPostProcessor(PostProcessor):
                 "should see a folder named: 'temporary_files' if you are."
             raise error_message
 
-    def get_feature_importance(self) -> None:
-        """Gets the feature importances and saves them to disk."""
+    def get_feature_importance(self, save_result: bool = True) -> None:
+        """
+        Gets the feature importances and saves them to disk.
+
+        Parameters
+        ----------
+        save_result : Optional[bool] = True
+            Save result to disk or not.
+            Optional, default is to save.
+        """
         self.all_feature_importances = {}
         for model_name, model in self.best_models.items():
             raw_importances = list(np.around(model.feature_importances_, 8))
@@ -296,14 +304,14 @@ class SupervisedPostProcessor(PostProcessor):
             sort_feat_importances = dict(sorted(
                 feat_importances, key=lambda x: x[1], reverse=True))
 
-            # Save to disk
-            model_file_name = str(model_name) + "_Feature_Importances.csv"
-            out_file_path = Path(self.out_dir, model_file_name)
+            if save_result:
+                model_file_name = str(model_name) + "_Feature_Importances.csv"
+                out_file_path = Path(self.out_dir, model_file_name)
 
-            self._per_feature_importances_to_file(
-                feature_importances=sort_feat_importances,
-                out_file=out_file_path
-            )
+                self._per_feature_importances_to_file(
+                    feature_importances=sort_feat_importances,
+                    out_file=out_file_path
+                )
 
             # Add to the class.
             self.all_feature_importances.update(
@@ -311,8 +319,16 @@ class SupervisedPostProcessor(PostProcessor):
 
         print("All feature importances have now been saved to disk.")
 
-    def get_per_res_importance(self) -> None:
-        """Projects feature importances onto the per-residue level"""
+    def get_per_res_importance(self, save_result: bool = True) -> None:
+        """
+        Projects feature importances onto the per-residue level.
+
+        Parameters
+        ----------
+        save_result : Optional[bool] = True
+            Save result to disk or not.
+            Optional, default is to save.
+        """
         # get_feature_importance has to be run before this function.
         if len(self.all_feature_importances) == 0:
             self.get_feature_importance()
@@ -323,14 +339,15 @@ class SupervisedPostProcessor(PostProcessor):
                 self._dict_to_df_feat_importances(feat_importances))
             spheres = self._per_res_importance(per_res_import)
 
-            # Save to disk
-            model_file_name = str(model_name) + "_Per_Residue_Importances.csv"
-            out_file_path = Path(self.out_dir, model_file_name)
+            if save_result:
+                model_file_name = str(model_name) + \
+                    "_Per_Residue_Importances.csv"
+                out_file_path = Path(self.out_dir, model_file_name)
 
-            self._per_res_importances_to_file(
-                per_res_values=spheres,
-                out_file=out_file_path
-            )
+                self._per_res_importances_to_file(
+                    per_res_values=spheres,
+                    out_file=out_file_path
+                )
 
             # Save to Class.
             self.all_per_residue_scores.update({model_name: spheres})
@@ -369,10 +386,10 @@ class UnsupervisedPostProcessor(PostProcessor):
 
     Methods
     -------
-    get_feature_importance()
+    get_feature_importance(save_result=True)
         Gets the feature importances and saves them to disk.
 
-    get_per_res_importance()
+    get_per_res_importance(save_result=True)
         Projects feature importances onto the per-residue level.
     """
     unsupervised_model: Optional[UnsupervisedModel]
@@ -386,7 +403,7 @@ class UnsupervisedPostProcessor(PostProcessor):
         self.out_dir = _prep_out_dir(self.out_dir)
         self.all_per_residue_scores = {}
 
-    def get_feature_importance(self, variance_explained_cutoff=0.95) -> None:
+    def get_feature_importance(self, variance_explained_cutoff=0.95, save_result: bool = True) -> None:
         """
         Gets the feature importances and saves them to disk.
 
@@ -395,6 +412,10 @@ class UnsupervisedPostProcessor(PostProcessor):
         variance_explained_cutoff : int
             What fraction of the variance needs to be described by the principal components (PCs)
             in order to stop including further PCs. Default is 0.95 (95%).
+
+        save_result : Optional[bool] = True
+            Save result to disk or not.
+            Optional, default is to save.
         """
         self.all_feature_importances = {}
 
@@ -403,20 +424,28 @@ class UnsupervisedPostProcessor(PostProcessor):
 
         # If more models are to be added beyond PCA, append here.
 
-        # Save to disk
-        for model_name, feat_importances in self.all_feature_importances.items():
+        if save_result:
+            for model_name, feat_importances in self.all_feature_importances.items():
 
-            model_file_name = str(model_name) + "_Feature_Importances.csv"
-            out_file_path = Path(self.out_dir, model_file_name)
+                model_file_name = str(model_name) + "_Feature_Importances.csv"
+                out_file_path = Path(self.out_dir, model_file_name)
 
-            self._per_feature_importances_to_file(
-                feature_importances=feat_importances,
-                out_file=out_file_path)
+                self._per_feature_importances_to_file(
+                    feature_importances=feat_importances,
+                    out_file=out_file_path)
 
-        print("All feature importances have now been saved to disk.")
+            print("All feature importances have now been saved to disk.")
 
-    def get_per_res_importance(self) -> None:
-        """Projects feature importances onto the per-residue level."""
+    def get_per_res_importance(self, save_result: bool = True) -> None:
+        """
+        Projects feature importances onto the per-residue level.
+
+        Parameters
+        ----------
+        save_result : Optional[bool] = True
+            Save result to disk or not.
+            Optional, default is to save.
+        """
         # get_feature_importance has to be run before this function.
         if len(self.all_feature_importances) == 0:
             self.get_feature_importance()
@@ -427,14 +456,15 @@ class UnsupervisedPostProcessor(PostProcessor):
                 self._dict_to_df_feat_importances(feat_importances))
             spheres = self._per_res_importance(per_res_import)
 
-            # Save to disk
-            model_file_name = str(model_name) + "_Per_Residue_Importances.csv"
-            out_file_path = Path(self.out_dir, model_file_name)
+            if save_result:
+                model_file_name = str(model_name) + \
+                    "_Per_Residue_Importances.csv"
+                out_file_path = Path(self.out_dir, model_file_name)
 
-            self._per_res_importances_to_file(
-                per_res_values=spheres,
-                out_file=out_file_path
-            )
+                self._per_res_importances_to_file(
+                    per_res_values=spheres,
+                    out_file=out_file_path
+                )
 
             # Save to Class
             self.all_per_residue_scores.update({model_name: spheres})
@@ -558,7 +588,7 @@ class StatClassificationPostProcessor(PostProcessor):
 
     Methods
     -------
-    get_per_res_importance(stat_method)
+    get_per_res_importance(stat_method, save_result=True)
         Projects feature importances onto the per-residue level for a single user selected
         statistical method.
 
@@ -587,7 +617,7 @@ class StatClassificationPostProcessor(PostProcessor):
         self.per_residue_js_distances = {}
         self.feature_directions = {}
 
-    def get_per_res_importance(self, stat_method: str) -> dict:
+    def get_per_res_importance(self, stat_method: str, save_result: bool = True) -> dict:
         """
         Projects feature importances onto the per-residue level for a
         single user selected statistical method.
@@ -598,6 +628,10 @@ class StatClassificationPostProcessor(PostProcessor):
             Define the statistical method that should be used to generate
             the per residue importances.
             "jensen_shannon" or "mutual_information" allowed.
+
+        save_result : Optional[bool] = True
+            Save result to disk or not.
+            Optional, default is to save.
 
         Returns
         ----------
@@ -610,14 +644,14 @@ class StatClassificationPostProcessor(PostProcessor):
             self.per_residue_mutual_infos = (
                 self._per_res_importance(per_res_import))
 
-            # Save to disk
-            model_file_name = "Mutual_Information_Scores_Per_Residue.csv"
-            out_file_path = Path(self.out_dir, model_file_name)
+            if save_result:
+                model_file_name = "Mutual_Information_Scores_Per_Residue.csv"
+                out_file_path = Path(self.out_dir, model_file_name)
+                self._per_res_importances_to_file(
+                    per_res_values=self.per_residue_mutual_infos,
+                    out_file=out_file_path
+                )
 
-            self._per_res_importances_to_file(
-                per_res_values=self.per_residue_mutual_infos,
-                out_file=out_file_path
-            )
             return self.per_residue_mutual_infos
 
         if stat_method == "jensen_shannon":
@@ -626,14 +660,14 @@ class StatClassificationPostProcessor(PostProcessor):
             self.per_residue_js_distances = (
                 self._per_res_importance(per_res_import))
 
-            # Save to disk
-            model_file_name = "Jensen_Shannon_Distance_Scores_Per_Residue.csv"
-            out_file_path = Path(self.out_dir, model_file_name)
+            if save_result:
+                model_file_name = "Jensen_Shannon_Distance_Scores_Per_Residue.csv"
+                out_file_path = Path(self.out_dir, model_file_name)
+                self._per_res_importances_to_file(
+                    per_res_values=self.per_residue_js_distances,
+                    out_file=out_file_path
+                )
 
-            self._per_res_importances_to_file(
-                per_res_values=self.per_residue_js_distances,
-                out_file=out_file_path
-            )
             return self.per_residue_js_distances
 
         raise ValueError("""You did not select one of either 'jensen_shannon'
@@ -732,12 +766,12 @@ class StatClassificationPostProcessor(PostProcessor):
             else:
                 self.feature_directions.update({feature_name: class_1_name})
 
-        out_file = self.out_dir + "Feature_Direction_Estimates.csv"
+        out_file_path = Path(self.out_dir, "Feature_Direction_Estimates.csv")
 
         self._save_feature_residue_direction(
             dict_to_save=self.feature_directions,
             feature_or_residue="features",
-            out_file=out_file
+            out_file=out_file_path
         )
 
         print("You can access these predictions through the 'feature_directions' class attribute.")
@@ -746,7 +780,7 @@ class StatClassificationPostProcessor(PostProcessor):
     def _save_feature_residue_direction(
             dict_to_save: dict,
             feature_or_residue: str,
-            out_file: str) -> None:
+            out_file: Path) -> None:
         """
         Save the estimated per feature or per residue "directions" to file.
 
@@ -758,7 +792,7 @@ class StatClassificationPostProcessor(PostProcessor):
         feature_or_residue : str
             Define if the file to be saved is per residue or per feature.
 
-        out_file : str
+        out_file : Path
             Full path of file to write out.
         """
         with open(out_file, "w", newline="") as file_out:
@@ -805,7 +839,7 @@ class StatRegressorPostProcessor(PostProcessor):
 
     Methods
     -------
-    get_per_res_importance(stat_method)
+    get_per_res_importance(stat_method, save_result=True)
         Projects feature importances onto the per-residue level for a single user selected
         statistical method.
     """
@@ -823,7 +857,7 @@ class StatRegressorPostProcessor(PostProcessor):
         self.per_residue_mutual_infos = {}
         self.per_residue_linear_correlations = {}
 
-    def get_per_res_importance(self, stat_method: str) -> dict:
+    def get_per_res_importance(self, stat_method: str, save_result: bool = True) -> dict:
         """
         Projects feature importances onto the per-residue level for a
         single user selected statistical method.
@@ -834,6 +868,10 @@ class StatRegressorPostProcessor(PostProcessor):
             Define the statistical method that should be used to generate
             the per residue importances.
             "mutual_information" or "linear_correlation" allowed.
+
+        save_result : Optional[bool] = True
+            Save result to disk or not.
+            Optional, default is to save.
 
         Returns
         ----------
@@ -846,11 +884,13 @@ class StatRegressorPostProcessor(PostProcessor):
             self.per_residue_mutual_infos = (
                 self._per_res_importance(per_res_import))
 
-            out_file = self.out_dir + "Mutual_Information_Scores_Per_Residue.csv"
-            self._per_res_importances_to_file(
-                per_res_values=self.per_residue_mutual_infos,
-                out_file=out_file
-            )
+            if save_result:
+                out_file_path = Path(
+                    self.out_dir, "Mutual_Information_Scores_Per_Residue.csv")
+                self._per_res_importances_to_file(
+                    per_res_values=self.per_residue_mutual_infos,
+                    out_file=out_file_path
+                )
             return self.per_residue_mutual_infos
 
         if stat_method == "linear_correlation":
@@ -859,11 +899,13 @@ class StatRegressorPostProcessor(PostProcessor):
             self.per_residue_linear_correlations = (
                 self._per_res_importance(per_res_import))
 
-            out_file = self.out_dir + "Linear_Correlation_Scores_Per_Residue.csv"
-            self._per_res_importances_to_file(
-                per_res_values=self.per_residue_linear_correlations,
-                out_file=out_file
-            )
+            if save_result:
+                out_file_path = Path(
+                    self.out_dir, "Linear_Correlation_Scores_Per_Residue.csv")
+                self._per_res_importances_to_file(
+                    per_res_values=self.per_residue_linear_correlations,
+                    out_file=out_file_path
+                )
             return self.per_residue_linear_correlations
 
         raise ValueError(
