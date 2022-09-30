@@ -1,33 +1,28 @@
+from setuptools import setup, find_packages
 
-# TODO, example taken from encodermap.
 
+VERSION = "0.0.1"
+DESCRIPTION = "Python package for MD simulation analysis"
+LONG_DESCRIPTION = "A python package to identify the key molecular interactions that regulate any conformational change."
 
-# from setuptools import setup
-# import os
-
-# with open("description.md", "r") as fh:
-#     long_description = fh.read()
-
-# version_file = open(os.path.join("encodermap", 'VERSION'))
-# version = version_file.read().strip()
-
-# setup(name='encodermap',
-#       version=version,
-#       description='python library for dimensionality reduction',
-#       long_description=long_description,
-#       long_description_content_type="text/markdown",
-#       author='Tobias Lemke',
-#       url="https://github.com/AG-Peter/encodermap",
-#       packages=['encodermap'],
-#       install_requires=[
-#           'numpy',
-#           'matplotlib',
-#           'scipy',
-#           'MDAnalysis',
-#           'tqdm'
-#       ],
-#       classifiers=[
-#           "Programming Language :: Python :: 3",
-#           "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-#           "Operating System :: OS Independent",
-#       ])
+setup(name="KIF",
+      version=VERSION,
+      description=DESCRIPTION,
+      long_description=LONG_DESCRIPTION,
+      author="Rory Crean",
+      url="https://github.com/kamerlinlab/KIF",
+      packages=find_packages(),
+      install_requires=[
+          "pandas",
+          "numpy",
+          "sklearn",
+          "scipy",
+          "xgboost",
+          "catboost",
+          "MDAnalysis",
+      ],
+      classifiers=[
+          "Programming Language :: Python :: 3",
+          "License :: GNU General Public License v2.0",
+          "Operating System :: OS Independent",
+      ])
