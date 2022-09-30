@@ -11,7 +11,8 @@ setup(name="KIF",
       long_description=LONG_DESCRIPTION,
       author="Rory Crean",
       url="https://github.com/kamerlinlab/KIF",
-      packages=find_packages(),
+      packages=find_packages(
+          include=["key_interactions_finder", "key_interactions_finder.*"]),
       install_requires=[
           "pandas",
           "numpy",
