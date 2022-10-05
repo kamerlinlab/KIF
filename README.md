@@ -85,6 +85,15 @@ All tutorials include the setup and post-processing steps used for each system. 
       - A python script to generate PyMOL comptabile figures depicting the results from the WISP calculation (The .R script will only generate VMD compataible ones.) 
 
 
+## License and Disclaimer
+
+This software is published under a GNU General Public License v2.0.
+
+As the principal investigator behind this software is employed by Georgia Tech University we must also clarify: “The software is provided “as is.” Neither the Georgia Institute of Technology nor any of its units or its employees, nor the software developers of KIF or any other person affiliated with the creation, implementation, and upkeep of the software’s code base, knowledge base, and servers (collectively, the “Entities”) shall be held liable for your use of the platform or any data that you enter. The Entities do not warrant or make any representations of any kind or nature with respect to the System, and the Entities do not assume or have any responsibility or liability for any claims, damages, or losses resulting from your use of the platform. None of the Entities shall have any liability to you for use charges related to any device that you use to access the platform or use and receive the platform, including, without limitation, charges for Internet data packages and Personal Computers. THE ENTITIES DISCLAIM ALL WARRANTIES WITH REGARD TO THE SERVICE,INCLUDING WARRANTIES OF MERCHANTABILITY, NON-INFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE TO THE FULLEST EXTENT ALLOWED BY LAW.”
+
+
+
+
 ## Citing this work
 If you make use of this package please cite our preprint: TODO. 
 
