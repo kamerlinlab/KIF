@@ -2,8 +2,11 @@
  A python package to identify the key molecular interactions that regulate any conformational change.
  
  ### TODOs ### 
-Add a TOC like figure demonstrating all the things one can do... 
- 
+- Add a TOC like figure demonstrating all the things one can do... 
+- Generate a read the docs when made public. 
+- Generate a docker image when made public. 
+
+
 ## In short, this package allows you to:
  - Identify important non-covalent interactions that regulate any conformational you are interested in (as long as you can describe the descriptor and sample the descriptor in your MD simulations). The interactions can be ranked in terms of their importance and used to generate per residue importances as well. 
  - Generate [PyMOL](https://pymol.org/2/) output scripts that enable you to visulaise your results on 3D structures. 
@@ -26,8 +29,24 @@ There are also tutorials available (discussed below).
 
 
 ## Dependancies and Install 
-Python 3.7 - because using dataclasses. 
-TODO 
+- Python 3.7 or higher is required as this package uses dataclasses. 
+
+- Although this package uses PyContact data, it does not require PyContact to be run. This may be beneficial if you for instance run your simulations on HPC architecture and process your (large) simulation files (with PyContact on the HPC). And then decide to work up the results on your desktop/laptop (using KIF). 
+
+If you wish to install both PyContact and KIF, please first install [PyContact (see the repo for how to do this)](https://github.com/maxscheurer/pycontact) and then install KIF using one of the below options:
+
+
+**Option 1: Clone/Download Repo first and then run setup.py :**
+
+```
+cd KIF-main
+python setup.py install 
+```
+
+**Option 2: TODO:**
+
+
+
 
 ## Running PyContact 
 Prior to using our package you'll need to have analysed your simulation(s) with [PyContact](https://github.com/maxscheurer/pycontact). For this, [we have a provided a script in this repo to do this](https://github.com/kamerlinlab/key-interactions-finder/blob/main/key_interactions_finder/run_pycontact.py), from which you'll obtain two outputs (one with summary stats - not needed for KIF, and the other with per frame interaction scores). This script helps to standardise the output from PyContact making it easier for KIF to handle the data. If you instead wish to process the data through the PyContact GUI, please refer to tutorial 3 for how to go about this. All other tutorials used datasets generated from the custom script described above. 
@@ -55,15 +74,24 @@ This is the approach we took for the enzyme PTP1B, which you can find described 
 ## Tutorials Available
 All tutorials include the setup and post-processing steps used for each system. All tutorials used datasets we analysed in our [preprint](TODO)
 
-1. **[Tutorial_PTP1B_Classification_ML_Stats.ipynb](LINK HERE TODO)**  - Perform binary classification ML and statistical analysis on simulations of PTP1B. Used to describe the differences in the closed and open WPD-loop states of PTP1B.   
+1. **[Tutorial_PTP1B_Classification_ML_Stats.ipynb](https://github.com/kamerlinlab/KIF/blob/main/tutorials/Tutorial_PTP1B_Classification_ML_Stats.ipynb)**  - Perform binary classification ML and statistical analysis on simulations of PTP1B. Used to describe the differences in the closed and open WPD-loop states of PTP1B.   
 
-2. **[Tutorial_KE07_Regression_ML_Stats.ipynb](LINK HERE TODO)** - Perform regression ML and statistical analysis on a kemp eliminse enzyme. Here the target value is the side chain dihedral of W50. 
+2. **[Tutorial_KE07_Regression_ML_Stats.ipynb](https://github.com/kamerlinlab/KIF/blob/main/tutorials/Tutorial_KE07_Regression_ML_Stats.ipynb)** - Perform regression ML and statistical analysis on a kemp eliminse enzyme. Here the target value is the side chain dihedral of W50. 
 
-3. **[Tutorial_Process_PyContact_GUI_Input.ipynb](LINK HERE TODO)** - This tutorial will provide a short example of how to use the "pycontact_processing.py" module to load in a PyContact dataset generated via the PyContact GUI. Please note it is recommended to use the ["run_pycontact.py"](https://github.com/kamerlinlab/key-interactions-finder/blob/main/key_interactions_finder/run_pycontact.py) script provided in this repo instead - see section: "Running PyContact" below. 
+3. **[Tutorial_Process_PyContact_GUI_Input.ipynb](https://github.com/kamerlinlab/KIF/blob/main/tutorials/Tutorial_Process_PyContact_GUI_Input.ipynb)** - This tutorial will provide a short example of how to use the "pycontact_processing.py" module to load in a PyContact dataset generated via the PyContact GUI. Please note it is recommended to use the ["run_pycontact.py"](https://github.com/kamerlinlab/key-interactions-finder/blob/main/key_interactions_finder/run_pycontact.py) script provided in this repo instead - see section: "Running PyContact" below. 
 
-4. **[network_analysis_tutorial](LINK HERE TODO)** - Preperation of PTP1B inputs required for graph theory based calculations. This tutorial is in its own folder, as two additional scripts are provided: 
+4. **[network_analysis_tutorial](https://github.com/kamerlinlab/KIF/tree/main/tutorials/network_analysis_tutorial)** - Preperation of PTP1B inputs required for graph theory based calculations. This tutorial is in its own folder, as two additional scripts are provided: 
       - A .R scipt (which uses [BIO3D](http://thegrantlab.org/bio3d_v2/)) to perform [WISP](https://pubs.acs.org/doi/10.1021/ct4008603)  
       - A python script to generate PyMOL comptabile figures depicting the results from the WISP calculation (The .R script will only generate VMD compataible ones.) 
+
+
+## License and Disclaimer
+
+This software is published under a GNU General Public License v2.0.
+
+As the principal investigator behind this software is employed by Georgia Tech University we must also clarify: “The software is provided “as is.” Neither the Georgia Institute of Technology nor any of its units or its employees, nor the software developers of KIF or any other person affiliated with the creation, implementation, and upkeep of the software’s code base, knowledge base, and servers (collectively, the “Entities”) shall be held liable for your use of the platform or any data that you enter. The Entities do not warrant or make any representations of any kind or nature with respect to the System, and the Entities do not assume or have any responsibility or liability for any claims, damages, or losses resulting from your use of the platform. None of the Entities shall have any liability to you for use charges related to any device that you use to access the platform or use and receive the platform, including, without limitation, charges for Internet data packages and Personal Computers. THE ENTITIES DISCLAIM ALL WARRANTIES WITH REGARD TO THE SERVICE,INCLUDING WARRANTIES OF MERCHANTABILITY, NON-INFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE TO THE FULLEST EXTENT ALLOWED BY LAW.”
+
+
 
 
 ## Citing this work
