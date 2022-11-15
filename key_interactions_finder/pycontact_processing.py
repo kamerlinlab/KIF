@@ -266,9 +266,10 @@ class PyContactInitializer():
             The feature/contact to test whether it is a duplicate of a pre-existing contact.
             The list items are different parts of the contact.
 
-        contacts_to_keep : list
-            A list of all current features that will be kept.
-            (Used to determine if new feature is duplicate of these.)
+        contacts_to_keep : list[list]
+            A list of lists, out list is all current features that will be kept.
+            Each feature is also a list in same format as contact_parts.
+            (Used to determine if new feature is duplicate of any of these.)
 
         Returns
         ----------
@@ -323,7 +324,7 @@ class PyContactInitializer():
         column_names = full_df.columns
 
         for idx, contact in enumerate(column_names):
-            contact_parts = re.split("(\d+|\s)", contact)
+            contact_parts = re.split(r"(\d+|\s)", contact)
             # remove the list items with empty or single spaces from the above regex.
             for list_index in sorted([0, 3, 4, 7, 9], reverse=True):
                 del contact_parts[list_index]
@@ -412,7 +413,7 @@ def modify_column_residue_numbers(dataset: pd.DataFrame, constant_to_add: int = 
     updated_names = []
     all_ori_names = list(dataset)
     for column_name in all_ori_names:
-        res_split = re.split("(\d+)", column_name)
+        res_split = re.split(r"(\d+)", column_name)
 
         res1_numb = int(res_split[1])
         res1_name = res_split[2]
