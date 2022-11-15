@@ -83,7 +83,7 @@ class _ProteinStatModel():
     feature_list: list = field(init=False)
     mutual_infos: dict = field(init=False)
 
-    def _gen_kdes(self, input_features: pd.DataFrame, kde_bandwidth: float) -> Tuple[np.ndarray, dict]:
+    def _gen_kdes(self, input_features: pd.DataFrame, kde_bandwidth: float = 0.02) -> Tuple[np.ndarray, dict]:
         """
         Generates kernel density estimations (kdes) for each feature for a single class.
 

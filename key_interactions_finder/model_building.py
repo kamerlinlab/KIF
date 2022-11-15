@@ -258,7 +258,7 @@ class _SupervisedRunner(_MachineLearnModel):
 
         Parameters
         ----------
-        models_to_use : list
+        models_to_use : list[str]
             List of machine learning models/algorithims to use.
 
         available_models : dict

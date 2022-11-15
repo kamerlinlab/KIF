@@ -109,7 +109,7 @@ class PyContactInitializer():
         print(f"You have {num_feats} features and {num_obs} observations.")
         print("The fully processed dataframe is accesible from the '.prepared_df' class attribute.")
 
-    def _load_pycontact_dataset(self, input_file) -> pd.DataFrame:
+    def _load_pycontact_dataset(self, input_file: str) -> pd.DataFrame:
         """
         Load a single PyContact dataset into a dataframe.
 
@@ -192,7 +192,7 @@ class PyContactInitializer():
         return pd.DataFrame.from_dict(all_features)
 
     @staticmethod
-    def _merge_pycontact_datasets_horizontally(individ_dfs) -> pd.DataFrame:
+    def _merge_pycontact_datasets_horizontally(individ_dfs: list) -> pd.DataFrame:
         """
         Function to merge multiple PyContact dataframes horizontally.
 
@@ -226,7 +226,7 @@ class PyContactInitializer():
         return merged_df
 
     @staticmethod
-    def _merge_pycontact_datasets_vertically(individ_dfs) -> pd.DataFrame:
+    def _merge_pycontact_datasets_vertically(individ_dfs: list) -> pd.DataFrame:
         """
         Function to merge multiple PyContact dfs vertically. This would be used when a user has
         multiple replicas or has broken their trajectories into blocks of separate frames.
@@ -301,7 +301,7 @@ class PyContactInitializer():
 
         return duplicate
 
-    def _rm_false_interactions(self, full_df) -> pd.DataFrame:
+    def _rm_false_interactions(self, full_df: pd.DataFrame) -> pd.DataFrame:
         """
         Remove non-meaningful (too close to one another) or duplicate contacts/features.
         Required if in the PyContact job run a user sets the second residue selection

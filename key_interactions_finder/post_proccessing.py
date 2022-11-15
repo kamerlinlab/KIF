@@ -42,7 +42,7 @@ class PostProcessor(ABC):
         """Projects feature importances onto the per-residue level."""
 
     @staticmethod
-    def _dict_to_df_feat_importances(feat_importances) -> pd.DataFrame:
+    def _dict_to_df_feat_importances(feat_importances: dict) -> pd.DataFrame:
         """
         Convert a dictionary of features and feature importances to a dataframe of 3 columns,
         which are: (1) the first residue, (2) the second residue and (3) the importance score.
@@ -62,8 +62,8 @@ class PostProcessor(ABC):
         df_feat_import_res = df_feat_import[0].str.split(" +", expand=True)
 
         res1, res2, values = [], [], []
-        res1 = (df_feat_import_res[0].str.extract("(\d+)")).astype(int)
-        res2 = (df_feat_import_res[1].str.extract("(\d+)")).astype(int)
+        res1 = (df_feat_import_res[0].str.extract(r"(\d+)")).astype(int)
+        res2 = (df_feat_import_res[1].str.extract(r"(\d+)")).astype(int)
         # absolute values required as want to be able to sum linear correlations.
         values = df_feat_import[1].abs()
 
@@ -263,7 +263,7 @@ class SupervisedPostProcessor(PostProcessor):
 
         Parameters
         ----------
-        models_to_use : list
+        models_to_use : list[str]
             List of machine learning models/algorithims to do the postprocessing on.
         """
         temp_folder = Path("temporary_files")
@@ -403,13 +403,15 @@ class UnsupervisedPostProcessor(PostProcessor):
         self.out_dir = _prep_out_dir(self.out_dir)
         self.all_per_residue_scores = {}
 
-    def get_feature_importance(self, variance_explained_cutoff=0.95, save_result: bool = True) -> None:
+    def get_feature_importance(self,
+                               variance_explained_cutoff: float = 0.95,
+                               save_result: bool = True) -> None:
         """
         Gets the feature importances and saves them to disk.
 
         Parameters
         ----------
-        variance_explained_cutoff : int
+        variance_explained_cutoff : float
             What fraction of the variance needs to be described by the principal components (PCs)
             in order to stop including further PCs. Default is 0.95 (95%).
 
@@ -489,7 +491,7 @@ class UnsupervisedPostProcessor(PostProcessor):
 
         Parameters
         ----------
-        variance_explained_cutoff : int
+        variance_explained_cutoff : float = 0.95
             What fraction of the variance needs to be described by the principal components (PCs)
             in order to stop including further PCs. Default is 0.95 (95%).
 
@@ -635,7 +637,7 @@ class StatClassificationPostProcessor(PostProcessor):
 
         Returns
         ----------
-        dict
+        dict[int, float]
             Dictionary of each residue and it's relative importance.
         """
         if stat_method == "mutual_information":
