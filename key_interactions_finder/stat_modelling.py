@@ -69,8 +69,8 @@ class _ProteinStatModel():
     _scale_features()
         Scale features with MinMaxScaler so that they are all between 0 and 1.
 
-    _per_feature_importances_to_file(per_feat_values, out_file)
-        Write out the per feature importances to a file.
+    _per_feature_scores_to_file(per_feat_values, out_file)
+        Write the per feature scores to a file.
     """
     # Generated at initialization.
     dataset: pd.DataFrame
@@ -153,9 +153,9 @@ class _ProteinStatModel():
         return scaled_dataset
 
     @staticmethod
-    def _per_feature_importances_to_file(per_feat_values: dict, out_file: str) -> None:
+    def _per_feature_scores_to_file(per_feat_values: dict, out_file: str) -> None:
         """
-        Write out the per feature importances to a file.
+        Write the per feature scores to a file.
 
         Parameters
         ----------
@@ -298,7 +298,7 @@ class ClassificationStatModel(_ProteinStatModel):
         if save_result:
             out_file_path = Path(
                 self.out_dir, "Mutual_Information_Per_Feature_Scores.csv")
-            self._per_feature_importances_to_file(
+            self._per_feature_scores_to_file(
                 per_feat_values=self.mutual_infos,
                 out_file=out_file_path
             )
@@ -349,7 +349,7 @@ class ClassificationStatModel(_ProteinStatModel):
         if save_result:
             out_file_path = Path(
                 self.out_dir, "Jensen_Shannon_Per_Feature_Scores.csv")
-            self._per_feature_importances_to_file(
+            self._per_feature_scores_to_file(
                 per_feat_values=self.js_distances,
                 out_file=out_file_path
             )
@@ -461,7 +461,7 @@ class RegressionStatModel(_ProteinStatModel):
         if save_result:
             out_file_path = Path(
                 self.out_dir, "Mutual_Information_Per_Feature_Scores.csv")
-            self._per_feature_importances_to_file(
+            self._per_feature_scores_to_file(
                 per_feat_values=self.mutual_infos,
                 out_file=out_file_path
             )
@@ -493,7 +493,7 @@ class RegressionStatModel(_ProteinStatModel):
         if save_result:
             out_file_path = Path(
                 self.out_dir, "Linear_Correlations_Per_Feature_Scores.csv")
-            self._per_feature_importances_to_file(
+            self._per_feature_scores_to_file(
                 per_feat_values=self.linear_correlations,
                 out_file=out_file_path
             )

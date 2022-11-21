@@ -5,11 +5,11 @@ on a 3D model of the protein.
 4 Functions available for the end user:
 
 1. project_pymol_per_res_scores(per_res_scores, model_name, out_dir)
-    Write out a PyMOL compatible python script to project per residue scores.
+    Write out a PyMOL compatible python script to project the per residue scores.
 
 2. project_multiple_per_res_scores(all_per_res_scores, out_dir)
-    Write out multiple PyMOL compatible per residue importance visualisation
-    scripts for the different models used.
+    Write out multiple PyMOL compatible visualisation scripts for
+    the per residue scores, one script for each model used.
 
 3. project_pymol_top_features()
     Write out a PyMOL compatible python script to project the top features.
@@ -29,7 +29,7 @@ def project_pymol_per_res_scores(per_res_scores: dict,
                                  out_dir: str = ""
                                  ) -> None:
     """
-    Write out a PyMOL compatible python script to project per residue scores.
+    Write out a PyMOL compatible python script to project the per residue scores.
 
     Parameters
     ----------
@@ -79,8 +79,8 @@ def project_multiple_per_res_scores(all_per_res_scores: dict,
                                     out_dir: str = ""
                                     ) -> None:
     """
-    Write out multiple PyMOL compatible per residue importance visualisation
-    scripts for the different models used.
+    Write out multiple PyMOL compatible visualisation scripts for
+    the per residue scores, one script for each model used.
 
     Parameters
     ----------
@@ -108,20 +108,20 @@ def project_pymol_top_features(per_feature_scores: dict,
     """
     Write out a PyMOL compatible python script to project the top X features.
     Features will be shown as cylinders between each residue pair,
-    with cylinder size controlled according to relative importance and
+    with cylinder size controlled according to relative score and
     cylinder colour controlled by interaction type.
 
     Parameters
     ----------
     per_feature_scores : dict
-        Keys are the names of the features and values are their importances.
+        Keys are the names of the features and values are their scores.
 
     model_name : str
         What name to appended to the start of the output file name to help identify it.
 
     numb_features : int or str
         The max number of top scoring features to determine (specified by an int).
-        Alternatively, if set to "all", then all feature importances will be determined.
+        Alternatively, if set to "all", then all feature scores will be determined.
 
     out_dir : str
         Folder to save outputs to, if none given, saved to current directory.
@@ -184,7 +184,7 @@ def project_pymol_top_features(per_feature_scores: dict,
     print(f"The file: {out_file_path} was written to disk.")
 
 
-def project_multiple_per_feature_scores(all_feature_scores: dict,
+def project_multiple_per_feature_scores(all_per_feature_scores: dict,
                                         numb_features: Union[int, str],
                                         out_dir: str = ""
                                         ) -> None:
@@ -193,19 +193,19 @@ def project_multiple_per_feature_scores(all_feature_scores: dict,
 
     Parameters
     ----------
-    all_feature_scores : dict
+    all_per_feature_scores : dict
         Nested dictionary, the outer layer keys are the model names/methods used.
         The inner layer is a dict with keys being each residue and
         values the per residue score.
 
     numb_features : int or str
         The max number of top scoring features to determine (specified by an int).
-        Alternatively, if set to "all", then all feature importances will be determined.
+        Alternatively, if set to "all", then all per feature scores will be determined.
 
     out_dir : str
         Folder to save outputs to, if none given, saved to current directory.
     """
-    for model_name, model_scores in all_feature_scores.items():
+    for model_name, model_scores in all_per_feature_scores.items():
         project_pymol_top_features(
             per_feature_scores=model_scores,
             model_name=model_name,
@@ -275,12 +275,12 @@ def _scale_interaction_strengths(input_df: pd.DataFrame) -> list:
     Parameters
     ----------
     input_df : pd.DataFrame
-        Dataframe of feature importances.
+        Dataframe of per feature scores.
 
     Returns
     ----------
     list
-        Scaled and rounded feature importances.
+        Scaled and rounded per feature scores.
     """
     interact_strengths = input_df[1]
     max_strength = max(interact_strengths)
