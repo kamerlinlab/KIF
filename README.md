@@ -2,17 +2,18 @@
  A python package to identify the key molecular interactions that regulate any conformational change.
  
  ### TODOs ### 
+ - Update here and in the tutorials all links to the preprint once it is accessible.
 - Add a TOC like figure demonstrating all the things one can do... 
 - Generate a read the docs when made public. 
 - Generate a docker image when made public. 
 
 
 ## In short, this package allows you to:
- - Identify important non-covalent interactions that regulate any conformational you are interested in (as long as you can describe the descriptor and sample the descriptor in your MD simulations). The interactions can be ranked in terms of their importance and used to generate per residue importances as well. 
+ - Identify important non-covalent interactions that are associated with any conformational you are interested in (as long as you can describe the descriptor and sample the descriptor in your MD simulations). The non covalent interactions are scored according to their association/importance to the conformational change and you can easily convert the per interaction/feature scores to per residue scores as well. 
  - Generate [PyMOL](https://pymol.org/2/) output scripts that enable you to visulaise your results on 3D structures. 
  - Generate per residue correlation and distance matrices that can be easily applied to the many graph theory methods available in order to study protein interaction networks and allostery within your system (no descriptor/target variable required for this). 
 
-Note that how define the descriptor is up to you, and you can use both a continous variable or a categorical variable (some tips on how to decide what to use will be given below). 
+Note that how define the descriptor is up to you, and you can use either a continous variable or a categorical variable (some tips on how to decide what to use will be given below). 
 
 **More Detail Please!**
 For a more complete description of KIF, please refer to our preprint: TODO. Included in the preprint is a description of some of the generic workflows possible alongside the application of KIF to several different biomolecular systems. 
@@ -43,15 +44,16 @@ cd KIF-main
 python setup.py install 
 ```
 
-**Option 2: TODO:**
+**Option 2:**
+(TODO) Additional methods will be added shortly. 
 
 
 
 
 ## Running PyContact 
-Prior to using our package you'll need to have analysed your simulation(s) with [PyContact](https://github.com/maxscheurer/pycontact). For this, [we have a provided a script in this repo to do this](https://github.com/kamerlinlab/key-interactions-finder/blob/main/key_interactions_finder/run_pycontact.py), from which you'll obtain two outputs (one with summary stats - not needed for KIF, and the other with per frame interaction scores). This script helps to standardise the output from PyContact making it easier for KIF to handle the data. If you instead wish to process the data through the PyContact GUI, please refer to tutorial 3 for how to go about this. All other tutorials used datasets generated from the custom script described above. 
+Prior to using our package you'll need to have analysed your simulation(s) with [PyContact](https://github.com/maxscheurer/pycontact). For this, [we have a provided a script in this repo to do this](https://github.com/kamerlinlab/key-interactions-finder/blob/main/key_interactions_finder/run_pycontact.py), from which you'll obtain two outputs (one with summary stats - not needed for KIF, and the other with per frame interaction scores). This script helps to standardise the output from PyContact making it easier for KIF to handle the data. If you instead wish to process the data through the PyContact GUI, please refer to tutorial 3 (see below) for how to go about this. All other tutorials used datasets generated from the custom script described above. 
 
-For a large number of frames and/or a large system, you will likely need to break up your PyContact calculation into blocks (to prevent running out of memory). We did this by making a single trajectory (of all frames we want to analyse) and submitting several (between 10-20) PyContact jobs on different residue ranges. Merging these results files back together again can be done with KIF - see the tutorials (1, 2 or 4).  
+For a large number of frames and/or a large system, you will likely need to break up your PyContact calculation into blocks (to prevent running out of memory). We did this by making a single trajectory (of all frames we wanted to analyse) and submitting several (between 10-20) PyContact jobs on different residue ranges. Merging these results files back together again can be done with KIF - see the tutorials (1, 2 or 4).  
 
 
 ## Choosing an Appropriate Target variable.  
