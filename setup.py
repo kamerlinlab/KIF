@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
-
 VERSION = "0.0.1"
 DESCRIPTION = "Python package for MD simulation analysis"
-LONG_DESCRIPTION = "A python package to identify the key molecular interactions that regulate any conformational change."
+LONG_DESCRIPTION = """
+    A python package to identify the key molecular interactions that regulate any conformational change."""
 
 setup(name="KIF",
       version=VERSION,
@@ -21,6 +21,7 @@ setup(name="KIF",
           "xgboost",
           "catboost",
           "MDAnalysis",
+          "gdown",
       ],
       classifiers=[
           "Programming Language :: Python :: 3",
