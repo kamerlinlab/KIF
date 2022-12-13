@@ -2,10 +2,14 @@
 Random helper functions.
 
 Functions Available:
+
 per_residue_distance_to_site()
     Calculate the closest heavy atom distance of each residue to an mdtraj defined
     selection of a site of interest. You can write the results to file if desired.
     Optionally can choose to only calculate minimum side chain distances.
+
+download_prep_tutorial_dataset()
+    Download one of the tutorial datasets from google drive using gdown and unzip it.
 
 
 ### The functions below should not be called directly by an end user ###
@@ -16,13 +20,15 @@ _filter_features_by_strings()
     Filter features to only include those that match one of the strings in the list provided.
 
 """
-from typing import Optional
+import shutil
 import csv
+from typing import Optional
 from pathlib import Path
 import pandas as pd
 import numpy as np
 from MDAnalysis.analysis import distances
 import MDAnalysis as mda
+import gdown
 
 
 def per_residue_distance_to_site(pdb_file: str,
@@ -53,9 +59,9 @@ def per_residue_distance_to_site(pdb_file: str,
         Last residue to measure the distance to.
 
     side_chain_only: bool = False,
-        Choose whether you want to measure the minimum distance using only the side chain of each residue.
-        If true, only the side chain atoms are used. For glycines (which do not have a side chain),
-        the CA of the glycine is used instead.
+        Choose whether you want to measure the minimum distance using only the
+        side chain of each residue. If true, only the side chain atoms are used.
+        For glycines (no side chain), the CA of the glycine is used instead.
 
     out_file : Optional[str]
         Path to output file to write out data.
@@ -81,7 +87,8 @@ def per_residue_distance_to_site(pdb_file: str,
             try:
                 min_res_dist = np.round(res_dist_arr.min(), 2)
 
-            except ValueError:  # catches "zero-size array to reduction operation minimum which has no identity"
+            # catches "zero-size array to reduction operation minimum which has no identity"
+            except ValueError:
                 # This happens for glycines which have no side chain...
                 selection_str = "name CA and resid " + str(residue)
                 group1 = universe.select_atoms(selection_str)
@@ -115,11 +122,48 @@ def per_residue_distance_to_site(pdb_file: str,
     return min_dists
 
 
-def download_prep_tutorial_dataset():
+def download_prep_tutorial_dataset(drive_url: str, save_dir: str) -> None:
     """
-    TODO.
+    Download one of the tutorial datasets from google drive using gdown and unzip it.
 
+    Parameters
+    ----------
+    drive_url : str
+        Google drive url to download the zip file from. Checked to see if a tutorial file.
+
+    save_dir : str
+        Directory to save and unpack the tutorial files.
     """
+    # tutorial links
+    accepted_links = [
+        "https://drive.google.com/file/d/1nbK3fw7z1hDXiGINZe-VT1SGdPbNhF07/view?usp=share_link",
+        "https://drive.google.com/file/d/1sYr_9stXLrOi_SDzHYLazSZUuzjL7lK-/view?usp=share_link",
+        "https://drive.google.com/file/d/10DbX12ZNPKqRIAlqs55HC8I6zLXJnP_q/view?usp=share_link",
+        "https://drive.google.com/file/d/1wPH4jOFOgIlpySLMN2ebk5PWzYgsrja2/view?usp=share_link"
+    ]
+
+    if drive_url not in accepted_links:
+        raise Exception(
+            "You seem to be trying to download a non-tutorial file, stopping for safety.")
+
+    # Prep the save_dir.
+    if save_dir != "":
+        save_dir_path = Path(save_dir)
+        if not save_dir_path.exists():
+            Path.mkdir(save_dir_path)
+    else:
+        save_dir_path = Path("")
+
+    zip_file_path = Path(save_dir_path, "tutorial_dataset.zip")
+
+    # gdown does not accept Path objects.
+    gdown.download(
+        url=drive_url, output=str(zip_file_path), quiet=False, fuzzy=True)
+
+    shutil.unpack_archive(
+        filename=zip_file_path, extract_dir=save_dir_path, format="zip")
+
+    print("Tutorial files were successfully downloaded and unzipped.")
 
 
 def _prep_out_dir(out_dir: str) -> str:
