@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = "0.0.1"
+VERSION = "0.1.0"
 DESCRIPTION = "Python package for MD simulation analysis"
 LONG_DESCRIPTION = """
     A python package to identify the key molecular interactions that regulate any conformational change."""
@@ -24,6 +24,7 @@ setup(name="KIF",
           "MDAnalysis",
           "gdown",
       ],
+      package_data={"key_interactions_finder": ["model_params/*.json"]},
       classifiers=[
           "Programming Language :: Python :: 3",
           "Operating System :: OS Independent",
