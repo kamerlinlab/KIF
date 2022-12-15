@@ -10,13 +10,14 @@ setup(name="KIF",
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
       author="Rory Crean",
+      author_email="rory.crean@kemi.uu.se",
       url="https://github.com/kamerlinlab/KIF",
       packages=find_packages(
           include=["key_interactions_finder"]),
       install_requires=[
           "pandas",
           "numpy",
-          "sklearn",
+          "scikit-learn",
           "scipy",
           "xgboost",
           "catboost",
@@ -25,6 +26,5 @@ setup(name="KIF",
       ],
       classifiers=[
           "Programming Language :: Python :: 3",
-          "License :: GNU General Public License v2.0",
           "Operating System :: OS Independent",
       ])
