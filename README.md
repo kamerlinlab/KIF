@@ -1,19 +1,20 @@
 # KIF - Key Interactions Finder
  A python package to identify the key molecular interactions that regulate any conformational change.
- 
+
  ### TODOs ### 
  - Update here and in the tutorials all links to the preprint once it is accessible.
-- Add a TOC like figure demonstrating all the things one can do... 
 - Generate a read the docs when made public. 
-- Generate a docker image when made public. 
+- Add more installation methods.  
+
+![KIF_ReadMe_Pic](https://user-images.githubusercontent.com/49672044/207597051-7dcde86a-62bd-4f69-96aa-326cad938a65.png)
 
 
 ## In short, this package allows you to:
- - Identify important non-covalent interactions that are associated with any conformational you are interested in (as long as you can describe the descriptor and sample the descriptor in your MD simulations). The non covalent interactions are scored according to their association/importance to the conformational change and you can easily convert the per interaction/feature scores to per residue scores as well. 
- - Generate [PyMOL](https://pymol.org/2/) output scripts that enable you to visulaise your results on 3D structures. 
+ - Identify important non-covalent interactions that are associated with any conformational you are interested in (as long as you can describe the descriptor and sample the descriptor in your MD simulations). The non-covalent interactions are scored according to their association/importance to the conformational change and you can easily convert the per interaction/feature scores to per residue scores as well. 
+ - Generate [PyMOL](https://pymol.org/2/) output scripts that enable you to visualise your results on 3D structures. 
  - Generate per residue correlation and distance matrices that can be easily applied to the many graph theory methods available in order to study protein interaction networks and allostery within your system (no descriptor/target variable required for this). 
 
-Note that how define the descriptor is up to you, and you can use either a continous variable or a categorical variable (some tips on how to decide what to use will be given below). 
+Note that how you define the descriptor is up to you, and you can use either a continuous variable or a categorical variable (some tips on how to decide what to use will be given below). 
 
 **More Detail Please!**
 For a more complete description of KIF, please refer to our preprint: TODO. Included in the preprint is a description of some of the generic workflows possible alongside the application of KIF to several different biomolecular systems. 
@@ -22,14 +23,14 @@ There are also tutorials available (discussed below).
 
 ## The approximate workflow for this package is as follows: 
 1. Run MD simulations on your system(s) of interest with whichever MD engine you want. 
-2. (Both can be done simultanesouly)
+2. (Both can be done simultaneously)
     1. Analyse the trajectory frames with [PyContact](https://github.com/maxscheurer/pycontact) (NOTE: this program is not made by us), to determine all the non-covalent contacts in your trajectory. [PyContact](https://github.com/maxscheurer/pycontact) is a well established program and is MD engine agnostic.
     2. (Optional) Calculate the value of a target variable for each frame you analyse with [PyContact](https://github.com/maxscheurer/pycontact) using whatever approach you see fit. 
 3. Load your non-covalent interactions data and optionally generated target data into KIF and perform some combination of machine learning, statistical analysis or network analysis. 
-4. Output the results for analysis. This includes visulisation scripts which are compatable with [PyMOL](https://pymol.org/2/) so you can see the results on a 3D protein structure. 
+4. Output the results for analysis. This includes visualisation scripts which are compatible with [PyMOL](https://pymol.org/2/) so you can see the results on a 3D protein structure. 
 
 
-## Dependancies and Install 
+## Dependencies and Install 
 - Python 3.7 or higher is required as this package uses dataclasses. 
 
 - Although this package uses PyContact data, it does not require PyContact to be run. This may be beneficial if you for instance run your simulations on HPC architecture and process your (large) simulation files (with PyContact on the HPC). And then decide to work up the results on your desktop/laptop (using KIF). 
@@ -51,7 +52,7 @@ python setup.py install
 
 
 ## Running PyContact 
-Prior to using our package you'll need to have analysed your simulation(s) with [PyContact](https://github.com/maxscheurer/pycontact). For this, [we have a provided a script in this repo to do this](https://github.com/kamerlinlab/key-interactions-finder/blob/main/key_interactions_finder/run_pycontact.py), from which you'll obtain two outputs (one with summary stats - not needed for KIF, and the other with per frame interaction scores). This script helps to standardise the output from PyContact making it easier for KIF to handle the data. If you instead wish to process the data through the PyContact GUI, please refer to tutorial 3 (see below) for how to go about this. All other tutorials used datasets generated from the custom script described above. 
+Prior to using our package you'll need to have analyzed your simulation(s) with [PyContact](https://github.com/maxscheurer/pycontact). For this, [we have a provided a script in this repo to do this](https://github.com/kamerlinlab/key-interactions-finder/blob/main/key_interactions_finder/run_pycontact.py), from which you'll obtain two outputs (one with summary stats - not needed for KIF, and the other with per frame interaction scores). This script helps to standardize the output from PyContact making it easier for KIF to handle the data. If you instead wish to process the data through the PyContact GUI, please refer to tutorial 3 (see below) for how to go about this. All other tutorials used datasets generated from the custom script described above. 
 
 For a large number of frames and/or a large system, you will likely need to break up your PyContact calculation into blocks (to prevent running out of memory). We did this by making a single trajectory (of all frames we wanted to analyse) and submitting several (between 10-20) PyContact jobs on different residue ranges. Merging these results files back together again can be done with KIF - see the tutorials (1, 2 or 4).  
 
@@ -72,20 +73,20 @@ Below are some examples of what could work for you. Of course, this is use case 
 You can also consider dropping the frames with state "neither" from your analysis to make the calculation cleaner (i.e., turn it into binary classification).
 This is the approach we took for the enzyme PTP1B, which you can find described in our preprint. 
 
-
 ## Tutorials Available
-All tutorials include the setup and post-processing steps used for each system. All tutorials used datasets we analysed in our [preprint](TODO)
+All tutorials include the setup and post-processing steps used for each system. All tutorials used datasets we analyzed in our [preprint](TODO)
 
 1. **[Tutorial_PTP1B_Classification_ML_Stats.ipynb](https://github.com/kamerlinlab/KIF/blob/main/tutorials/Tutorial_PTP1B_Classification_ML_Stats.ipynb)**  - Perform binary classification ML and statistical analysis on simulations of PTP1B. Used to describe the differences in the closed and open WPD-loop states of PTP1B.   
 
-2. **[Tutorial_KE07_Regression_ML_Stats.ipynb](https://github.com/kamerlinlab/KIF/blob/main/tutorials/Tutorial_KE07_Regression_ML_Stats.ipynb)** - Perform regression ML and statistical analysis on a kemp eliminse enzyme. Here the target value is the side chain dihedral of W50. 
+2. **[Tutorial_KE07_Regression_ML_Stats.ipynb](https://github.com/kamerlinlab/KIF/blob/main/tutorials/Tutorial_KE07_Regression_ML_Stats.ipynb)** - Perform regression ML and statistical analysis on a kemp eliminase enzyme. Here the target value is the side chain dihedral of W50. 
 
 3. **[Tutorial_Process_PyContact_GUI_Input.ipynb](https://github.com/kamerlinlab/KIF/blob/main/tutorials/Tutorial_Process_PyContact_GUI_Input.ipynb)** - This tutorial will provide a short example of how to use the "pycontact_processing.py" module to load in a PyContact dataset generated via the PyContact GUI. Please note it is recommended to use the ["run_pycontact.py"](https://github.com/kamerlinlab/key-interactions-finder/blob/main/key_interactions_finder/run_pycontact.py) script provided in this repo instead - see section: "Running PyContact" below. 
 
-4. **[network_analysis_tutorial](https://github.com/kamerlinlab/KIF/tree/main/tutorials/network_analysis_tutorial)** - Preperation of PTP1B inputs required for graph theory based calculations. This tutorial is in its own folder, as two additional scripts are provided: 
-      - A .R scipt (which uses [BIO3D](http://thegrantlab.org/bio3d_v2/)) to perform [WISP](https://pubs.acs.org/doi/10.1021/ct4008603)  
-      - A python script to generate PyMOL comptabile figures depicting the results from the WISP calculation (The .R script will only generate VMD compataible ones.) 
+4. **[network_analysis_tutorial](https://github.com/kamerlinlab/KIF/tree/main/tutorials/network_analysis_tutorial)** - Preparation of PTP1B inputs required for graph theory based calculations. This tutorial is in its own folder, as two additional scripts are provided: 
+      - A .R script (which uses [BIO3D](http://thegrantlab.org/bio3d_v2/)) to perform [WISP](https://pubs.acs.org/doi/10.1021/ct4008603)  
+      - A python script to generate PyMOL compatible figures depicting the results from the WISP calculation (The .R script will only generate VMD compatible ones.) 
 
+5. **[Workup_PDZ_Bootstrapping.ipynb](https://github.com/kamerlinlab/KIF/blob/main/tutorials/Workup_PDZ_Bootstrapping.ipynb)** - Workup the bootstrapping calculations performed on the PDZ3 domain. As described in the notebook, the bootstrapping itself was computationally intensive to run so only the workup is included in this notebook. We have however included the [scripts that we used to perform bootstrapping for both PTP1B and the PDZ3 domain on Zenodo](https://zenodo.org/record/7104965#.Y5meLXbMKUk) 
 
 ## License and Disclaimer
 
