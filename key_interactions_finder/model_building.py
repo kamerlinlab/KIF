@@ -527,9 +527,8 @@ class ClassificationModel(_SupervisedRunner):
             self.available_models = {
                 "CatBoost": {"model": CatBoostClassifier(
                     class_weights=class_weights, logging_level="Silent"), "params": {}},
-                "XGBoost": {"model": XGBClassifier(
-                    use_label_encoder=False, eval_metric="logloss", scale_pos_weight=scaled_weight
-                ), "params": {}},
+                "XGBoost": {"model": XGBClassifier(eval_metric="logloss", scale_pos_weight=scaled_weight
+                                                   ), "params": {}},
                 "Random_Forest": {"model": RandomForestClassifier(
                     class_weight="balanced"), "params": {}}}
 
@@ -540,8 +539,7 @@ class ClassificationModel(_SupervisedRunner):
         else:
             self.available_models = {
                 "CatBoost": {"model": CatBoostClassifier(logging_level="Silent"), "params": {}},
-                "XGBoost": {"model": XGBClassifier(
-                    use_label_encoder=False, eval_metric="logloss"), "params": {}},
+                "XGBoost": {"model": XGBClassifier(eval_metric="logloss"), "params": {}},
                 "Random_Forest": {"model": RandomForestClassifier(), "params": {}},
             }
 
