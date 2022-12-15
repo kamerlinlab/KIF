@@ -38,17 +38,19 @@ There are also tutorials available (discussed below).
 If you wish to install both PyContact and KIF, please first install [PyContact (see the repo for how to do this)](https://github.com/maxscheurer/pycontact) and then install KIF using one of the below options:
 
 
-**Option 1: Clone/Download Repo first and then run setup.py :**
+**Option 1: Install with pip**
+```
+pip install KIF
+```
+
+**Option 2: Clone/Download Repo first and then run setup.py :**
 
 ```
 cd KIF-main
 python setup.py install 
 ```
 
-**Option 2:**
-(TODO) Additional methods will be added shortly. 
-
-
+- Additional methods will be added shortly. 
 
 
 ## Running PyContact 
