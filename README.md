@@ -1,11 +1,6 @@
 # KIF - Key Interactions Finder
  A python package to identify the key molecular interactions that regulate any conformational change.
 
- ### TODOs ### 
- - Update here and in the tutorials all links to the preprint once it is accessible.
-- Generate a read the docs when made public. 
-- Add more installation methods.  
-
 ![KIF_ReadMe_Pic](https://user-images.githubusercontent.com/49672044/207597051-7dcde86a-62bd-4f69-96aa-326cad938a65.png)
 
 
@@ -17,7 +12,7 @@
 Note that how you define the descriptor is up to you, and you can use either a continuous variable or a categorical variable (some tips on how to decide what to use will be given below). 
 
 **More Detail Please!**
-For a more complete description of KIF, please refer to our preprint: TODO. Included in the preprint is a description of some of the generic workflows possible alongside the application of KIF to several different biomolecular systems. 
+For a more complete description of KIF, [please refer to our preprint](https://chemrxiv.org/engage/chemrxiv/article-details/63afa03c963bf350c9abb601). Included in the preprint is a description of some of the generic workflows possible alongside the application of KIF to several different biomolecular systems. 
 
 There are also tutorials available (discussed below). 
 
@@ -76,7 +71,7 @@ You can also consider dropping the frames with state "neither" from your analysi
 This is the approach we took for the enzyme PTP1B, which you can find described in our preprint. 
 
 ## Tutorials Available
-All tutorials include the setup and post-processing steps used for each system. All tutorials used datasets we analyzed in our [preprint](TODO)
+All tutorials include the setup and post-processing steps used for each system. All tutorials used datasets we analyzed in our [preprint](https://chemrxiv.org/engage/chemrxiv/article-details/63afa03c963bf350c9abb601)
 
 1. **[Tutorial_PTP1B_Classification_ML_Stats.ipynb](https://github.com/kamerlinlab/KIF/blob/main/tutorials/Tutorial_PTP1B_Classification_ML_Stats.ipynb) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kamerlinlab/KIF/blob/main/tutorials/Tutorial_PTP1B_Classification_ML_Stats.ipynb)**  - Perform binary classification ML and statistical analysis on simulations of PTP1B. Used to describe the differences in the closed and open WPD-loop states of PTP1B.   
 
@@ -101,7 +96,12 @@ As the principal investigator behind this software is employed by Georgia Tech U
 
 
 ## Citing this work
-If you make use of this package please cite our preprint: TODO. 
+If you make use of this package [please cite our preprint:](https://chemrxiv.org/engage/chemrxiv/article-details/63afa03c963bf350c9abb601). 
+
+KIF – Key Interactions Finder: A Program to Identify the Key Molecular Interactions that Regulate Protein Conformational Changes
+
+Authors: Rory M. Crean, Joanna S. G. Slusky, Peter M. Kasson and Shina Caroline Lynn Kamerlin
+
 
 ## Issues/Questions/Contributions
 All welcome. Please feel free to open an issue or submit a pull request as necessary. Feature requests are welcome too. 
