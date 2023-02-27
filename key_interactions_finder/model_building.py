@@ -815,11 +815,17 @@ class RegressionModel(_SupervisedRunner):
         rmse = np.round(
             np.sqrt(metrics.mean_squared_error(y_true, y_pred)), 4)
 
-        mean_squared_log_error = np.round(
-            metrics.mean_squared_log_error(y_true, y_pred), 4)
-
         r_squared = np.round(
             metrics.r2_score(y_true, y_pred), 4)
+
+        try:
+            mean_squared_log_error = np.round(
+                metrics.mean_squared_log_error(y_true, y_pred), 4)
+
+        except ValueError:
+            print("""Mean Squared Log Error cannot be calculated as your target column contains
+                  negative numbers. Continuing with the other metrics.""")
+            mean_squared_log_error = "N/A"
 
         all_metrics = [[model_name, explained_variance, mean_absolute_error,
                         mse, rmse, mean_squared_log_error, r_squared]]
