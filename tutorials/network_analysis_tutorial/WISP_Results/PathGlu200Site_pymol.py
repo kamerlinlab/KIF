@@ -1,4 +1,4 @@
-# To run this script you will need to get a copy of 'draw_links.py' from the internet.
+# To run this script you will need to get a copy of 'draw_links.py' 
 # You can find it freely available here: 
 # http://pldserver1.biochem.queensu.ca/~rlc/work/pymol/draw_links.py 
 # Place the 'draw_links.py' file in your working directory. 
