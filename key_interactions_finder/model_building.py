@@ -324,7 +324,7 @@ class _SupervisedRunner(_MachineLearnModel):
         module_path = Path(data_preperation.__file__).parent
         hyper_params_file = Path(module_path, "model_params", file_name)
 
-        with open(hyper_params_file) as file_in:
+        with open(hyper_params_file, encoding="utf-8") as file_in:
             hyper_params = json.load(file_in)
 
         if is_classification:
@@ -907,11 +907,11 @@ class UnsupervisedModel(_MachineLearnModel):
         out_text += "Below is a summary of the unsupervised machine learning you have planned. \n"
 
         out_text += f"You will use {len(self.dataset.columns)} features to build the model, with "
-        out_text += f"all of your data will be used for training the model, "
+        out_text += "all of your data will be used for training the model, "
         out_text += f"which is {len(self.dataset)} observations.\n"
 
-        out_text += f"Currently you will use principal component analysis to get your results. "
-        out_text += f"More methods might be added in the future. "
+        out_text += "Currently you will use principal component analysis to get your results. "
+        out_text += "More methods might be added in the future. "
 
         out_text += "If you're happy with the above, lets get model building!"
         return out_text

@@ -265,7 +265,7 @@ class SupervisedFeatureData(_FeatureData):
                                  "length of your features file. If the difference is 1, " +
                                  "check if you set the 'header_present' keyword correctly."
                                  )
-            raise Exception(exception_message)
+            raise ValueError(exception_message)
 
         # Empty for now until any filtering is performed
         self.df_filtered = pd.DataFrame()

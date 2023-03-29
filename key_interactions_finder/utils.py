@@ -114,7 +114,7 @@ def per_residue_distance_to_site(pdb_file: str,
     if out_file is None:
         return min_dists
 
-    with open(out_file, "w", newline="") as file_out:
+    with open(out_file, "w", newline="", encoding="utf-8") as file_out:
         csv_out = csv.writer(file_out)
         csv_out.writerow(["Residue Number", "Minimum Distance"])
         csv_out.writerows(min_dists.items())
@@ -144,7 +144,7 @@ def download_prep_tutorial_dataset(drive_url: str, save_dir: str) -> None:
     ]
 
     if drive_url not in accepted_links:
-        raise Exception(
+        raise ValueError(
             "You seem to be trying to download a non-tutorial file, stopping for safety.")
 
     # Prep the save_dir.

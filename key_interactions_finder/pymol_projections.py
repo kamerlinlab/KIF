@@ -232,9 +232,9 @@ def _extract_residue_lists(input_df: pd.DataFrame) -> Tuple[list, list]:
         residue 2 for each feature.
     """
     residue1 = (input_df[0].str.extract(
-        "(\d+)")).astype(int).values.tolist()
+        r"(\d+)")).astype(int).values.tolist()
     residue2 = (input_df[1].str.extract(
-        "(\d+)")).astype(int).values.tolist()
+        r"(\d+)")).astype(int).values.tolist()
     res1 = [item for sublist in residue1 for item in sublist]
     res2 = [item for sublist in residue2 for item in sublist]
 
@@ -243,7 +243,7 @@ def _extract_residue_lists(input_df: pd.DataFrame) -> Tuple[list, list]:
 
 def _write_file(file_name: str, text: str) -> None:
     """Write out a PyMOL text file."""
-    with open(file_name, "w+") as file_out:
+    with open(file_name, "w+", encoding="utf-8") as file_out:
         file_out.write(text)
 
 

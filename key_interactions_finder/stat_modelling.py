@@ -83,7 +83,9 @@ class _ProteinStatModel():
     feature_list: list = field(init=False)
     mutual_infos: dict = field(init=False)
 
-    def _gen_kdes(self, input_features: pd.DataFrame, kde_bandwidth: float = 0.02) -> Tuple[np.ndarray, dict]:
+    def _gen_kdes(self,
+                  input_features: pd.DataFrame,
+                  kde_bandwidth: float = 0.02) -> Tuple[np.ndarray, dict]:
         """
         Generates kernel density estimations (kdes) for each feature for a single class.
 
@@ -165,7 +167,7 @@ class _ProteinStatModel():
         out_file : str
             The full path to write the file too.
         """
-        with open(out_file, "w", newline="") as file_out:
+        with open(out_file, "w", newline="", encoding="utf-8") as file_out:
             csv_out = csv.writer(file_out)
             csv_out.writerow(["Feature", "Score"])
             csv_out.writerows(per_feat_values.items())

@@ -76,7 +76,7 @@ class PostProcessor(ABC):
     @staticmethod
     def _per_res_scores(per_res_import: pd.DataFrame) -> dict:
         """
-        Sums together all the per features scores to determine the per residue value for each residue.
+        Sums all per features scores to determine the per residue score for each residue.
 
         Parameters
         ----------
@@ -126,7 +126,7 @@ class PostProcessor(ABC):
         out_file : Path
             The full path to write the file too.
         """
-        with open(out_file, "w", newline="") as out:
+        with open(out_file, "w", newline="", encoding="utf-8") as out:
             csv_out = csv.writer(out)
             csv_out.writerow(["Feature", "Score"])
             for key, value in feature_scores.items():
@@ -146,7 +146,7 @@ class PostProcessor(ABC):
         out_file : Path
             The full path to write the file too.
         """
-        with open(out_file, "w", newline="") as file_out:
+        with open(out_file, "w", newline="", encoding="utf-8") as file_out:
             csv_out = csv.writer(file_out)
             csv_out.writerow(["Residue Number", "Normalised Score"])
             csv_out.writerows(per_res_values.items())
@@ -285,7 +285,7 @@ class SupervisedPostProcessor(PostProcessor):
                 "machine learning run, if you have already run the machine learning, " + \
                 "make sure you are inside the right working directory. You " + \
                 "should see a folder named: 'temporary_files' if you are."
-            raise error_message
+            raise FileNotFoundError(error_message)
 
     def get_per_feature_scores(self, save_result: bool = True) -> None:
         """
@@ -797,7 +797,7 @@ class StatClassificationPostProcessor(PostProcessor):
         out_file : Path
             Full path of file to write out.
         """
-        with open(out_file, "w", newline="") as file_out:
+        with open(out_file, "w", newline="", encoding="utf-8") as file_out:
             csv_out = csv.writer(file_out)
 
             if feature_or_residue == "features":

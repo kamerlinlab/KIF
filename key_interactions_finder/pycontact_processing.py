@@ -155,7 +155,7 @@ class PyContactInitializer():
             A dataframe with all interactions in the gui file and interactions names
             reformatted to match the format used throughout this programm.
         """
-        with open(pycontact_gui_file, 'r') as file:
+        with open(pycontact_gui_file, 'r', encoding="utf-8") as file:
             filedata = file.read()
 
         filedata = filedata.replace("[", ",").replace("]", ",")
@@ -219,7 +219,7 @@ class PyContactInitializer():
                 "If you are using this approach then your different files should all be from the " +
                 "same trajectory just with different contacts measured in each of them. " +
                 "If not, you likely want to set the 'merge_files_method' parameter to 'vertical'.")
-            raise Exception(except_message)
+            raise ValueError(except_message)
 
         merged_df = pd.concat(individ_dfs, axis=1)
         merged_df = merged_df.fillna(0.0)
