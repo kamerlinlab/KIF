@@ -1,22 +1,20 @@
 """
-This scripts generates a PyMOL script to visualise the results geenrated from a 
-WISP calculation performed with Bio3D (generated with R). 
+This script generates a PyMOL script to visualise the results generated from a
+WISP calculation performed with Bio3D (generated with R).
 
 Bio3D can already make a VMD compatible visulisation file with the following command:
 "vmd.cnapath()"
-
 """
-import re
 from typing import Tuple
 
-# 3 Adjustable arguments below - UPDATE THESE. 
+# 3 Adjustable arguments below - UPDATE THESE.
 
 # Inputs.
-vmd_file = "WISP_Results/PathGlu200Site.vmd"
-paths_file = "WISP_Results/PathGlu200Site_all_paths.txt"
+VMD_FILE = "WISP_Results/PathGlu200Site.vmd"
+PATHS_FILE = "WISP_Results/PathGlu200Site_all_paths.txt"
 
-# Output. 
-out_file = "WISP_Results/PathGlu200Site_pymol.py"
+# Output.
+OUT_FILE = "WISP_Results/PathGlu200Site_pymol.py"
 
 
 def parse_vmd_file(vmd_file: str) -> list:
@@ -34,8 +32,8 @@ def parse_vmd_file(vmd_file: str) -> list:
         List of all residues that are on any of the suboptimal paths.
     """
     mol_selections = []
-    with open(vmd_file, "r") as f:
-        for line in f:
+    with open(vmd_file, "r", encoding="utf-8") as file_in:
+        for line in file_in:
             if "mol selection " in line:
                 mol_selections.append(line)
 
@@ -64,8 +62,8 @@ def parse_all_paths_file(paths_file: str) -> Tuple[list, list]:
     """
     all_paths_concat = []
     all_paths = []
-    with open(paths_file, "r") as f:
-        for line in f:
+    with open(paths_file, "r", encoding="utf-8") as file_in:
+        for line in file_in:
             split_line = line.split()
 
             path = []
@@ -156,14 +154,14 @@ def prep_res_res_connections(all_paths: list) -> dict:
 def main():
     """Runs everything"""
 
-    path_residues = parse_vmd_file(vmd_file=vmd_file)
-    all_paths_concat, all_paths = parse_all_paths_file(paths_file=paths_file)
+    path_residues = parse_vmd_file(vmd_file=VMD_FILE)
+    all_paths_concat, all_paths = parse_all_paths_file(paths_file=PATHS_FILE)
     interacting_pairs = prep_res_res_connections(all_paths=all_paths)
     res_counts = prep_res_counts(all_paths_concat=all_paths_concat)
 
     # Write the pymol file.
     pymol_out_text = ""
-    pymol_out_text += "# To run this script you will need to get a copy of 'draw_links.py' from the internet.\n"
+    pymol_out_text += "# To run this script you will need to get a copy of 'draw_links.py' \n"
     pymol_out_text += "# You can find it freely available here: \n"
     pymol_out_text += "# http://pldserver1.biochem.queensu.ca/~rlc/work/pymol/draw_links.py \n"
     pymol_out_text += "# Place the 'draw_links.py' file in your working directory. \n"
@@ -192,7 +190,7 @@ def main():
     pymol_out_text += "group Paths, link*"
 
     # Finally save.
-    with open(out_file, "w+") as file_out:
+    with open(OUT_FILE, "w+", encoding="utf-8") as file_out:
         file_out.write(pymol_out_text)
 
 
