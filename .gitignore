@@ -117,3 +117,5 @@ dmypy.json
 # project specific stuff
 .tutorials/catboost_info
 .tutorials/temporary_files
+.tutorials/synthetic_data_test/KIF_Results
+.tutorials/synthetic_data_test/Raw
