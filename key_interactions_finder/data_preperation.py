@@ -136,6 +136,15 @@ class _FeatureData():
         pd.DataFrame
             Filtered dataframe.
         """
+        # Test contact data has information about "bb-bb", "sc-sc", "bb-sc", "sc-bb" included.
+        # Optional to have this information, but method can only be used if present...
+        example_column = self.df_processed.columns[1]
+        if len(example_column.split(" ")) < 4:
+            error_message = """You're trying to filter interactions based on if they are
+            primarily from the side or main chain but your columns don't seem to contain
+            this information."""
+            raise ValueError(error_message)
+
         try:
             self.df_filtered = _filter_features_by_strings(
                 dataset=self.df_filtered,
