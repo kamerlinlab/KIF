@@ -12,7 +12,7 @@
 Note that how you define the descriptor is up to you, and you can use either a continuous variable or a categorical variable (some tips on how to decide what to use will be given below). 
 
 **More Detail Please!**
-For a more complete description of KIF, [please refer to our preprint](https://chemrxiv.org/engage/chemrxiv/article-details/63afa03c963bf350c9abb601). Included in the preprint is a description of some of the generic workflows possible alongside the application of KIF to several different biomolecular systems. 
+For a more complete description of KIF, [please refer to our article](https://aip.scitation.org/doi/10.1063/5.0140882). Included in the article is a description of some of the generic workflows possible alongside the application of KIF to several different biomolecular systems. 
 
 There are also tutorials available (discussed below). 
 
@@ -68,10 +68,10 @@ Below are some examples of what could work for you. Of course, this is use case 
 * if RMSD to "State 1" => 1.5 Å and an RMSD to "State 2" <= 1.5 Å --> assign frame as "State 2".
 * else --> assign frame as "neither".
 You can also consider dropping the frames with state "neither" from your analysis to make the calculation cleaner (i.e., turn it into binary classification).
-This is the approach we took for the enzyme PTP1B, which you can find described in our preprint. 
+This is the approach we took for the enzyme PTP1B, which you can find described in our manuscript. 
 
 ## Tutorials Available
-All tutorials include the setup and post-processing steps used for each system. All tutorials used datasets we analyzed in our [preprint](https://chemrxiv.org/engage/chemrxiv/article-details/63afa03c963bf350c9abb601)
+All tutorials include the setup and post-processing steps used for each system. All tutorials used datasets we analyzed in our [manuscript](https://aip.scitation.org/doi/10.1063/5.0140882)
 
 1. **[Tutorial_PTP1B_Classification_ML_Stats.ipynb](https://github.com/kamerlinlab/KIF/blob/main/tutorials/Tutorial_PTP1B_Classification_ML_Stats.ipynb) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kamerlinlab/KIF/blob/main/tutorials/Tutorial_PTP1B_Classification_ML_Stats.ipynb)**  - Perform binary classification ML and statistical analysis on simulations of PTP1B. Used to describe the differences in the closed and open WPD-loop states of PTP1B.   
 
@@ -94,14 +94,14 @@ As the principal investigator behind this software is employed by Georgia Tech U
 
 
 
-
 ## Citing this work
-If you make use of this package [please cite our preprint:](https://chemrxiv.org/engage/chemrxiv/article-details/63afa03c963bf350c9abb601). 
+If you make use of this package [please cite our manuscript:](https://aip.scitation.org/doi/10.1063/5.0140882). 
 
 KIF – Key Interactions Finder: A Program to Identify the Key Molecular Interactions that Regulate Protein Conformational Changes
 
 Authors: Rory M. Crean, Joanna S. G. Slusky, Peter M. Kasson and Shina Caroline Lynn Kamerlin
 
+DOI: 10.1063/5.0140882
 
 ## Issues/Questions/Contributions
 All welcome. Please feel free to open an issue or submit a pull request as necessary. Feature requests are welcome too. 
