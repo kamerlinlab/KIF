@@ -1,5 +1,18 @@
 # KIF - Key Interactions Finder
  A python package to identify the key molecular interactions that regulate any conformational change.
+ 
+ ### New in Version 0.2.0  - TODO Add release date. 
+ Now non-covalent interactions can be calculated directly from a trajectory using KIF, just make sure you're trajecory is [imaged correctly](http://ambermd.org/Questions/periodic2.html) as you would normally do so. 
+ 
+ Please check out tutorial/example scripts here # TODO. 
+ TODO also included example how it integrates into the current pipeline. 
+ 
+ **Note** - If you have already used PyContact (the prior method to calculate non-covalent interactions) don't worry, you can still use the PyContact generated dataset in the newer version of KIF. 
+ 
+In order to use this feature you'll need to update your install of KIF:
+```
+pip install --upgrade KIF 
+```
 
 ![KIF_ReadMe_Pic](https://user-images.githubusercontent.com/49672044/207597051-7dcde86a-62bd-4f69-96aa-326cad938a65.png)
 
@@ -19,19 +32,19 @@ There are also tutorials available (discussed below).
 ## The approximate workflow for this package is as follows: 
 1. Run MD simulations on your system(s) of interest with whichever MD engine you want. 
 2. (Both can be done simultaneously)
-    1. Analyse the trajectory frames with [PyContact](https://github.com/maxscheurer/pycontact) (NOTE: this program is not made by us), to determine all the non-covalent contacts in your trajectory. [PyContact](https://github.com/maxscheurer/pycontact) is a well established program and is MD engine agnostic.
+    1. Analyse the trajectory frames with KIF to determine all non-covalent interactions.* See TODO for how to do this. 
+     
+    
     2. (Optional) Calculate the value of a target variable for each frame you analyse with [PyContact](https://github.com/maxscheurer/pycontact) using whatever approach you see fit. 
 3. Load your non-covalent interactions data and optionally generated target data into KIF and perform some combination of machine learning, statistical analysis or network analysis. 
 4. Output the results for analysis. This includes visualisation scripts which are compatible with [PyMOL](https://pymol.org/2/) so you can see the results on a 3D protein structure. 
 
 
+*The previous implemetation of KIF used [PyContact](https://github.com/maxscheurer/pycontact) (NOTE: this program is not made by us), to determine all the non-covalent contacts in your trajectory. You can still use this approach if desired, see legacy tutorial for information (TODO). 
+
+
 ## Dependencies and Install 
-- Python 3.7 or higher is required as this package uses dataclasses. 
-
-- Although this package uses PyContact data, it does not require PyContact to be run. This may be beneficial if you for instance run your simulations on HPC architecture and process your (large) simulation files (with PyContact on the HPC). And then decide to work up the results on your desktop/laptop (using KIF). 
-
-If you wish to install both PyContact and KIF, please first install [PyContact (see the repo for how to do this)](https://github.com/maxscheurer/pycontact) and then install KIF using one of the below options:
-
+- Python 3.7 or higher is required as this package uses dataclasses. We recommened python 3.10 as 3.7 is rather old. 
 
 **Option 1: Install with pip**
 ```
@@ -45,10 +58,11 @@ cd KIF-main
 python setup.py install 
 ```
 
-- Additional methods will be added shortly. 
+In prior versions of KIF (less than 0.2.0) you would have needed to also install [PyContact (see the repo for how to do this)](https://github.com/maxscheurer/pycontact). Now you can determine all the non-covalent interactions using KIF so you only need a working install of KIF for this to work. 
 
 
-## Running PyContact 
+
+## Running PyContact  TODO - move this to a legacy tutorial folder? 
 Prior to using our package you'll need to have analyzed your simulation(s) with [PyContact](https://github.com/maxscheurer/pycontact). For this, [we have a provided a script in this repo to do this](https://github.com/kamerlinlab/key-interactions-finder/blob/main/key_interactions_finder/run_pycontact.py), from which you'll obtain two outputs (one with summary stats - not needed for KIF, and the other with per frame interaction scores). This script helps to standardize the output from PyContact making it easier for KIF to handle the data. If you instead wish to process the data through the PyContact GUI, please refer to tutorial 3 (see below) for how to go about this. All other tutorials used datasets generated from the custom script described above. 
 
 For a large number of frames and/or a large system, you will likely need to break up your PyContact calculation into blocks (to prevent running out of memory). We did this by making a single trajectory (of all frames we wanted to analyse) and submitting several (between 10-20) PyContact jobs on different residue ranges. Merging these results files back together again can be done with KIF - see the tutorials (1, 2 or 4).  
@@ -70,7 +84,7 @@ Below are some examples of what could work for you. Of course, this is use case 
 You can also consider dropping the frames with state "neither" from your analysis to make the calculation cleaner (i.e., turn it into binary classification).
 This is the approach we took for the enzyme PTP1B, which you can find described in our manuscript. 
 
-## Tutorials Available
+## Tutorials Available - TODO update when new tutorials made. 
 All tutorials include the setup and post-processing steps used for each system. All tutorials used datasets we analyzed in our [manuscript](https://aip.scitation.org/doi/10.1063/5.0140882)
 
 1. **[Tutorial_PTP1B_Classification_ML_Stats.ipynb](https://github.com/kamerlinlab/KIF/blob/main/tutorials/Tutorial_PTP1B_Classification_ML_Stats.ipynb) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kamerlinlab/KIF/blob/main/tutorials/Tutorial_PTP1B_Classification_ML_Stats.ipynb)**  - Perform binary classification ML and statistical analysis on simulations of PTP1B. Used to describe the differences in the closed and open WPD-loop states of PTP1B.   
