@@ -46,12 +46,13 @@ def calculate_contacts(parm_file: str,
     Parameters
     ----------
     parm_file: str
-        Topology file of your protein. All MDAnalysis allowed topologies can be used.
+        The file path to your topology file. All MDAnalysis allowed topologies can be used.
         Please do not use a PDB file for this, use something with charge information.
         This is important for the hydrogen bonding part of the calculation to work.
 
     traj_file: str
-        Trajectory file. All MDAnalysis allowed trajectory file types can be used.
+        The file path to your trajectory file.
+        All MDAnalysis allowed trajectory file types can be used.
 
     out_file: str
         Path to write the csv output file too.
