@@ -1,14 +1,21 @@
 """
-Responsible for identfying all non-covalent interactions in a trajectory.
+Responsible for identifying all non-covalent interactions in a trajectory.
 
 This bypasses the need for the install of PyContact and reproduces the scoring
 function used by PyContact.
 
-TODO - Add additional documentation.
-TODO - Set first_res and last_res as optional parameters.
-TODO - Add optional cut-off on hbonds as to if counted as a hbond.
+Output will be a csv file with each column an interaction pair.
+Each column has the following format:
+[residue1] [residue2] [interaction type]
+
+Where "residue1" and "residue2" are the names and residue numbers of the pair.
+and "interaction type" is one of:
+"Hbond" - Hydrogen bond
+"Saltbr" - Salt Bridge
+"Hydrophobic" - VdW interaction between two hydrophobic residues.
+"VdW" - Unspecified VdW interaction.
 """
-from typing import Tuple, List
+from typing import Tuple, Optional, List
 
 import pandas as pd
 import numpy as np
@@ -28,30 +35,34 @@ HYDROPHOBIC_RESIDUES = ("ALA", "VAL", "LEU", "ILE", "PRO", "PHE", "Cys")
 def calculate_contacts(parm_file: str,
                        traj_file: str,
                        out_file: str,
-                       first_res: int,
-                       last_res: int,
+                       first_res: Optional[int] = None,
+                       last_res: Optional[int] = None,
                        report_timings: bool = True) -> None:
     """
     Identify all non-covalent interactions present in the simulation and save the output.
+    Output has each non-covalent interaction as a column
+    each column has the following information: [residue1] [residue2] [interaction type]
 
     Parameters
     ----------
     parm_file: str
-        Topology file of your protein. All mdanalysis allowed topoligies can be used.
+        Topology file of your protein. All MDAnalysis allowed topologies can be used.
         Please do not use a PDB file for this, use something with charge information.
         This is important for the hydrogen bonding part of the calculation to work.
 
     traj_file: str
-        Trajectory file. All mdanalysis allowed trajectory file types can be used.
+        Trajectory file. All MDAnalysis allowed trajectory file types can be used.
 
     out_file: str
         Path to write the csv output file too.
 
-    first_res: int
-        TODO
+    first_res: Optional[int]
+        First residue to analyse, useful if you want to break the analysis into blocks.
+        If not provided, the first residue in the trajectory will be used.
 
-    last_res: int
-        TODO
+    last_res: Optional[int]
+        Last residue to analyse, useful if you want to break the analysis into blocks.
+        If not provided, the last residue in the trajectory will be used.
 
     report_timings: bool = True
         Choose whether to print to the console how long the job took to run.
@@ -68,6 +79,11 @@ def calculate_contacts(parm_file: str,
         start_time = time.monotonic()
 
     universe = Universe(parm_file, traj_file)
+
+    if first_res is None:
+        first_res = 1
+    if last_res is None:
+        last_res = len(universe.atoms.residues)
 
     hbond_pairs = _determine_hbond_pairs(universe=universe)
 
@@ -89,7 +105,9 @@ def calculate_contacts(parm_file: str,
             contact_scores = []
             for timestep in universe.trajectory:
                 res_res_dists = contacts.distance_array(
-                    res1_atoms.positions, res2_atoms.positions)
+                    res1_atoms.positions.copy(),
+                    res2_atoms.positions.copy()
+                )
                 contact_score = _score_residue_contact(
                     res_res_dists=res_res_dists)
                 contact_scores.append(contact_score)
@@ -100,11 +118,8 @@ def calculate_contacts(parm_file: str,
             if avg_contact_score > 0.1:
 
                 # -1 as 0 indexed...
-                res1_name = universe.residues[res1 -
-                                              1].resname.capitalize()
-                # -1 as 0 indexed...
-                res2_name = universe.residues[res2 -
-                                              1].resname.capitalize()
+                res1_name = universe.residues[res1-1].resname.capitalize()
+                res2_name = universe.residues[res2-1].resname.capitalize()
 
                 interaction_type = _determine_interaction_type(
                     res1_id=res1, res2_id=res2,
@@ -129,7 +144,6 @@ def calculate_contacts(parm_file: str,
 def _atom_num_to_res_info(atom_num: int,
                           universe: MDAnalysis.core.universe.Universe) -> Tuple[str, int]:
     """
-    Helper function.
     From an MDAnalysis atom number and universe, obtain the residue number
     and residue name.
 
@@ -139,7 +153,7 @@ def _atom_num_to_res_info(atom_num: int,
         Atom id to get residue info from.
 
     universe: MDAnalysis.core.universe.Universe
-        mdanalysis universe object
+        MDAnalysis universe object
 
     Returns
     -------
@@ -159,19 +173,16 @@ def _determine_hbond_pairs(universe: MDAnalysis.core.universe.Universe) -> List[
     Run hydrogen bonding analysis on the trajectory to figure out
     which interacting residue pairs contain hydrogen bonds.
 
-    TODO - could add some kind of cut-off on %observations to stop outliers?
-    cut-off would need to be an optional param.
-
     Parameters
     ----------
     universe: MDAnalysis.core.universe.Universe
-        mdanalysis universe object
+        MDAnalysis universe object
 
     Returns
     -------
     List[tuple[int]]
         List of hydrogen bonding pairs,
-        tuples are of size 2, residue 1, residue 2.
+        tuples are of size 2: residue 1, residue 2.
     """
     hbonds = HBA(universe=universe)
     hbonds.run()
@@ -204,7 +215,7 @@ def _determine_interaction_type(res1_id: int,
                                 universe: MDAnalysis.core.universe.Universe) -> str:
     """
     Determine the interaction type for a residue pair. Options are:
-    hydrogen bond, salt bridge, hydrophobic and vdW's interaction.
+    hydrogen bond, salt bridge, hydrophobic and VdW's interaction.
 
     Parameters
     ----------
@@ -218,7 +229,7 @@ def _determine_interaction_type(res1_id: int,
         list of residue pairs that form hydrogen bonds to one another.
 
     universe: MDAnalysis.core.universe.Universe
-        mdanalysis universe object
+        MDAnalysis universe object
 
     Returns
     -------
@@ -231,20 +242,20 @@ def _determine_interaction_type(res1_id: int,
 
     # salt bridge recongition.
     if (res1_name in POSITIVE_SB_RESIDUES) and (res2_name in NEGATIVE_SB_RESIDUES):
-        return "Salt Bridge"
+        return "Saltbr"
     if (res1_name in NEGATIVE_SB_RESIDUES) and (res2_name in POSITIVE_SB_RESIDUES):
-        return "Salt Bridge"
+        return "Saltbr"
 
     # hydrogen bond recognition.
     if ((res1_id, res2_id) in hbond_pairs) or ((res2_id, res1_id) in hbond_pairs):
-        return "Hydrogen Bond"
+        return "Hbond"
 
     # Hydrophobic recognition.
     if (res1_name in HYDROPHOBIC_RESIDUES) and (res2_name in HYDROPHOBIC_RESIDUES):
         return "Hydrophobic"
 
-    # if not others, then VdW contact.
-    return "VdW"
+    # if not any of the above, then VdW contact.
+    return "Other"
 
 
 def _score_residue_contact(res_res_dists: np.ndarray, dist_cut: float = 6.0) -> float:
