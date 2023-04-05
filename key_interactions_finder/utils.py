@@ -136,6 +136,8 @@ def download_prep_tutorial_dataset(drive_url: str, save_dir: str) -> None:
     """
     # tutorial links
     accepted_links = [
+        "https://drive.google.com/file/d/1hJbwCCuTTgI4xglwu1vXyzo-yaZJbmUY/view?usp=share_link",
+        "https://drive.google.com/file/d/13SjTIbSjF4ai_-Fn1vJDvW6-nsPmCdbw/view?usp=share_link",
         "https://drive.google.com/file/d/1nbK3fw7z1hDXiGINZe-VT1SGdPbNhF07/view?usp=share_link",
         "https://drive.google.com/file/d/1sYr_9stXLrOi_SDzHYLazSZUuzjL7lK-/view?usp=share_link",
         "https://drive.google.com/file/d/10DbX12ZNPKqRIAlqs55HC8I6zLXJnP_q/view?usp=share_link",
