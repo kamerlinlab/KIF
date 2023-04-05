@@ -16,6 +16,7 @@ and "interaction type" is one of:
 "VdW" - Unspecified VdW interaction.
 """
 from typing import Tuple, Optional, List
+import warnings
 
 import pandas as pd
 import numpy as np
@@ -30,6 +31,12 @@ from MDAnalysis.analysis import contacts
 POSITIVE_SB_RESIDUES = ("LYS", "ARG")
 NEGATIVE_SB_RESIDUES = ("GLU", "ASP")
 HYDROPHOBIC_RESIDUES = ("ALA", "VAL", "LEU", "ILE", "PRO", "PHE", "Cys")
+
+
+# From clarification on GitHub, this message can be safely ignored.
+# https://github.com/MDAnalysis/mdanalysis/issues/3889
+warnings.filterwarnings(
+    "ignore", message="DCDReader currently makes independent timesteps")
 
 
 def calculate_contacts(parm_file: str,
@@ -106,8 +113,8 @@ def calculate_contacts(parm_file: str,
             contact_scores = []
             for timestep in universe.trajectory:
                 res_res_dists = contacts.distance_array(
-                    res1_atoms.positions.copy(),
-                    res2_atoms.positions.copy()
+                    res1_atoms.positions,
+                    res2_atoms.positions
                 )
                 contact_score = _score_residue_contact(
                     res_res_dists=res_res_dists)
