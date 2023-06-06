@@ -2,7 +2,7 @@
  A python package to identify the key molecular interactions that regulate any conformational change.
 
  ### New in Version 0.2.0  - (05/04/2023)
-Now non-covalent interactions can be identified directly from a trajectory using KIF, just make sure you're trajecory is [imaged](http://ambermd.org/Questions/periodic2.html), as you would normally do so.
+Now non-covalent interactions can be identified directly from a trajectory using KIF, just make sure your trajectory is [imaged](http://ambermd.org/Questions/periodic2.html), as you would normally do so.
 
 **Note** - If you have already used PyContact (the prior method to calculate non-covalent interactions) don't worry, you can still use the PyContact generated dataset in the newer version(s) of KIF.
 
@@ -15,7 +15,7 @@ pip install --upgrade KIF
 
 
 ## In short, this package allows you to:
- - Identify important non-covalent interactions that are associated with any conformational you are interested in (as long as you can describe the descriptor and sample the descriptor in your MD simulations). The non-covalent interactions are scored according to their association/importance to the conformational change and you can easily convert the per interaction/feature scores to per residue scores as well.
+ - Identify important non-covalent interactions that are associated with any conformational change you are interested in (as long as you can describe the descriptor and sample the descriptor in your MD simulations). The non-covalent interactions are scored according to their association/importance to the conformational change and you can easily convert the per interaction/feature scores to per residue scores as well.
  - Generate [PyMOL](https://pymol.org/2/) output scripts that enable you to visualise your results on 3D structures.
  - Generate per residue correlation and distance matrices that can be easily applied to the many graph theory methods available in order to study protein interaction networks and allostery within your system (no descriptor/target variable required for this).
 
