@@ -17,14 +17,15 @@ and "interaction type" is one of:
 """
 from typing import Tuple, Optional, List
 import warnings
+import time
+from datetime import timedelta
 
 import pandas as pd
 import numpy as np
 
-import MDAnalysis
 from MDAnalysis import Universe
 from MDAnalysis.analysis.hydrogenbonds.hbond_analysis import HydrogenBondAnalysis as HBA
-from MDAnalysis.analysis import contacts
+from MDAnalysis.analysis import distances
 
 
 # Amino acid definitions - helps define interaction types.
@@ -32,19 +33,25 @@ POSITIVE_SB_RESIDUES = ("LYS", "ARG")
 NEGATIVE_SB_RESIDUES = ("GLU", "ASP")
 HYDROPHOBIC_RESIDUES = ("ALA", "VAL", "LEU", "ILE", "PRO", "PHE", "Cys")
 
+# Used to prefilter residue pairs.
+MAX_CA_DIST = 20
+MAX_HEAVY_DIST = 6  # Min heavy atom dist, otherwise contact score = 0.
 
 # From clarification on GitHub, this message can be safely ignored.
 # https://github.com/MDAnalysis/mdanalysis/issues/3889
 warnings.filterwarnings(
-    "ignore", message="DCDReader currently makes independent timesteps")
+    "ignore", message="DCDReader currently makes independent timesteps"
+)
 
 
-def calculate_contacts(parm_file: str,
-                       traj_file: str,
-                       out_file: str,
-                       first_res: Optional[int] = None,
-                       last_res: Optional[int] = None,
-                       report_timings: bool = True) -> None:
+def calculate_contacts(
+    parm_file: str,
+    traj_file: str,
+    out_file: str,
+    first_res: Optional[int] = None,
+    last_res: Optional[int] = None,
+    report_timings: bool = True,
+) -> None:
     """
     Identify all non-covalent interactions present in the simulation and save the output.
     Output has each non-covalent interaction as a column
@@ -82,63 +89,115 @@ def calculate_contacts(parm_file: str,
         Output written to file. Optional timings printed to the console.
     """
     if report_timings:
-        import time
-        from datetime import timedelta
         start_time = time.monotonic()
 
     universe = Universe(parm_file, traj_file)
 
     if first_res is None:
         first_res = 1
-    if last_res is None:
-        last_res = len(universe.atoms.residues)
 
+    biggest_protein_res = max(universe.select_atoms("name CA").resids)
+    if last_res is None:
+        last_res = biggest_protein_res
+
+    if last_res > biggest_protein_res:
+        warning_message = f"""
+            You stated your last residue was residue number: {last_res}.
+            I found the last protein residue to be: {biggest_protein_res}. \n
+            This program is primarily designed to analyse protein-protein interactions, but can be used
+            on ligands, or even water molecules \n
+            If the difference between the {last_res} and {biggest_protein_res} is very large, then check you have not
+            included all water molecules in your calculation. Doing so will make this calculation a lot slower. \n
+
+            If the difference is small, you can safely ignore this warning message as it is probably the case you just
+            have a ligand or two in your input file.
+        """
+        warnings.warn(warning_message)
+
+        biggest_res = last_res
+    else:
+        biggest_res = biggest_protein_res
+
+    # some setup steps.
     hbond_pairs = _determine_hbond_pairs(universe=universe)
 
+    trajectory_length = len(universe.trajectory)
+    trajectory_of_zeros = np.zeros(trajectory_length)
+
+    all_heavy_atoms_sele = (
+        "not name H* and resid " + str(first_res) + "-" + str(biggest_res)
+    )
+    all_heavy_atoms = universe.select_atoms(all_heavy_atoms_sele)
+    residue_names = [names.capitalize() for names in list(universe.residues.resnames)]
+
+    # determine which residue each heavy atom belongs to.
+    residue_ranges = {}
+    for res_numb in range(1, biggest_res + 1):
+        residue_range = np.where(all_heavy_atoms.atoms.resids == res_numb)
+        residue_ranges[res_numb] = residue_range
+
+    print("setup complete, analysing contacts now...")
+
+    # Now go through each frame.
     all_contact_scores = {}
-    for res1 in range(first_res, last_res + 1):
-        res1_sele = "not name H* and resid " + str(res1)
-        res1_atoms = universe.select_atoms(res1_sele)
+    for idx, _ in enumerate(universe.trajectory):  # each step is new frame.
+        # calculate all heavy atom distances for this trajectory
+        heavy_atom_dists = distances.distance_array(
+            all_heavy_atoms.positions,
+            all_heavy_atoms.positions,
+        )
 
-        # symmetrical matrix along diagonal, hence loop style.
-        for res2 in range(res1, len(universe.residues) + 1):
+        for res1 in range(1, last_res + 1):
+            res_dists = heavy_atom_dists[residue_ranges[res1]]
 
-            res_delta = abs(res1 - res2)
-            if res_delta <= 2:  # neighbour residues should have 0 score
-                continue
+            # +3 here as neighbouring residues not interesting.
+            for res2 in range(res1 + 3, biggest_res + 1):
+                res_res_dists = res_dists[:, residue_ranges[res2]]
 
-            res2_sele = "not name H* and resid " + str(res2)
-            res2_atoms = universe.select_atoms(res2_sele)
+                # score would be 0 if true.
+                if res_res_dists.min() > MAX_HEAVY_DIST:
+                    continue
 
-            contact_scores = []
-            for timestep in universe.trajectory:
-                res_res_dists = contacts.distance_array(
-                    res1_atoms.positions,
-                    res2_atoms.positions
-                )
-                contact_score = _score_residue_contact(
-                    res_res_dists=res_res_dists)
-                contact_scores.append(contact_score)
+                contact_score = _score_residue_contact(res_res_dists)
+                if (res1, res2) not in all_contact_scores:
+                    # create empty array of size trajectory for it...
+                    all_contact_scores[(res1, res2)] = trajectory_of_zeros.copy()
+                # now update score for this frame.
+                all_contact_scores[(res1, res2)][idx] = contact_score
 
-            # save contact only if non-negligible interaction present
-            avg_contact_score = sum(
-                contact_scores) / len(universe.trajectory)
-            if avg_contact_score > 0.1:
+    contact_labels_scores = {}
+    for res_pair, contact_scores in all_contact_scores.items():
+        # save contact only if non-negligible interaction present
+        avg_contact_score = sum(contact_scores) / trajectory_length
+        if avg_contact_score < 0.1:
+            continue
 
-                # -1 as 0 indexed...
-                res1_name = universe.residues[res1-1].resname.capitalize()
-                res2_name = universe.residues[res2-1].resname.capitalize()
+        res1, res2 = res_pair
+        # -1 as 0 indexed...
+        res1_name = residue_names[res1 - 1]
+        res2_name = residue_names[res2 - 1]
 
-                interaction_type = _determine_interaction_type(
-                    res1_id=res1, res2_id=res2,
-                    hbond_pairs=hbond_pairs, universe=universe
-                )
+        interaction_type = _determine_interaction_type(
+            res1_id=res1,
+            res2_id=res2,
+            hbond_pairs=hbond_pairs,
+            universe=universe,
+        )
 
-                contact_label = str(res1) + res1_name + " " + \
-                    str(res2) + res2_name + " " + interaction_type
-                all_contact_scores.update({contact_label: contact_scores})
+        contact_label = (
+            str(res1) + res1_name + " " + str(res2) + res2_name + " " + interaction_type
+        )
+        contact_labels_scores.update({contact_label: contact_scores})
 
-    df_contact_scores = pd.DataFrame(all_contact_scores)
+    # reorders column names, to be like the old format.
+    sorted_dict = dict(
+        sorted(
+            contact_labels_scores.items(),
+            key=lambda item: (int("".join(filter(str.isdigit, item[0].split(":")[0])))),
+        )
+    )
+
+    df_contact_scores = pd.DataFrame(sorted_dict)
     df_contact_scores.to_csv(out_file, index=False)
 
     if report_timings:
@@ -148,9 +207,7 @@ def calculate_contacts(parm_file: str,
 
 
 # helper functions below.
-
-def _atom_num_to_res_info(atom_num: int,
-                          universe: MDAnalysis.core.universe.Universe) -> Tuple[str, int]:
+def _atom_num_to_res_info(atom_num: int, universe: Universe) -> Tuple[str, int]:
     """
     From an MDAnalysis atom number and universe, obtain the residue number
     and residue name.
@@ -160,7 +217,7 @@ def _atom_num_to_res_info(atom_num: int,
     atom_num: int
         Atom id to get residue info from.
 
-    universe: MDAnalysis.core.universe.Universe
+    universe: Universe
         MDAnalysis universe object
 
     Returns
@@ -176,14 +233,14 @@ def _atom_num_to_res_info(atom_num: int,
     return res_name, resid
 
 
-def _determine_hbond_pairs(universe: MDAnalysis.core.universe.Universe) -> List[tuple]:
+def _determine_hbond_pairs(universe: Universe) -> List[tuple]:
     """
     Run hydrogen bonding analysis on the trajectory to figure out
     which interacting residue pairs contain hydrogen bonds.
 
     Parameters
     ----------
-    universe: MDAnalysis.core.universe.Universe
+    universe: Universe
         MDAnalysis universe object
 
     Returns
@@ -193,6 +250,8 @@ def _determine_hbond_pairs(universe: MDAnalysis.core.universe.Universe) -> List[
         tuples are of size 2: residue 1, residue 2.
     """
     hbonds = HBA(universe=universe)
+    hbonds.hydrogens_sel = hbonds.guess_hydrogens("protein")
+    hbonds.acceptors_sel = hbonds.guess_acceptors("protein")
     hbonds.run()
     # MDAnalysis.exceptions.NoDataError will occur if topology has no charge info.
 
@@ -206,10 +265,10 @@ def _determine_hbond_pairs(universe: MDAnalysis.core.universe.Universe) -> List[
     for observation in hbond_results:
         donor_atom, acceptor_atom = observation[1], observation[3]
 
-        donor_resid = _atom_num_to_res_info(
-            atom_num=donor_atom, universe=universe)[1]
+        donor_resid = _atom_num_to_res_info(atom_num=donor_atom, universe=universe)[1]
         acceptor_resid = _atom_num_to_res_info(
-            atom_num=acceptor_atom, universe=universe)[1]
+            atom_num=acceptor_atom, universe=universe
+        )[1]
 
         if (donor_resid, acceptor_resid) not in hbond_pairs:
             hbond_pairs.append((donor_resid, acceptor_resid))
@@ -217,10 +276,12 @@ def _determine_hbond_pairs(universe: MDAnalysis.core.universe.Universe) -> List[
     return hbond_pairs
 
 
-def _determine_interaction_type(res1_id: int,
-                                res2_id: int,
-                                hbond_pairs: List[tuple],
-                                universe: MDAnalysis.core.universe.Universe) -> str:
+def _determine_interaction_type(
+    res1_id: int,
+    res2_id: int,
+    hbond_pairs: List[tuple],
+    universe: Universe,
+) -> str:
     """
     Determine the interaction type for a residue pair. Options are:
     hydrogen bond, salt bridge, hydrophobic and VdW's interaction.
@@ -236,7 +297,7 @@ def _determine_interaction_type(res1_id: int,
     hbond_pairs: List[tuple]
         list of residue pairs that form hydrogen bonds to one another.
 
-    universe: MDAnalysis.core.universe.Universe
+    universe: Universe
         MDAnalysis universe object
 
     Returns
