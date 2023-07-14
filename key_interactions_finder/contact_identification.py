@@ -150,7 +150,8 @@ def calculate_contacts(
         for res1 in range(1, last_res + 1):
             res_dists = heavy_atom_dists[residue_ranges[res1]]
 
-            for res2 in range(res1 + 2, biggest_res + 1):
+            # +3 here as neighbouring residues not interesting.
+            for res2 in range(res1 + 3, biggest_res + 1):
                 res_res_dists = res_dists[:, residue_ranges[res2]]
 
                 # score would be 0 if true.
@@ -188,7 +189,15 @@ def calculate_contacts(
         )
         contact_labels_scores.update({contact_label: contact_scores})
 
-    df_contact_scores = pd.DataFrame(contact_labels_scores)
+    # reorders column names, to be like the old format.
+    sorted_dict = dict(
+        sorted(
+            contact_labels_scores.items(),
+            key=lambda item: (int("".join(filter(str.isdigit, item[0].split(":")[0])))),
+        )
+    )
+
+    df_contact_scores = pd.DataFrame(sorted_dict)
     df_contact_scores.to_csv(out_file, index=False)
 
     if report_timings:
