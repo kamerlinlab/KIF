@@ -14,44 +14,45 @@ out_file: str
     Path to write the csv output file too.
 
 first_res: Optional[int]
-    First residue to analyse, useful if you want to break the analysis into blocks.
-    If not provided, the first residue in the trajectory will be used.
+    First residue to analyse (if you want to break the analysis into blocks).
+    If not provided, the first protein residue in the trajectory will be used.
 
 last_res: Optional[int]
-    Last residue to analyse, useful if you want to break the analysis into blocks.
-    If not provided, the last residue in the trajectory will be used.
+    Last residue to analyse (if you want to break the analysis into blocks).
+    If not provided, the last protein residue in the trajectory will be used.
 
 report_timings: bool = True
     Choose whether to print to the console how long the job took to run.
     Optional, default is True.
-
 """
 from MDAnalysis.tests.datafiles import PSF, DCD  # test trajectory
 from key_interactions_finder import contact_identification
 
 # Here we will use a test trajectory from MDAnalysis to showcase the function.
 # In your case you would just replace these two items with the file paths to your simulations.
-# Warning - the first calculation took 8 mins on my laptop to run.
-
+# A recommendation is to not use more than 10,000 frames for this analysis, you may need much less.
 
 # Version 1. - All residues in the trajectory will be analysed.
+# First calculation took 26 seconds to run on my laptop.
 contact_identification.calculate_contacts(
     parm_file=PSF,
     traj_file=DCD,
     out_file="contacts_all_res.csv",
-    report_timings=True  # optional
+    report_timings=True,  # optional
 )
 
 
 # Version 2. - Determine the interaction network for a subset of residues.
-# This can be useful if you have a large system/large number of frames to analyse
-# The results generated here can be very easily merged later on.
-# E.g. run this for residues 1-50, 51-100, etc... and then combine them later.
+# This calculation took 16 seconds to run on my laptop.
+# In prior versions of KIF this approach was recommended for large systems.
+# However, due to a rewrite of this code, it is no longer recommended
+# as it will take longer, overall to run.
+# I.e., run the analysis as in version1.
 contact_identification.calculate_contacts(
     parm_file=PSF,
     traj_file=DCD,
     out_file="contacts_res_1_to_50.csv",
     first_res=1,  # optional
     last_res=50,  # optional
-    report_timings=True  # optional
+    report_timings=True,  # optional
 )
