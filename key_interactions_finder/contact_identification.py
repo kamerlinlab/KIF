@@ -118,15 +118,10 @@ def calculate_contacts(
     else:
         biggest_res = biggest_protein_res
 
-    # some setup steps.
-    hbond_pairs = _determine_hbond_pairs(universe=universe)
-
     trajectory_length = len(universe.trajectory)
     trajectory_of_zeros = np.zeros(trajectory_length)
 
-    all_heavy_atoms_sele = (
-        "not name H* and resid " + str(first_res) + "-" + str(biggest_res)
-    )
+    all_heavy_atoms_sele = "not name H* and resid 1" + "-" + str(biggest_res)
     all_heavy_atoms = universe.select_atoms(all_heavy_atoms_sele)
     residue_names = [names.capitalize() for names in list(universe.residues.resnames)]
 
@@ -137,6 +132,7 @@ def calculate_contacts(
         residue_ranges[res_numb] = residue_range
 
     print("setup complete, analysing contacts now...")
+    hbond_pairs = _determine_hbond_pairs(universe=universe)
 
     # Now go through each frame.
     all_contact_scores = {}
@@ -147,7 +143,7 @@ def calculate_contacts(
             all_heavy_atoms.positions,
         )
 
-        for res1 in range(1, last_res + 1):
+        for res1 in range(first_res, last_res + 1):
             res_dists = heavy_atom_dists[residue_ranges[res1]]
 
             # +3 here as neighbouring residues not interesting.
