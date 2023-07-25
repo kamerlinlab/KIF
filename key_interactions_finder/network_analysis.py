@@ -8,6 +8,7 @@ does not require a target variable and if you have one it does not need it.
 """
 from dataclasses import dataclass, field
 from typing import Optional
+import re
 import pandas as pd
 import numpy as np
 import MDAnalysis as mda
@@ -156,12 +157,16 @@ class CorrelationNetwork:
         pd.DataFrame
             1st and 2nd residue number of each contact/feature in the dataframe.
         """
-        df_cols = pd.DataFrame(list(self.dataset.columns), columns=["Feature_Names"])
-        df_cols["Res1"] = df_cols["Feature_Names"].str.split("[a-zA-Z]+").str.get(0)
-        df_cols["Res2"] = df_cols["Feature_Names"].str.split("[a-zA-Z]+").str.get(1)
-        df_cols["Res1"] = pd.to_numeric(df_cols["Res1"])
-        df_cols["Res2"] = pd.to_numeric(df_cols["Res2"])
-        return df_cols[["Res1", "Res2"]]
+        res1_numbs, res2_numbs = [], []
+        for residue_pair in list(self.dataset.columns):
+            res1_info, res2_info, _ = residue_pair.split(" ")
+            res1_numb = int(re.findall(r"\d+", res1_info)[0])
+            res2_numb = int(re.findall(r"\d+", res2_info)[0])
+            res1_numbs.append(res1_numb)
+            res2_numbs.append(res2_numb)
+
+        res_pairs_dict = {"Res1": res1_numbs, "Res2": res2_numbs}
+        return pd.DataFrame(res_pairs_dict)
 
     def _get_last_residue(self) -> int:
         """

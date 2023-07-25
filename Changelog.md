@@ -1,5 +1,12 @@
 ## Change Log
 
+0.3.0 (14/07/2023)
+*****
+
+#### Updated:
+- Large scale speed up of contact analysis module.
+
+
 0.2.0 (05/04/2023)
 *****
 
