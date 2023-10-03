@@ -154,26 +154,20 @@ def project_pymol_top_features(per_feature_scores: dict,
 
     # Main, show CA carbons as spheres and set their size.
     if numb_features == "all":
-        for i, _ in enumerate(res1):
-            feature_rep = f"draw_links selection1=resi {res1[i]}, " + \
-                f"selection2=resi {res2[i]}, " + \
-                f"color={interact_color[i]}, " + \
-                f"radius={interact_strengths[i]} \n"
-            top_feats_out += feature_rep
-
-    elif isinstance(numb_features, int):
-        # prevent issue if user requests more features than exist.
-        max_features = min(numb_features, len(res1))
-        for i in range(0, max_features):
-            feature_rep = f"draw_links selection1=resi {res1[i]}, " + \
-                f"selection2=resi {res2[i]}, " + \
-                f"color={interact_color[i]}, " + \
-                f"radius={interact_strengths[i]} \n"
-            top_feats_out += feature_rep
-
-    else:
+        numb_features = len(res1)
+    elif not isinstance(numb_features, int):
         raise ValueError(
             "You defined the parameter 'numb_features' as neither 'all' or as an integer.")
+
+    # prevent issue if user requests more features than exist.
+    numb_features = min(numb_features, len(res1))
+
+    for i in range(numb_features):
+        feature_rep = f"draw_links selection1=resi {res1[i]}, " + \
+            f"selection2=resi {res2[i]}, " + \
+            f"color={interact_color[i]}, " + \
+            f"radius={interact_strengths[i]} \n"
+        top_feats_out += feature_rep
 
     # Finally, group all cylinders made together - easier for user to handle in PyMOL
     top_feats_out += "group All_Features, link*\n"
