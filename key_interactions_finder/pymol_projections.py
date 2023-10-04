@@ -139,11 +139,8 @@ def project_pymol_top_features(per_feature_scores: dict,
     top_feats_out = ""
     top_feats_out += "# You can run me in several ways, perhaps the easiest way is to:\n"
     top_feats_out += "# 1. Load the PDB file of your system in PyMOL.\n"
-    top_feats_out += "# 2. Download and run the draw_links.py script.\n"
-    top_feats_out += "# It can be obtained from: "
-    top_feats_out += "# http://pldserver1.biochem.queensu.ca/~rlc/work/pymol/draw_links.py \n"
-    top_feats_out += "# 3. Type: @[FILE_NAME.py] in the command line.\n"
-    top_feats_out += "# 4. Make sure the .py files are in the same directory as the pdb.\n"
+    top_feats_out += "# 2. Type: @[FILE_NAME.py] in the command line.\n"
+    top_feats_out += "# Make sure the .py files are in the same directory as the pdb.\n"
     top_feats_out += "# The lines below are suggestions for potentially nicer figures.\n"
     top_feats_out += "# You can comment them in if you want.\n"
     top_feats_out += "# bg_color white\n"
@@ -154,29 +151,31 @@ def project_pymol_top_features(per_feature_scores: dict,
 
     # Main, show CA carbons as spheres and set their size.
     if numb_features == "all":
-        for i, _ in enumerate(res1):
-            feature_rep = f"draw_links selection1=resi {res1[i]}, " + \
-                f"selection2=resi {res2[i]}, " + \
-                f"color={interact_color[i]}, " + \
-                f"radius={interact_strengths[i]} \n"
-            top_feats_out += feature_rep
-
-    elif isinstance(numb_features, int):
-        # prevent issue if user requests more features than exist.
-        max_features = min(numb_features, len(res1))
-        for i in range(0, max_features):
-            feature_rep = f"draw_links selection1=resi {res1[i]}, " + \
-                f"selection2=resi {res2[i]}, " + \
-                f"color={interact_color[i]}, " + \
-                f"radius={interact_strengths[i]} \n"
-            top_feats_out += feature_rep
-
-    else:
+        numb_features = len(res1)
+    elif not isinstance(numb_features, int):
         raise ValueError(
             "You defined the parameter 'numb_features' as neither 'all' or as an integer.")
 
+    # prevent issue if user requests more features than exist.
+    numb_features = min(numb_features, len(res1))
+
+    for i in range(numb_features):
+        feature_rep = (
+            f"distance interaction{i}, " +
+            f"resid {str(res1[i])} and name CA, " +
+            f"resid {str(res2[i])} and name CA \n" +
+            f"set dash_radius, {interact_strengths[i]}, interaction{i} \n"
+            f"set dash_color, {interact_color[i]}, interaction{i} \n"
+        )
+        top_feats_out += feature_rep
+
     # Finally, group all cylinders made together - easier for user to handle in PyMOL
-    top_feats_out += "group All_Features, link*\n"
+    top_feats_out += "group All_Interactions, interaction* \n"
+
+    # general cylinder settings
+    top_feats_out += "set dash_gap, 0.00, All_Interactions \n"
+    top_feats_out += "set dash_round_ends, off, All_Interactions \n"
+    top_feats_out += "hide labels \n"
 
     out_file_name = model_name + "_Pymol_Per_Feature_Scores.py"
     out_file_path = Path(out_dir, out_file_name)
