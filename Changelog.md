@@ -1,5 +1,15 @@
 ## Change Log
 
+Between 0.3.1 to 0.3.3 (04/10/2023)
+*****
+
+#### Updated:
+- Changed pymol representation method to no longer depend on external dependancy draw_links.py.
+- Able to recognise/handle (non-standard) residues that have one or more numerical character in their name. 
+
+#### Fixed:
+- Block wise analysis correctly treated in contact_identification.py
+
 0.3.0 (14/07/2023)
 *****
 

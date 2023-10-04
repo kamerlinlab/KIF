@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = "0.3.2"
+VERSION = "0.3.3"
 DESCRIPTION = "Python package for MD simulation analysis"
 LONG_DESCRIPTION = """
     A python package to identify the key molecular interactions that regulate any conformational change."""
