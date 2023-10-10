@@ -50,11 +50,13 @@ class PostProcessor(ABC):
 
         Parameters
         ----------
+
         feat_scores : dict
             Contains each feature name (keys) and their corresponding score (values).
 
         Returns
         ----------
+
         pd.DataFrame
             dataframe of residue numbers and scores for each feature.
         """
@@ -80,12 +82,14 @@ class PostProcessor(ABC):
 
         Parameters
         ----------
+
         per_res_import : pd.DataFrame
             Dataframe with columns of both residues numbers and their
             corresponding per feature score.
 
         Returns
         ----------
+
         dict
             Keys are each residue, values are the residue's relative score.
         """
@@ -120,6 +124,7 @@ class PostProcessor(ABC):
 
         Parameters
         ----------
+
         feature_scores : dict
             Dictionary of feature names and there scores to write to disk.
 
@@ -140,6 +145,7 @@ class PostProcessor(ABC):
 
         Parameters
         ----------
+
         per_res_values : dict
             Dictionary of residue numbers and their scores to write to disk.
 
@@ -165,6 +171,7 @@ class SupervisedPostProcessor(PostProcessor):
 
     Attributes
     ----------
+
     out_dir : str
         Directory path to store results files to.
         Default = ""
@@ -191,6 +198,7 @@ class SupervisedPostProcessor(PostProcessor):
 
     Methods
     -------
+
     load_models_from_instance(supervised_model)
         Gets the generated machine learning model data from an instance
         of either the ClassificationModel or RegressionModel class.
@@ -229,6 +237,7 @@ class SupervisedPostProcessor(PostProcessor):
 
         Parameters
         ----------
+
         supervised_model : ClassificationModel, RegressionModel
             Name of the supervised model class instance used to build the ml models.
 
@@ -263,6 +272,7 @@ class SupervisedPostProcessor(PostProcessor):
 
         Parameters
         ----------
+
         models_to_use : list[str]
             List of machine learning models/algorithims to do the postprocessing on.
         """
@@ -293,6 +303,7 @@ class SupervisedPostProcessor(PostProcessor):
 
         Parameters
         ----------
+
         save_result : Optional[bool] = True
             Save result to disk or not.
             Optional, default is to save.
@@ -325,6 +336,7 @@ class SupervisedPostProcessor(PostProcessor):
 
         Parameters
         ----------
+
         save_result : Optional[bool] = True
             Save result to disk or not.
             Optional, default is to save.
@@ -364,6 +376,7 @@ class UnsupervisedPostProcessor(PostProcessor):
 
     Attributes
     ----------
+
     unsupervised_model : Optional[UnsupervisedModel]
         Instance of the unsupervised model class with models already built.
 
@@ -386,6 +399,7 @@ class UnsupervisedPostProcessor(PostProcessor):
 
     Methods
     -------
+
     get_per_feature_scores(save_result=True)
         Gets the per feature scores and saves them to disk.
 
@@ -411,6 +425,7 @@ class UnsupervisedPostProcessor(PostProcessor):
 
         Parameters
         ----------
+
         variance_explained_cutoff : float
             What fraction of the variance needs to be described by the principal components (PCs)
             in order to stop including further PCs. Default is 0.95 (95%).
@@ -444,6 +459,7 @@ class UnsupervisedPostProcessor(PostProcessor):
 
         Parameters
         ----------
+
         save_result : Optional[bool] = True
             Save result to disk or not.
             Optional, default is to save.
@@ -491,12 +507,14 @@ class UnsupervisedPostProcessor(PostProcessor):
 
         Parameters
         ----------
+
         variance_explained_cutoff : float = 0.95
             What fraction of the variance needs to be described by the principal components (PCs)
             in order to stop including further PCs. Default is 0.95 (95%).
 
         Returns
         ----------
+
         dict
             Dictionary of PCA calculated per feature scores. Keys are feature names,
             values are normalised feature scores.
@@ -542,11 +560,13 @@ class UnsupervisedPostProcessor(PostProcessor):
 
         Parameters
         ----------
+
         eigenvalue_sums : list
             Per feature summed eigenvalues with no scaling.
 
         Returns
         ----------
+
         list
             Per feature summed eigenvalues now scaled.
         """
@@ -566,6 +586,7 @@ class StatClassificationPostProcessor(PostProcessor):
 
     Attributes
     ----------
+
     stat_model : ClassificationStatModel
         Instance of the statistical model produced by the stat_modelling.py module.
 
@@ -590,6 +611,7 @@ class StatClassificationPostProcessor(PostProcessor):
 
     Methods
     -------
+
     get_per_res_scores(stat_method, save_result=True)
         Projects the per feature scores onto the per-residue level for a single user selected
         statistical method.
@@ -626,6 +648,7 @@ class StatClassificationPostProcessor(PostProcessor):
 
         Parameters
         ----------
+
         stat_method : str
             Define the statistical method that should be used to generate
             the per residue scores.
@@ -637,6 +660,7 @@ class StatClassificationPostProcessor(PostProcessor):
 
         Returns
         ----------
+
         dict[int, float]
             Dictionary of each residue and it's relative score.
         """
@@ -686,6 +710,7 @@ class StatClassificationPostProcessor(PostProcessor):
 
         Parameters
         ----------
+
         number_features : int or str
             The number of features to return (those with the highest jensen-shannon
             distances taken forward).
@@ -693,6 +718,7 @@ class StatClassificationPostProcessor(PostProcessor):
 
         Returns
         ----------
+
         np.ndarray
             X values between 0 and 1 to match the kernel density estimations.
 
@@ -788,6 +814,7 @@ class StatClassificationPostProcessor(PostProcessor):
 
         Parameters
         ----------
+
         dict_to_save : dict
             Dictionary of feature names or residue numbers (keys) vs predicted direction (values).
 
@@ -821,6 +848,7 @@ class StatRegressorPostProcessor(PostProcessor):
 
     Attributes
     ----------
+
     stat_model : RegressionStatModel
         Instance of the statistical model produced by the stat_modelling.py module.
 
@@ -841,6 +869,7 @@ class StatRegressorPostProcessor(PostProcessor):
 
     Methods
     -------
+
     get_per_res_scores(stat_method, save_result=True)
         Projects the per feature scores onto the per-residue level for a single user selected
         statistical method.
@@ -866,6 +895,7 @@ class StatRegressorPostProcessor(PostProcessor):
 
         Parameters
         ----------
+
         stat_method : str
             Define the statistical method that should be used to generate
             the per residue scores.
@@ -877,6 +907,7 @@ class StatRegressorPostProcessor(PostProcessor):
 
         Returns
         ----------
+        
         dict
             Dictionary of each residue and it's relative score.
         """

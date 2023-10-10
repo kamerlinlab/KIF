@@ -31,6 +31,7 @@ class _FeatureData():
 
     Attributes
     ----------
+
     input_df : pd.DataFrame
         Dataframe of PyContact features to process.
 
@@ -45,6 +46,7 @@ class _FeatureData():
 
     Methods
     -------
+
     filter_by_occupancy(min_occupancy)
         Filter features such that only features with %occupancy >= the min_occupancy are kept.
 
@@ -72,11 +74,13 @@ class _FeatureData():
 
         Parameters
         ----------
+
         min_occupancy : float
             Minimum percentage occupancy that a feature must have to be retained.
 
         Returns
         -------
+
         pd.DataFrame
             Filtered dataframe.
         """
@@ -98,11 +102,13 @@ class _FeatureData():
 
         Parameters
         ----------
+
         interaction_types_included : list
             Expected list items can be one or more of: "Hbond", "Saltbr", "Hydrophobic", "Other"
 
         Returns
         -------
+
         pd.DataFrame
             Filtered dataframe.
         """
@@ -128,11 +134,13 @@ class _FeatureData():
 
         Parameters
         ----------
+
         main_side_chain_types_included : list
             Expected list items can be one or more of: "bb-bb", "sc-sc", "bb-sc", "sc-bb"
 
         Returns
         -------
+
         pd.DataFrame
             Filtered dataframe.
         """
@@ -165,11 +173,13 @@ class _FeatureData():
 
         Parameters
         ----------
+
         average_strength_cut_off : float
             Cutoff below which features are removed from the Dataframe.
 
         Returns
         -------
+
         pd.DataFrame
             Filtered dataframe.
         """
@@ -206,6 +216,7 @@ class SupervisedFeatureData(_FeatureData):
 
     Attributes
     ----------
+
     input_df : pd.DataFrame
         Dataframe of PyContact features to process.
 
@@ -230,6 +241,7 @@ class SupervisedFeatureData(_FeatureData):
 
     Methods
     -------
+
     filter_by_occupancy(min_occupancy)
         Filter features such that only features with %occupancy >= the min_occupancy are kept.
 
@@ -295,11 +307,13 @@ class SupervisedFeatureData(_FeatureData):
 
         Parameters
         ----------
+
         min_occupancy : float
             Minimum %occupancy that a feature must have to be retained.
 
         Returns
         -------
+
         pd.DataFrame
             Filtered dataframe.
         """
@@ -347,6 +361,7 @@ class UnsupervisedFeatureData(_FeatureData):
 
     Attributes
     ----------
+
     input_df : pd.DataFrame
         Dataframe of PyContact features to process.
 
@@ -359,6 +374,7 @@ class UnsupervisedFeatureData(_FeatureData):
 
     Methods
     -------
+    
     filter_by_occupancy(min_occupancy)
         Filter features such that only features with %occupancy >= the min_occupancy are kept.
 

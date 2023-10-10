@@ -33,6 +33,7 @@ class PyContactInitializer():
 
     Attributes
     ----------
+
     pycontact_files : str or list
         String for a single file or list of strings for many files
 
@@ -118,11 +119,13 @@ class PyContactInitializer():
 
         Parameters
         ----------
+
         input_file: str
             Input file name.
 
         Returns
         ----------
+
         pd.DataFrame
             A df with each interaction found by PyContact a row in the dataframe.
         """
@@ -146,11 +149,13 @@ class PyContactInitializer():
 
         Parameters
         ----------
+
         pycontact_gui_file: str
             complete file path to the GUI generated file.
 
         Returns
         ----------
+
         pd.DataFrame
             A dataframe with all interactions in the gui file and interactions names
             reformatted to match the format used throughout this programm.
@@ -202,11 +207,13 @@ class PyContactInitializer():
 
         Parameters
         ----------
+
         individ_dfs: list
             List of dataframes to merge.
 
         Returns
         ----------
+
         pd.DataFrame
             A complete dataframe with the individual dfs merged.
         """
@@ -233,11 +240,13 @@ class PyContactInitializer():
 
         Parameters
         ----------
+
         individ_dfs: list
             List of dataframes to merge.
 
         Returns
         ----------
+
         pd.DataFrame
             Complete df with individual dfs merged in the same order as they were provided.
         """
@@ -262,6 +271,7 @@ class PyContactInitializer():
 
         Parameters
         ----------
+
         contact_parts : list
             The feature/contact to test whether it is a duplicate of a pre-existing contact.
             The list items are different parts of the contact.
@@ -273,6 +283,7 @@ class PyContactInitializer():
 
         Returns
         ----------
+
         bool
             True if contact is a duplicate.
         """
@@ -310,12 +321,14 @@ class PyContactInitializer():
 
         Parameters
         ----------
+
         full_df : pd.DataFrame
             Dataframe of pycontact data (already merged if needed) but not cleaned/proccessed
             yet.
 
         Returns
         ----------
+
         pd.DataFrame
             Dataframe with "false interactions" removed.
         """
@@ -363,11 +376,13 @@ class PyContactInitializer():
 
         Parameters
         ----------
+
         feature_name: str
             GUI formatted feature to reformat.
 
         Returns
         ----------
+
         str
             Reformatted feature name.
         """
@@ -397,6 +412,7 @@ def modify_column_residue_numbers(dataset: pd.DataFrame, constant_to_add: int = 
 
     Parameters
     ----------
+
     dataset: pd.DataFrame
         Input dataframe with Pycontact features you wish to modify.
 
@@ -407,6 +423,7 @@ def modify_column_residue_numbers(dataset: pd.DataFrame, constant_to_add: int = 
 
     Returns
     ----------
+    
     pd.DataFrame
         Dataframe with residue numbers updated accordingly.
     """

@@ -23,6 +23,7 @@ class CorrelationNetwork:
 
     Attributes
     ----------
+
     dataset : pd.DataFrame
         Input Dataframe containing all features to be studied.
 
@@ -31,6 +32,7 @@ class CorrelationNetwork:
 
     Methods
     -------
+
     gen_res_contact_matrix(out_file)
         Generate a per residue contact map (matrix) that identifies whether two residues
         are in contact with each other.
@@ -65,11 +67,13 @@ class CorrelationNetwork:
 
         Parameters
         ----------
+
         out_file : Optional[str]
             Path to save the corelation matrix to. If left empty no file is saved.
 
         Returns
         ----------
+
         np.ndarray
             A symmetrical matrix (along diagonal) of correlations between each residue.
         """
@@ -121,11 +125,13 @@ class CorrelationNetwork:
 
         Parameters
         ----------
+
         out_file : Optional[str]
             Path to save the corelation matrix to. If left empty no file is saved.
 
         Returns
         ----------
+
         np.ndarray
             A symmetrical matrix (along diagonal) of 1s (in contact) and 0s (not in contact).
         """
@@ -154,6 +160,7 @@ class CorrelationNetwork:
 
         Returns
         ----------
+
         pd.DataFrame
             1st and 2nd residue number of each contact/feature in the dataframe.
         """
@@ -177,6 +184,7 @@ class CorrelationNetwork:
 
         Returns
         ----------
+
         int
             Largest residue number present in the dataset.
         """
@@ -194,6 +202,7 @@ class CorrelationNetwork:
 
         Returns
         ----------
+
         dict
             Dictionary of all interacting residue pairs.
         """
@@ -213,14 +222,15 @@ class CorrelationNetwork:
 
         Parameters
         ----------
-        int
+
+        res_number: int
             Residue number to create the regex string for.
 
         Returns
         ----------
+
         str
             Regex str to be used to filter a dataframe with pycontact features.
-
         """
         # matches if target res number is 1st residue in name
         regex_key_p1 = "(^" + str(res_number) + ")" + "([A-Za-z]{3})" + " "
@@ -244,6 +254,7 @@ def heavy_atom_contact_map_from_pdb(
 
     Parameters
     ----------
+
     pdb_file: str
         Path to PDB file to generate the contact map from.
 
@@ -261,6 +272,7 @@ def heavy_atom_contact_map_from_pdb(
 
     Returns
     ----------
+
     np.ndarray
         Symmetrical (along diagonal) matrix of 1s (in contact) and 0s (not in contact).
     """
@@ -310,6 +322,7 @@ def heavy_atom_contact_map_from_multiple_pdbs(
 
     Parameters
     ----------
+
     pdb_file: list
         Paths to PDB files to generate the contact map from.
 
@@ -327,9 +340,9 @@ def heavy_atom_contact_map_from_multiple_pdbs(
 
     Returns
     ----------
+
     np.ndarray
         Symmetrical (along diagonal) matrix of 1s (in contact) and 0s (not in contact).
-
     """
     res_selection = "not name H* and resid " + str(first_res) + "-" + str(last_res)
 

@@ -81,6 +81,7 @@ class _SupervisedRunner(_MachineLearnModel):
 
     Attributes
     ----------
+
     dataset : pd.DataFrame
         Input dataset.
 
@@ -118,6 +119,7 @@ class _SupervisedRunner(_MachineLearnModel):
 
     Methods
     -------
+
     describe_ml_planned()
         Prints a summary of what machine learning protocol has been selected.
 
@@ -193,11 +195,13 @@ class _SupervisedRunner(_MachineLearnModel):
 
         Parameters
         ----------
+
         save_models : bool
             Whether to save the ML models made to disk.
 
         Returns
         ----------
+
         pd.DataFrame
             A dataframe with the best score and standard deviation
             (obtained from grid search cv) for each model used.
@@ -258,6 +262,7 @@ class _SupervisedRunner(_MachineLearnModel):
 
         Parameters
         ----------
+
         models_to_use : list[str]
             List of machine learning models/algorithims to use.
 
@@ -275,6 +280,7 @@ class _SupervisedRunner(_MachineLearnModel):
 
         Returns
         ----------
+
         dict
             Nested dictionary of model parameters that can be read directly into
             Scikit-learn's implementation of grid search cv.
@@ -301,6 +307,7 @@ class _SupervisedRunner(_MachineLearnModel):
 
         Parameters
         ----------
+        
         is_classification : bool
             If true, the ML model is for classification.
             If false, the ML model is for regression.
@@ -314,6 +321,7 @@ class _SupervisedRunner(_MachineLearnModel):
 
         Returns
         ----------
+
         dict
             Dictionary of hyperparameters to tune for a specific ML algorithim.
         """
@@ -344,6 +352,7 @@ class _SupervisedRunner(_MachineLearnModel):
 
         Parameters
         ----------
+
         scaling_method : str
             How to scale the dataset prior to machine learning.
             Options are "min_max" (scikit-learn's MinMaxScaler)
@@ -357,6 +366,7 @@ class _SupervisedRunner(_MachineLearnModel):
 
         Returns
         ----------
+
         train_data_scaled : np.ndarray
             Scaled training/testing data ready for model building.
 
@@ -383,6 +393,7 @@ class ClassificationModel(_SupervisedRunner):
 
     Attributes
     ----------
+
     dataset : pd.DataFrame
         Input dataset.
 
@@ -454,6 +465,7 @@ class ClassificationModel(_SupervisedRunner):
 
     Methods
     -------
+
     describe_ml_planned()
         Prints a summary of what machine learning protocol has been selected.
 
@@ -563,6 +575,7 @@ class ClassificationModel(_SupervisedRunner):
 
         Returns
         ----------
+
         dict
             A dictionary with keys being the model names and values being a pd.DataFrame
             with several scoring metrics output for each model used.
@@ -611,6 +624,7 @@ class ClassificationModel(_SupervisedRunner):
 
         Returns
         ----------
+
         dict
             Keys are strings of each model name. Values are the confusion matrix
             of said model as a numpy.ndarray.
@@ -639,6 +653,7 @@ class RegressionModel(_SupervisedRunner):
 
     Attributes
     ----------
+
     dataset : pd.DataFrame
         Input dataset.
 
@@ -694,6 +709,7 @@ class RegressionModel(_SupervisedRunner):
 
     Methods
     -------
+
     describe_ml_planned()
         Prints a summary of what machine learning protocol has been selected.
 
@@ -759,6 +775,7 @@ class RegressionModel(_SupervisedRunner):
 
         Returns
         ----------
+
         pd.DataFrame
             Dataframe with each row a containing several regression metrics
             for each ML model generated.
@@ -789,6 +806,7 @@ class RegressionModel(_SupervisedRunner):
 
         Parameters
         ----------
+
         model_name : str
             Name of the ML model.
 
@@ -800,6 +818,7 @@ class RegressionModel(_SupervisedRunner):
 
         Returns
         ----------
+
         pd.DataFrame
             Contains various regression metrics for the provided model.
         """
@@ -847,6 +866,7 @@ class UnsupervisedModel(_MachineLearnModel):
 
     Attributes
     ----------
+
     dataset : pd.DataFrame
         Input dataset.
 
@@ -866,6 +886,7 @@ class UnsupervisedModel(_MachineLearnModel):
 
     Methods
     -------
+
     describe_ml_planned()
         Prints a summary of what machine learning protocol has been selected.
 
@@ -922,6 +943,7 @@ class UnsupervisedModel(_MachineLearnModel):
 
         Parameters
         ----------
+        
         save_models : bool
             Whether to save the ML models made to disk.
             Default is True.
