@@ -39,6 +39,7 @@ class _ProteinStatModel():
 
     Attributes
     ----------
+
     dataset : pd.DataFrame
         Input dataframe.
 
@@ -63,6 +64,7 @@ class _ProteinStatModel():
 
     Methods
     -------
+
     _gen_kdes(input_features, kde_bandwidth)
         Generates kernel density estimations for each feature for a single class.
 
@@ -95,6 +97,7 @@ class _ProteinStatModel():
 
         Parameters
         ----------
+
         input_features : pd.DataFrame
             A dataframe containing all features but with observations for only a single class.
             This can be used to calculate a probabilty distribtion for each feature for each class.
@@ -106,6 +109,7 @@ class _ProteinStatModel():
 
         Returns
         ----------
+
         x_values : np.ndarray
             x values for probabilities over the range 0 to 1. Spacing consistent with
             the kernel density estimations generated in this function.
@@ -140,6 +144,7 @@ class _ProteinStatModel():
 
         Returns
         ----------
+
         pd.DataFrame
             Dataframe with all features scaled between 0 and 1.
         """
@@ -161,6 +166,7 @@ class _ProteinStatModel():
 
         Parameters
         ----------
+
         per_feat_values : dict
             Dictionary of feature names and their scores to write to disk.
 
@@ -184,6 +190,7 @@ class ClassificationStatModel(_ProteinStatModel):
 
     Attributes
     ----------
+
     dataset : pd.DataFrame
         Input dataframe.
 
@@ -224,6 +231,7 @@ class ClassificationStatModel(_ProteinStatModel):
 
     Methods
     -------
+
     calc_mutual_info_to_target(save_result=True)
         Calculate the mutual information between each feature to the target classes.
 
@@ -279,6 +287,7 @@ class ClassificationStatModel(_ProteinStatModel):
 
         Parameters
         ----------
+
         save_result : Optional[bool] = True
             Save result to disk or not.
             Optional, default is to save.
@@ -315,6 +324,7 @@ class ClassificationStatModel(_ProteinStatModel):
 
         Parameters
         ----------
+
         kde_bandwidth : Optional[float]
             Bandwidth used to generate the probabilty distribtions for each feature set.
             Note that features are all scaled to be between 0 and 1 before this step.
@@ -370,6 +380,7 @@ class RegressionStatModel(_ProteinStatModel):
 
     Attributes
     ----------
+
     dataset : pd.DataFrame
         Input dataframe.
 
@@ -398,6 +409,7 @@ class RegressionStatModel(_ProteinStatModel):
 
     Methods
     -------
+
     calc_mutual_info_to_target(save_result=True)
         Calculate the mutual information between each feature and the target.
 
@@ -442,6 +454,7 @@ class RegressionStatModel(_ProteinStatModel):
 
         Parameters
         ----------
+
         save_result : Optional[bool] = True
             Save result to disk or not.
             Optional, default is to save.
@@ -477,6 +490,7 @@ class RegressionStatModel(_ProteinStatModel):
 
         Parameters
         ----------
+        
         save_result : Optional[bool] = True
             Save result to disk or not.
             Optional, default is to save.

@@ -1,0 +1,62 @@
+site_name: KIF - Key Interactions Finder
+
+repo_name: kamerlinlab/kif
+repo_url: https://github.com/kamerlinlab/kif
+
+theme:
+  name: material
+  features:
+    - content.tabs.link
+    - content.code.annotate
+    - content.code.copy
+    - announce.dismiss
+    - navigation.tabs
+  language: en
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline 
+        name: Switch to dark mode
+      primary: teal
+      accent: purple 
+    - scheme: slate 
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode    
+      primary: teal
+      accent: lime
+plugins:
+- search
+- mkdocstrings:
+    handlers:
+      python:
+        selection:
+          docstring_style: numpy
+
+nav:
+  - Get Started:
+    - Key Interactions Finder (KIF): index.md
+
+  - API Documentation:
+    - Contact Identification: contact_identification.md
+    - Data Preperation: data_preperation.md
+    - Statistical Modelling: stat_modelling.md
+    - Machine Learning: model_building.md
+    - Network Analysis: network_analysis.md
+    - Pymol Projections: pymol_projections.md
+    - Utils: utils.md
+    - PyContact Processing: pycontact_processing.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.mark
+  - attr_list

@@ -44,6 +44,7 @@ def per_residue_distance_to_site(pdb_file: str,
 
     Parameters
     ----------
+
     pdb_file : str
         Path to pdb file to use for the distance calculation.
 
@@ -68,6 +69,7 @@ def per_residue_distance_to_site(pdb_file: str,
 
     Returns
     ----------
+
     dict
         Residue numbers are the keys and minimum distances are the values.
     """
@@ -128,6 +130,7 @@ def download_prep_tutorial_dataset(drive_url: str, save_dir: str) -> None:
 
     Parameters
     ----------
+
     drive_url : str
         Google drive url to download the zip file from. Checked to see if a tutorial file.
 
@@ -175,11 +178,13 @@ def _prep_out_dir(out_dir: str) -> str:
 
     Parameters
     ----------
+
     out_dir : str
         Name of output directory user defines.
 
     Returns
     ----------
+
     str
         Corrected name of output directory to meet standardization criteria.
     """
@@ -198,6 +203,7 @@ def _filter_features_by_strings(dataset: pd.DataFrame, strings_to_preserve: list
 
     Parameters
     ----------
+
     dataset : pd.DataFrame
         Input dataset to filter.
 
@@ -206,6 +212,7 @@ def _filter_features_by_strings(dataset: pd.DataFrame, strings_to_preserve: list
 
     Returns
     ----------
+    
     pd.DataFrame
         Dataframe with features filtered to only include those the user wants.
     """

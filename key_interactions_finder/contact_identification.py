@@ -53,17 +53,19 @@ def calculate_contacts(
     report_timings: bool = True,
 ) -> None:
     """
+
     Identify all non-covalent interactions present in the simulation and save the output.
     Output has each non-covalent interaction as a column
     each column has the following information: [residue1] [residue2] [interaction type]
 
     Parameters
     ----------
+
     parm_file: str
         The file path to your topology file. All MDAnalysis allowed topologies can be used.
         Please do not use a PDB file for this, use something with charge information.
         This is important for the hydrogen bonding part of the calculation to work.
-
+        
     traj_file: str
         The file path to your trajectory file.
         All MDAnalysis allowed trajectory file types can be used.
@@ -85,6 +87,7 @@ def calculate_contacts(
 
     Returns
     -------
+
     None
         Output written to file. Optional timings printed to the console.
     """

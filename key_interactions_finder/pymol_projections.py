@@ -33,6 +33,7 @@ def project_pymol_per_res_scores(per_res_scores: dict,
 
     Parameters
     ----------
+
     per_res_scores : dict
         The keys are each residue and values the per residue score.
 
@@ -84,6 +85,7 @@ def project_multiple_per_res_scores(all_per_res_scores: dict,
 
     Parameters
     ----------
+
     all_per_res_scores : dict
         Nested dictionary, the outer layer keys are the model names/methods used.
         The inner layer is a dict with keys being each residue and
@@ -113,6 +115,7 @@ def project_pymol_top_features(per_feature_scores: dict,
 
     Parameters
     ----------
+
     per_feature_scores : dict
         Keys are the names of the features and values are their scores.
 
@@ -192,6 +195,7 @@ def project_multiple_per_feature_scores(all_per_feature_scores: dict,
 
     Parameters
     ----------
+
     all_per_feature_scores : dict
         Nested dictionary, the outer layer keys are the model names/methods used.
         The inner layer is a dict with keys being each residue and
@@ -219,11 +223,13 @@ def _extract_residue_lists(input_df: pd.DataFrame) -> Tuple[list, list]:
 
     Parameters
     ----------
+
     input_df : pd.DataFrame
         Dataframe of feature names.
 
     Returns
     ----------
+    
     res1 : list
         residue 1 for each feature.
 
