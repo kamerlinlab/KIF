@@ -775,8 +775,9 @@ class StatClassificationPostProcessor(PostProcessor):
 
         per_class_datasets = {}
         for class_name in self.stat_model.class_names:
-            per_class_datasets[class_name] = self.stat_model.scaled_dataset[(
+            single_class_dataset = self.stat_model.scaled_dataset[(
                 self.stat_model.scaled_dataset["Target"] == class_name)]
+            per_class_datasets[class_name] = single_class_dataset.drop(columns=["Target"]) 
 
         avg_contact_scores = {}
         self.feature_directions = {}
