@@ -1,5 +1,12 @@
 ## Change Log
 
+0.3.4 (13/02/2024)
+*****
+
+#### Fixed:
+- Remove bug from "estimate_feature_directions" function.  
+
+
 Between 0.3.1 to 0.3.3 (04/10/2023)
 *****
 
