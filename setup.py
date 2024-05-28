@@ -24,7 +24,6 @@ setup(
         "MDAnalysis",
         "MDAnalysisTests",
         "gdown",
-        "biopython"
     ],
     package_data={"key_interactions_finder": ["model_params/*.json"]},
     classifiers=[
