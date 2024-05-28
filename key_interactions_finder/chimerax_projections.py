@@ -21,7 +21,7 @@ on a 3D model of the protein.
 from pathlib import Path
 from typing import Union, Tuple
 import pandas as pd
-from Bio.PDB import PDBParser
+import MDAnalysis as mda
 from key_interactions_finder.utils import _prep_out_dir
 from key_interactions_finder.project_structure_utils import (
     _extract_residue_lists, 
@@ -47,14 +47,11 @@ def get_residue_coordinates(pdb_file: str, residue_number: int) -> Tuple[float, 
     Tuple[float, float, float]
         The x, y, z coordinates of the CA atom.
     """
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure("protein", pdb_file)
-    for model in structure:
-        for chain in model:
-            for residue in chain:
-                if residue.get_id()[1] == residue_number:
-                    return residue['CA'].get_coord()
-    raise ValueError(f"Residue number {residue_number} not found in {pdb_file}")
+    u = mda.Universe(pdb_file)
+    residue = u.select_atoms(f"resid {residue_number} and name CA")
+    if not residue:
+        raise ValueError(f"Residue number {residue_number} not found in {pdb_file}")
+    return tuple(residue.positions[0])
 
 
 def project_chimerax_per_res_scores(per_res_scores: dict,
