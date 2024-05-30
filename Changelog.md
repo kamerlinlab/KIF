@@ -1,5 +1,12 @@
 ## Change Log
 
+0.4.1 (30/05/2024)
+*****
+
+#### Fixed:
+- Added new tutorials files to allowed google drive links 
+
+
 0.4.0 (30/05/2024)
 *****
 
