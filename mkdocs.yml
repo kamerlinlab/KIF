@@ -44,9 +44,9 @@ nav:
     - Machine Learning: model_building.md
     - Network Analysis: network_analysis.md
     - Pymol Projections: pymol_projections.md
-    - ChimeraX Projections: chimerax_projections.py
+    - ChimeraX Projections: chimerax_projections.md
     - Utils: utils.md
-    - Project Structure Utils: project_structure_utils.py
+    - Project Structure Utils: project_structure_utils.md
     - PyContact Processing: pycontact_processing.md
 
 markdown_extensions:
