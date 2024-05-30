@@ -1,5 +1,12 @@
 ## Change Log
 
+0.4.0 (30/05/2024)
+*****
+
+#### Added:
+Now KIF results can be projected onto a given 3D structure using [ChimeraX](https://www.cgl.ucsf.edu/chimerax/). Previously only [PyMOL](https://pymol.org/) was possible. Thanks to @darianyang for adding this functionality. 
+
+
 0.3.4 (13/02/2024)
 *****
 

@@ -1,28 +1,19 @@
 # KIF - Key Interactions Finder
  A python package to identify the key molecular interactions that regulate any conformational change.
 
- ### New in Version 0.3.0  - (14/07/2023)
-The non-covalent interaction detection part of KIF has been rewritten to be much faster. 
-These changes have the biggest effect on larger systems.
+### New in Version 0.4.0 - (30/05/2024)
 
-#### Example improvements:
-**Small trajectory of 214 residues and 98 frames.**
-- Old code: 5 min 54 seconds
-- New code: 29 seconds
+Now KIF results can be projected onto a given 3D structure using [ChimeraX](https://www.cgl.ucsf.edu/chimerax/). Previously only [PyMOL](https://pymol.org/) was possible. Thanks to @darianyang for adding this functionality. 
 
-**Larger system of 827 residues, 1 frame. **
-- Old code: more than 20 mins.  
-- New code: 8.4 seconds
+Check out the tutorial to see it in action: 
 
-In order to make use of this you'll need to update your install of KIF to at least 0.3.0 or greater:
+
+In order to make use of this you'll need to update your install of KIF to at least 0.4.0 or greater:
 ```
 pip install --upgrade KIF
 ```
 
 **Keep in mind** that your trajectory(s) must be [imaged](http://ambermd.org/Questions/periodic2.html) before using KIF, to remove periodic effects. 
-
-**Note**  If you have already used PyContact (the prior method to calculate non-covalent interactions) don't worry, you can still use the PyContact generated dataset in the newer version(s) of KIF.
-
 
 ![KIF_ReadMe_Pic](https://user-images.githubusercontent.com/49672044/207597051-7dcde86a-62bd-4f69-96aa-326cad938a65.png)
 
