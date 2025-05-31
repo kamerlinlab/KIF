@@ -119,3 +119,5 @@ dmypy.json
 .tutorials/temporary_files
 .tutorials/synthetic_data_test/KIF_Results
 .tutorials/synthetic_data_test/Raw
+tutorials/tutorial_datasets
+tutorials/network_analysis_tutorial/tutorial_datasets/
