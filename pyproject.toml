@@ -1,0 +1,42 @@
+[project]
+name = "KIF"
+version = "0.4.2"
+description = "Python package for MD simulation analysis"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Rory Crean", email = "rory.crean@icm.uu.se" }
+]
+dependencies = [
+    "catboost>=1.2.8",
+    "gdown>=5.2.0",
+    "ipykernel>=6.29.5",
+    "jupyter>=1.1.1",
+    "mdanalysis>=2.9.0",
+    "mdanalysistests>=2.9.0",
+    "numpy>=2.2.5",
+    "pandas>=2.2.3",
+    "scikit-learn>=1.6.1",
+    "scipy>=1.15.2",
+    "xgboost>=3.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "mkdocs-material>=9.6.14",
+    "mkdocstrings[python]>=0.29.1",
+    "pytest>=8.3.5",
+    "ruff>=0.11.8",
+]
+
+[project.urls]
+homepage = "https://github.com/kamerlinlab/KIF"
+docs = "https://kamerlinlab.github.io/KIF/"
+
+[tool.setuptools.packages.find]
+include = ["key_interactions_finder", "key_interactions_finder.*"]
+
+[tool.setuptools.package-data]
+"key_interactions_finder" = ["model_params/*.json"]
+
+
