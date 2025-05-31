@@ -1,0 +1,886 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+        <link rel="next" href="contact_identification/">
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>Key Interactions Finder (KIF) - KIF - Key Interactions Finder</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#documentation-for-kif-key-interactions-finder" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="KIF - Key Interactions Finder" class="md-header__button md-logo" aria-label="KIF - Key Interactions Finder" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            KIF - Key Interactions Finder
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Key Interactions Finder (KIF)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/kamerlinlab/kif" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kamerlinlab/kif
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="KIF - Key Interactions Finder" class="md-nav__button md-logo" aria-label="KIF - Key Interactions Finder" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    KIF - Key Interactions Finder
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/kamerlinlab/kif" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kamerlinlab/kif
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Get Started
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            Get Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Key Interactions Finder (KIF)
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Key Interactions Finder (KIF)
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#package-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Package Overview:
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-approximate-workflow-for-this-package-is-as-follows" class="md-nav__link">
+    <span class="md-ellipsis">
+      The approximate workflow for this package is as follows:
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies-and-install" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependencies and Install
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-an-appropriate-target-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choosing an Appropriate Target variable.
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tutorials-available" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tutorials Available
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#license-and-disclaimer" class="md-nav__link">
+    <span class="md-ellipsis">
+      License and Disclaimer
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#citing-this-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      Citing this work
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#issuesquestionscontributions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issues/Questions/Contributions
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Documentation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            API Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="contact_identification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contact Identification
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="data_preperation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data Preperation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="stat_modelling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Statistical Modelling
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="model_building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Machine Learning
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="network_analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Network Analysis
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="pymol_projections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Pymol Projections
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="chimerax_projections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ChimeraX Projections
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Utils
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="project_structure_utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Project Structure Utils
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="pycontact_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    PyContact Processing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="documentation-for-kif-key-interactions-finder">Documentation for KIF - Key Interactions Finder</h1>
+<p>A python package to identify the key molecular interactions that regulate any conformational change.</p>
+<p><img alt="KIF_ReadMe_Pic" src="https://user-images.githubusercontent.com/49672044/207597051-7dcde86a-62bd-4f69-96aa-326cad938a65.png" /></p>
+<h2 id="package-overview">Package Overview:</h2>
+<ul>
+<li>Identify important non-covalent interactions that are associated with any conformational change you are interested in (as long as you can describe the descriptor and sample the descriptor in your MD simulations). The non-covalent interactions are scored according to their association/importance to the conformational change and you can easily convert the per interaction/feature scores to per residue scores as well.</li>
+<li>Generate <a href="https://pymol.org/2/">PyMOL</a> output scripts that enable you to visualise your results on 3D structures.</li>
+<li>Generate per residue correlation and distance matrices that can be easily applied to the many graph theory methods available in order to study protein interaction networks and allostery within your system (no descriptor/target variable required for this).</li>
+</ul>
+<p>Note that how you define the descriptor is up to you, and you can use either a continuous variable or a categorical variable (some tips on how to decide what to use will be given below).</p>
+<p><strong>More Detail Please!</strong>
+For a more complete description of KIF, <a href="https://aip.scitation.org/doi/10.1063/5.0140882">please refer to our article</a>. Included in the article is a description of some of the generic workflows possible alongside the application of KIF to several different biomolecular systems.</p>
+<p>There are also tutorials available (discussed below).</p>
+<h2 id="the-approximate-workflow-for-this-package-is-as-follows">The approximate workflow for this package is as follows:</h2>
+<ol>
+<li>Run MD simulations on your system(s) of interest with whichever MD engine you want.</li>
+<li>(Both can be done simultaneously)<ol>
+<li>Analyse the trajectory frames with KIF to determine all non-covalent interactions.* See tutorial 0 for how to do this.</li>
+<li>(Optional) Calculate the value of a target variable for each frame using whatever approach you see fit (tips provided below).</li>
+</ol>
+</li>
+<li>Load your non-covalent interactions data and optionally generated target data into KIF and perform some combination of machine learning, statistical analysis or network analysis.</li>
+<li>Output the results for analysis. This includes visualisation scripts which are compatible with <a href="https://pymol.org/2/">PyMOL</a> so you can see the results on a 3D protein structure.</li>
+</ol>
+<p>*The previous implementation of KIF used <a href="https://github.com/maxscheurer/pycontact">PyContact</a> (note that this program is not made by us), to determine all the non-covalent interactions in your trajectory. You can still use this approach if desired, see the legacy tutorials section below.</p>
+<h2 id="dependencies-and-install">Dependencies and Install</h2>
+<ul>
+<li>Python 3.7 or higher is required as this package uses dataclasses. We recommend python 3.10 as 3.7 is rather old.</li>
+</ul>
+<p><strong>Option 1: Install with pip</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip install KIF
+</code></pre></div></p>
+<p><strong>Option 2: Clone/Download Repo first and then run setup.py :</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cd KIF-main
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>python setup.py install
+</code></pre></div>
+<p>Note that in prior versions of KIF (less than 0.2.0) you would have needed to also install <a href="https://github.com/maxscheurer/pycontact">PyContact (see the repo for how to do this)</a>. This is no longer the case.</p>
+<h2 id="choosing-an-appropriate-target-variable">Choosing an Appropriate Target variable.</h2>
+<p>To perform either the machine learning or statistical analysis methods available in this package you will want to calculate a target variable to go alongside the features (non-covalent interactions identified by KIF). This target variable should as cleanly as possible describe your process of interest.</p>
+<p>Below are some examples of what could work for you. Of course, this is use case specific so feel free to select what makes sense for your problem.</p>
+<p><strong>Enzyme catalysis</strong> - A per frame reacting atom distance for regression or define a max reacting atom distance cut-off to classify each frame as either "active" or "inactive".</p>
+<p><strong>Conformational Changes</strong> - Calculate the RMSD for each frame in your simulation to each conformational state. In this case of 2 different states, classify each frame as either "State 1", "State 2" or "neither" based on your RMSD metrics.</p>
+<p><strong>For example:</strong>
+* if RMSD to "State 1" &lt;= 1.5 Å and an RMSD to "State 2" &gt;= 1.5 Å --&gt; assign frame as "State 1".
+* if RMSD to "State 1" =&gt; 1.5 Å and an RMSD to "State 2" &lt;= 1.5 Å --&gt; assign frame as "State 2".
+* else --&gt; assign frame as "neither".
+You can also consider dropping the frames with state "neither" from your analysis to make the calculation cleaner (i.e., turn it into binary classification).
+This is the approach we took for the enzyme PTP1B, which you can find described in our manuscript.</p>
+<h2 id="tutorials-available">Tutorials Available</h2>
+<p>All tutorials include the setup and post-processing steps used for each system. All tutorials used datasets we analyzed in our <a href="https://aip.scitation.org/doi/10.1063/5.0140882">manuscript</a></p>
+<ol>
+<li>
+<p><strong><a href="https://github.com/kamerlinlab/KIF/blob/main/tutorials/identify_contacts.py">identify_contacts.py</a></strong> - Example script showing how you can use KIF to identify all the non-covalent interactions present in your MD simulations. This needs to be determined before using the rest of KIF.</p>
+</li>
+<li>
+<p><strong><a href="https://github.com/kamerlinlab/KIF/blob/main/tutorials/Tutorial_PTP1B_Classification_ML_Stats.ipynb">Tutorial_PTP1B_Classification_ML_Stats.ipynb</a> <a href="https://colab.research.google.com/github/kamerlinlab/KIF/blob/main/tutorials/Tutorial_PTP1B_Classification_ML_Stats.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></strong>  - Perform binary classification ML and statistical analysis on simulations of PTP1B. Used to describe the differences in the closed and open WPD-loop states of PTP1B.</p>
+</li>
+<li>
+<p><strong><a href="https://github.com/kamerlinlab/KIF/blob/main/tutorials/Tutorial_KE07_Regression_ML_Stats.ipynb">Tutorial_KE07_Regression_ML_Stats.ipynb</a> <a href="https://colab.research.google.com/github/kamerlinlab/KIF/blob/main/tutorials/Tutorial_KE07_Regression_ML_Stats.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></strong> - Perform regression ML and statistical analysis on a kemp eliminase enzyme. Here the target value is the side chain dihedral of W50.</p>
+</li>
+<li>
+<p><strong><a href="https://github.com/kamerlinlab/KIF/tree/main/tutorials/network_analysis_tutorial">network_analysis_tutorial</a> <a href="https://colab.research.google.com/github/kamerlinlab/KIF/blob/main/tutorials/network_analysis_tutorial/Step1_Tutorial_PTP1B_Network_Analysis.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></strong> - Preparation of PTP1B inputs required for graph theory based calculations. This tutorial is in its own folder, as two additional scripts are provided:</p>
+<ul>
+<li>A .R script (which uses <a href="http://thegrantlab.org/bio3d_v2/">BIO3D</a>) to perform <a href="https://pubs.acs.org/doi/10.1021/ct4008603">WISP</a></li>
+<li>A python script to generate PyMOL compatible figures depicting the results from the WISP calculation (The .R script will only generate VMD compatible ones.)</li>
+</ul>
+</li>
+<li>
+<p><strong><a href="https://github.com/kamerlinlab/KIF/blob/main/tutorials/Workup_PDZ_Bootstrapping.ipynb">Workup_PDZ_Bootstrapping.ipynb</a> <a href="https://colab.research.google.com/github/kamerlinlab/KIF/blob/main/tutorials/Workup_PDZ_Bootstrapping.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></strong> - Workup the bootstrapping calculations performed on the PDZ3 domain. As described in the notebook, the bootstrapping itself was computationally intensive to run so only the workup is included in this notebook. We have however included the <a href="https://zenodo.org/record/7104965#.Y5meLXbMKUk">scripts that we used to perform bootstrapping for both PTP1B and the PDZ3 domain on Zenodo</a></p>
+</li>
+</ol>
+<p>There are also <a href="https://github.com/kamerlinlab/KIF/blob/main/tutorials/legacy_tutorials">several legacy tutorials which can be found here</a>. These tutorials are almost identical to the equivalent ones found above, but instead use non-covalent interaction data identified with PyContact instead of KIF.</p>
+<h2 id="license-and-disclaimer">License and Disclaimer</h2>
+<p>This software is published under a GNU General Public License v2.0.</p>
+<p>As the principal investigator behind this software is employed by Georgia Tech University we must also clarify: “The software is provided “as is.” Neither the Georgia Institute of Technology nor any of its units or its employees, nor the software developers of KIF or any other person affiliated with the creation, implementation, and upkeep of the software’s code base, knowledge base, and servers (collectively, the “Entities”) shall be held liable for your use of the platform or any data that you enter. The Entities do not warrant or make any representations of any kind or nature with respect to the System, and the Entities do not assume or have any responsibility or liability for any claims, damages, or losses resulting from your use of the platform. None of the Entities shall have any liability to you for use charges related to any device that you use to access the platform or use and receive the platform, including, without limitation, charges for Internet data packages and Personal Computers. THE ENTITIES DISCLAIM ALL WARRANTIES WITH REGARD TO THE SERVICE,INCLUDING WARRANTIES OF MERCHANTABILITY, NON-INFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE TO THE FULLEST EXTENT ALLOWED BY LAW.”</p>
+<h2 id="citing-this-work">Citing this work</h2>
+<p>If you make use of this package <a href="https://aip.scitation.org/doi/10.1063/5.0140882">please cite our manuscript:</a>.</p>
+<p>KIF – Key Interactions Finder: A Program to Identify the Key Molecular Interactions that Regulate Protein Conformational Changes</p>
+<p>Authors: Rory M. Crean, Joanna S. G. Slusky, Peter M. Kasson and Shina Caroline Lynn Kamerlin</p>
+<p>DOI: 10.1063/5.0140882</p>
+<h2 id="issuesquestionscontributions">Issues/Questions/Contributions</h2>
+<p>All welcome. Please feel free to open an issue or submit a pull request as necessary. Feature requests are welcome too.
+You can also reach me at: rory.crean [at] kemi.uu.se</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": ".", "features": ["announce.dismiss", "content.tabs.link", "content.code.annotate", "content.code.copy", "navigation.instant", "navigation.sections", "navigation.top", "toc.integrate"], "search": "assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+    
+  </body>
+</html>
