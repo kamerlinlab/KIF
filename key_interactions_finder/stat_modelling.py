@@ -293,7 +293,7 @@ class ClassificationStatModel(_ProteinStatModel):
         mutual_info_raw = mutual_info_classif(features_array, classes)
         mutual_info_rescaled = np.around((np.exp(mutual_info_raw) - 1), 5)
 
-        self.mutual_infos = dict(zip(df_features.columns, mutual_info_rescaled))
+        self.mutual_infos = dict(zip(df_features.columns, mutual_info_rescaled, strict=True))
         self.mutual_infos = {k: v for k, v in sorted(self.mutual_infos.items(), key=lambda item: item[1], reverse=True)}
 
         print("Mutual information scores calculated.")
@@ -444,7 +444,7 @@ class RegressionStatModel(_ProteinStatModel):
         mutual_info_raw = mutual_info_regression(features_array, target_values)
         mutual_info_rescaled = np.around((np.exp(mutual_info_raw) - 1), 5)
 
-        self.mutual_infos = dict(zip(df_features.columns, mutual_info_rescaled))
+        self.mutual_infos = dict(zip(df_features.columns, mutual_info_rescaled, strict=True))
         self.mutual_infos = {k: v for k, v in sorted(self.mutual_infos.items(), key=lambda item: item[1], reverse=True)}
 
         print("Mutual information scores calculated.")

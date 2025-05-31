@@ -112,7 +112,7 @@ def calculate_contacts(
             If the difference is small, you can safely ignore this warning message as it is probably the case you just
             have a ligand or two in your input file.
         """
-        warnings.warn(warning_message)
+        warnings.warn(warning_message, stacklevel=2)
 
         biggest_res = last_res
     else:

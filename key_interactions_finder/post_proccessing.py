@@ -111,7 +111,7 @@ class PostProcessor(ABC):
         for i in range(1, max_res, 1):
             tot_scores_scaled.append(tot_scores[i] / max_ori_score)
 
-        spheres = dict(sorted(zip(res_ids, tot_scores_scaled), key=lambda x: x[1], reverse=True))
+        spheres = dict(sorted(zip(res_ids, tot_scores_scaled, strict=True), key=lambda x: x[1], reverse=True))
 
         spheres = {keys: np.around(values, 5) for keys, values in spheres.items()}
 
@@ -251,7 +251,7 @@ class SupervisedPostProcessor(PostProcessor):
         self.best_models = {}
 
         if models_to_use == "all":
-            for model in supervised_model.ml_models.keys():
+            for model in supervised_model.ml_models:
                 self.best_models[model] = supervised_model.ml_models[model].best_estimator_
 
         elif isinstance(models_to_use, list):
@@ -288,17 +288,18 @@ class SupervisedPostProcessor(PostProcessor):
                 model_file_name = str(model_name) + "_Model.pickle"
                 model_in_path = Path(temp_folder, model_file_name)
 
-                model = pickle.load(open(model_in_path, "rb"))
+                with open(model_in_path, "rb") as f:
+                    model = pickle.load(f)
                 self.best_models.update({model_name: model})
 
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             error_message = (
                 "I cannot find the files you generated from a prior "
                 + "machine learning run, if you have already run the machine learning, "
                 + "make sure you are inside the right working directory. You "
                 + "should see a folder named: 'temporary_files' if you are."
             )
-            raise FileNotFoundError(error_message)
+            raise FileNotFoundError(error_message) from e
 
     def get_per_feature_scores(self, save_result: bool = True) -> None:
         """
@@ -314,7 +315,7 @@ class SupervisedPostProcessor(PostProcessor):
         self.all_per_feature_scores = {}
         for model_name, model in self.best_models.items():
             raw_scores = list(np.around(model.feature_importances_, 8))
-            feat_scores = zip(self.feat_names, raw_scores)
+            feat_scores = zip(self.feat_names, raw_scores, strict=True)
             sort_feat_scores = dict(sorted(feat_scores, key=lambda x: x[1], reverse=True))
 
             if save_result:
@@ -523,7 +524,7 @@ class UnsupervisedPostProcessor(PostProcessor):
 
         eigenvalues_scaled = self._scale_eigenvalues(eigenvalue_sums)
 
-        pca_per_feat_scores = dict(zip(self.unsupervised_model.feat_names, eigenvalues_scaled))
+        pca_per_feat_scores = dict(zip(self.unsupervised_model.feat_names, eigenvalues_scaled, strict=True))
 
         print(
             "The total variance described by the principal components (PCs) used "
@@ -739,7 +740,7 @@ class StatClassificationPostProcessor(PostProcessor):
             + "direction each feature appears to favour. "
             + "You should therefore interpret these results with care..."
         )
-        warnings.warn(warning_message)
+        warnings.warn(warning_message, stacklevel=2)
 
         per_class_datasets = {}
         for class_name in self.stat_model.class_names:

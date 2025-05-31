@@ -7,6 +7,7 @@ There is only a single class in this module (CorrelationNetwork) as this module
 does not require a target variable and if you have one it does not need it.
 """
 
+import contextlib
 import re
 from dataclasses import dataclass, field
 from typing import Optional
@@ -52,11 +53,8 @@ class CorrelationNetwork:
 
     def __post_init__(self):
         """Filter features and generate the full correlation matrix."""
-
-        try:
+        with contextlib.suppress(KeyError):
             self.dataset = self.dataset.drop(["Target"], axis=1)
-        except KeyError:
-            pass  # If not present then dataset is from unsupervised learning.
 
         self.feature_corr_matrix = self.dataset.corr()
         return self.feature_corr_matrix
@@ -210,7 +208,7 @@ class CorrelationNetwork:
         """
         df_cols = pd.DataFrame()
         df_cols[["Res1", "Res2"]] = self._get_residue_lists()
-        contact_pairs = dict(zip(df_cols["Res1"], df_cols["Res2"]))
+        contact_pairs = dict(zip(df_cols["Res1"], df_cols["Res2"], strict=True))
         return contact_pairs
 
     @staticmethod

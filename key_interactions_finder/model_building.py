@@ -21,6 +21,7 @@ Classes 1 and 2 then inherit from a parent class called "_SupervisedRunner" whic
 as much as their shared behaviour as possible.
 """
 
+import contextlib
 import json
 import pickle
 import time
@@ -524,7 +525,7 @@ class ClassificationModel(_SupervisedRunner):
             # For CatBoostClassifier
             classes = np.unique(y_train)
             weights = compute_class_weight(class_weight="balanced", classes=classes, y=y_train)
-            class_weights = dict(zip(classes, weights))
+            class_weights = dict(zip(classes, weights, strict=True))
 
             # For XGBClassifier, I need the total number of examples in the majority class
             # divided by the total number of examples in the minority class.
@@ -905,10 +906,8 @@ class UnsupervisedModel(_MachineLearnModel):
         self.ml_models = {}
 
         # Allow a user with a supervised dataset to do unsupervised learning.
-        try:
+        with contextlib.suppress(KeyError):
             self.dataset = self.dataset.drop(["Target"], axis=1)
-        except KeyError:
-            pass
 
         self.feat_names = self.dataset.columns.values
         data_array = self.dataset.to_numpy()
