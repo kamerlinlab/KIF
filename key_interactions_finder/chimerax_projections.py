@@ -20,6 +20,7 @@ on a 3D model of the protein.
 """
 from pathlib import Path
 from typing import Union, Tuple
+import warnings
 import pandas as pd
 import MDAnalysis as mda
 from key_interactions_finder.utils import _prep_out_dir
@@ -47,6 +48,8 @@ def get_residue_coordinates(pdb_file: str, residue_number: int) -> Tuple[float, 
     Tuple[float, float, float]
         The x, y, z coordinates of the CA atom.
     """
+    # Not relevant warning message for this use case, don't want to scare users.
+    warnings.filterwarnings(action="ignore", message="Element information is missing")
     u = mda.Universe(pdb_file)
     residue = u.select_atoms(f"resid {residue_number} and name CA")
     if not residue:
