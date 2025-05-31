@@ -1,0 +1,19 @@
+line-length = 120
+
+lint.select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+
+lint.ignore = [
+    "E501", # line too long
+    "SIM108" # if-else-block-instead-of-if-exp
+] 

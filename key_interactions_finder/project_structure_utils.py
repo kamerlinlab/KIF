@@ -1,13 +1,16 @@
 """
-Note: If you are an end user, you do not need to use this module directly. 
+Note: If you are an end user, you do not need to use this module directly.
 
 A set of functions to help with projecting the KIF results onto 3D protein structures.
 
-These functions are used to help create the PyMOL and ChimeraX projections of 
+These functions are used to help create the PyMOL and ChimeraX projections of
 per interaction and per residue scores.
 """
+
 from typing import Tuple
+
 import pandas as pd
+
 
 def _extract_residue_lists(input_df: pd.DataFrame) -> Tuple[list, list]:
     """
@@ -21,17 +24,15 @@ def _extract_residue_lists(input_df: pd.DataFrame) -> Tuple[list, list]:
 
     Returns
     ----------
-    
+
     res1 : list
         residue 1 for each feature.
 
     res2 : list
         residue 2 for each feature.
     """
-    residue1 = (input_df[0].str.extract(
-        r"(\d+)")).astype(int).values.tolist()
-    residue2 = (input_df[1].str.extract(
-        r"(\d+)")).astype(int).values.tolist()
+    residue1 = (input_df[0].str.extract(r"(\d+)")).astype(int).values.tolist()
+    residue2 = (input_df[1].str.extract(r"(\d+)")).astype(int).values.tolist()
     res1 = [item for sublist in residue1 for item in sublist]
     res2 = [item for sublist in residue2 for item in sublist]
 
@@ -58,8 +59,7 @@ def _extract_interaction_types(input_df: pd.DataFrame) -> list:
     list
         List of colors to assign for each feature.
     """
-    stick_col_scheme = {"Hbond": "red", "Saltbr": "blue",
-                        "Hydrophobic": "green", "Other": "magenta"}
+    stick_col_scheme = {"Hbond": "red", "Saltbr": "blue", "Hydrophobic": "green", "Other": "magenta"}
 
     interact_type = input_df[2].values.tolist()
     return [stick_col_scheme[i] for i in interact_type if i in stick_col_scheme]
@@ -67,7 +67,7 @@ def _extract_interaction_types(input_df: pd.DataFrame) -> list:
 
 def _scale_interaction_strengths(input_df: pd.DataFrame) -> list:
     """
-    Determine interaction strength value and scale so max is 0.5. 
+    Determine interaction strength value and scale so max is 0.5.
     (0.5 is good for both PyMOL and Chimera).
 
     Parameters

@@ -18,22 +18,22 @@ on a 3D model of the protein.
     Write out multiple PyMOL compatible scripts for different models.
 
 """
+
 from pathlib import Path
 from typing import Union
+
 import pandas as pd
-from key_interactions_finder.utils import _prep_out_dir
+
 from key_interactions_finder.project_structure_utils import (
-    _extract_residue_lists, 
-    _write_file, 
-    _extract_interaction_types, 
-    _scale_interaction_strengths
+    _extract_interaction_types,
+    _extract_residue_lists,
+    _scale_interaction_strengths,
+    _write_file,
 )
+from key_interactions_finder.utils import _prep_out_dir
 
 
-def project_pymol_per_res_scores(per_res_scores: dict,
-                                 model_name: str = "",
-                                 out_dir: str = ""
-                                 ) -> None:
+def project_pymol_per_res_scores(per_res_scores: dict, model_name: str = "", out_dir: str = "") -> None:
     """
     Write out a PyMOL compatible python script to project the per residue scores.
 
@@ -73,7 +73,7 @@ def project_pymol_per_res_scores(per_res_scores: dict,
 
     # user selection of all CA carbons so easy to modify the sphere colours etc...
     all_spheres_list = list(per_res_scores.keys())
-    all_spheres_str = '+'.join(map(str, all_spheres_list))
+    all_spheres_str = "+".join(map(str, all_spheres_list))
     per_res_import_out += f"sele All_Spheres, resi {all_spheres_str} and name CA\n"
 
     out_file_name = model_name + "_Pymol_Per_Res_Scores.py"
@@ -82,9 +82,7 @@ def project_pymol_per_res_scores(per_res_scores: dict,
     print(f"The file: {out_file_path} was written to disk.")
 
 
-def project_multiple_per_res_scores(all_per_res_scores: dict,
-                                    out_dir: str = ""
-                                    ) -> None:
+def project_multiple_per_res_scores(all_per_res_scores: dict, out_dir: str = "") -> None:
     """
     Write out multiple PyMOL compatible visualisation scripts for
     the per residue scores, one script for each model used.
@@ -101,18 +99,12 @@ def project_multiple_per_res_scores(all_per_res_scores: dict,
         Folder to save outputs to, if none given, saved to current directory.
     """
     for model_name, model_scores in all_per_res_scores.items():
-        project_pymol_per_res_scores(
-            per_res_scores=model_scores,
-            model_name=str(model_name),
-            out_dir=out_dir
-        )
+        project_pymol_per_res_scores(per_res_scores=model_scores, model_name=str(model_name), out_dir=out_dir)
 
 
-def project_pymol_top_features(per_feature_scores: dict,
-                               model_name: str,
-                               numb_features: Union[int, str] = "all",
-                               out_dir: str = ""
-                               ) -> None:
+def project_pymol_top_features(
+    per_feature_scores: dict, model_name: str, numb_features: Union[int, str] = "all", out_dir: str = ""
+) -> None:
     """
     Write out a PyMOL compatible python script to project the top X features.
     Features will be shown as cylinders between each residue pair,
@@ -162,18 +154,17 @@ def project_pymol_top_features(per_feature_scores: dict,
     if numb_features == "all":
         numb_features = len(res1)
     elif not isinstance(numb_features, int):
-        raise ValueError(
-            "You defined the parameter 'numb_features' as neither 'all' or as an integer.")
+        raise ValueError("You defined the parameter 'numb_features' as neither 'all' or as an integer.")
 
     # prevent issue if user requests more features than exist.
     numb_features = min(numb_features, len(res1))
 
     for i in range(numb_features):
         feature_rep = (
-            f"distance interaction{i}, " +
-            f"resid {str(res1[i])} and name CA, " +
-            f"resid {str(res2[i])} and name CA \n" +
-            f"set dash_radius, {interact_strengths[i]}, interaction{i} \n"
+            f"distance interaction{i}, "
+            + f"resid {str(res1[i])} and name CA, "
+            + f"resid {str(res2[i])} and name CA \n"
+            + f"set dash_radius, {interact_strengths[i]}, interaction{i} \n"
             f"set dash_color, {interact_color[i]}, interaction{i} \n"
         )
         top_feats_out += feature_rep
@@ -192,10 +183,9 @@ def project_pymol_top_features(per_feature_scores: dict,
     print(f"The file: {out_file_path} was written to disk.")
 
 
-def project_multiple_per_feature_scores(all_per_feature_scores: dict,
-                                        numb_features: Union[int, str],
-                                        out_dir: str = ""
-                                        ) -> None:
+def project_multiple_per_feature_scores(
+    all_per_feature_scores: dict, numb_features: Union[int, str], out_dir: str = ""
+) -> None:
     """
     Write out multiple PyMOL compatible scripts for different models.
 
@@ -216,9 +206,5 @@ def project_multiple_per_feature_scores(all_per_feature_scores: dict,
     """
     for model_name, model_scores in all_per_feature_scores.items():
         project_pymol_top_features(
-            per_feature_scores=model_scores,
-            model_name=model_name,
-            numb_features=numb_features,
-            out_dir=out_dir
+            per_feature_scores=model_scores, model_name=model_name, numb_features=numb_features, out_dir=out_dir
         )
-

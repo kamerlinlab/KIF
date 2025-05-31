@@ -15,23 +15,24 @@ This is only available to supervised datasets (i.e. data must has class labels).
 These classes both inherit from a parent class called "_ProteinStatModel" which abstracts
 as much as their shared behavior as possible.
 """
+
+import csv
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Tuple
-from dataclasses import dataclass, field
-import csv
-import pandas as pd
-import numpy as np
 
+import numpy as np
+import pandas as pd
+from scipy.spatial.distance import jensenshannon
+from sklearn.feature_selection import mutual_info_classif, mutual_info_regression
 from sklearn.neighbors import KernelDensity
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.feature_selection import mutual_info_classif, mutual_info_regression
-from scipy.spatial.distance import jensenshannon
 
-from key_interactions_finder.utils import _prep_out_dir, _filter_features_by_strings
+from key_interactions_finder.utils import _filter_features_by_strings, _prep_out_dir
 
 
 @dataclass
-class _ProteinStatModel():
+class _ProteinStatModel:
     """
     Generic class to unify the construction of the classiciation and regression
     classes used by the user. There is no __post_init__ method called by this class
@@ -74,20 +75,18 @@ class _ProteinStatModel():
     _per_feature_scores_to_file(per_feat_values, out_file)
         Write the per feature scores to a file.
     """
+
     # Generated at initialization.
     dataset: pd.DataFrame
     out_dir: str = ""
-    interaction_types_included: list = field(
-        default_factory=["Hbond", "Hydrophobic", "Saltbr", "Other"])
+    interaction_types_included: list = field(default_factory=["Hbond", "Hydrophobic", "Saltbr", "Other"])
 
     # Generated later.
     scaled_dataset: pd.DataFrame = field(init=False)
     feature_list: list = field(init=False)
     mutual_infos: dict = field(init=False)
 
-    def _gen_kdes(self,
-                  input_features: pd.DataFrame,
-                  kde_bandwidth: float = 0.02) -> Tuple[np.ndarray, dict]:
+    def _gen_kdes(self, input_features: pd.DataFrame, kde_bandwidth: float = 0.02) -> Tuple[np.ndarray, dict]:
         """
         Generates kernel density estimations (kdes) for each feature for a single class.
 
@@ -117,18 +116,15 @@ class _ProteinStatModel():
         kdes : dict
             Keys are features and values are an array of kernel density estimations (kdes).
         """
-        x_values = np.asarray(
-            [value for value in np.arange(0.0, 1.0, kde_bandwidth)])
-        x_values = x_values.reshape((int(1/kde_bandwidth)), 1)
+        x_values = np.asarray([value for value in np.arange(0.0, 1.0, kde_bandwidth)])
+        x_values = x_values.reshape((int(1 / kde_bandwidth)), 1)
 
         kdes = {}
 
         for feature in self.feature_list:
-            model = KernelDensity(
-                bandwidth=kde_bandwidth, kernel="gaussian")
+            model = KernelDensity(bandwidth=kde_bandwidth, kernel="gaussian")
 
-            feature_values = (
-                (input_features[feature]).to_numpy()).reshape(-1, 1)
+            feature_values = ((input_features[feature]).to_numpy()).reshape(-1, 1)
 
             model.fit(feature_values)
 
@@ -153,8 +149,7 @@ class _ProteinStatModel():
         scaler.fit(feature_values)
         feature_values_scaled = scaler.transform(feature_values)
 
-        scaled_dataset = pd.DataFrame.from_records(
-            feature_values_scaled, columns=self.feature_list)
+        scaled_dataset = pd.DataFrame.from_records(feature_values_scaled, columns=self.feature_list)
         scaled_dataset.insert(0, "Target", self.dataset["Target"])
 
         return scaled_dataset
@@ -257,11 +252,9 @@ class ClassificationStatModel(_ProteinStatModel):
         self.js_distances = {}
         self.mutual_infos = {}
 
-        if sorted(self.interaction_types_included) != sorted(
-                ["Hbond", "Hydrophobic", "Saltbr", "Other"]):
+        if sorted(self.interaction_types_included) != sorted(["Hbond", "Hydrophobic", "Saltbr", "Other"]):
             self.dataset = _filter_features_by_strings(
-                dataset=self.dataset,
-                strings_to_preserve=self.interaction_types_included
+                dataset=self.dataset, strings_to_preserve=self.interaction_types_included
             )
 
         self.feature_list = list(self.dataset.columns)
@@ -272,8 +265,9 @@ class ClassificationStatModel(_ProteinStatModel):
 
         if len(self.class_names) != 2:
             raise ValueError(
-                "The number of classes to compare should be 2. \n" +
-                "Please use a list of 2 items for the parameter: 'class_names'.")
+                "The number of classes to compare should be 2. \n"
+                + "Please use a list of 2 items for the parameter: 'class_names'."
+            )
 
     def calc_mutual_info_to_target(self, save_result: bool = True):
         """
@@ -299,22 +293,15 @@ class ClassificationStatModel(_ProteinStatModel):
         mutual_info_raw = mutual_info_classif(features_array, classes)
         mutual_info_rescaled = np.around((np.exp(mutual_info_raw) - 1), 5)
 
-        self.mutual_infos = dict(
-            zip(df_features.columns, mutual_info_rescaled))
-        self.mutual_infos = {k: v for k, v in sorted(
-            self.mutual_infos.items(), key=lambda item: item[1], reverse=True)}
+        self.mutual_infos = dict(zip(df_features.columns, mutual_info_rescaled))
+        self.mutual_infos = {k: v for k, v in sorted(self.mutual_infos.items(), key=lambda item: item[1], reverse=True)}
 
         print("Mutual information scores calculated.")
 
         if save_result:
-            out_file_path = Path(
-                self.out_dir, "Mutual_Information_Per_Feature_Scores.csv")
-            self._per_feature_scores_to_file(
-                per_feat_values=self.mutual_infos,
-                out_file=out_file_path
-            )
-            print(
-                "You can also access these results via the class attribute: 'mutual_infos'.")
+            out_file_path = Path(self.out_dir, "Mutual_Information_Per_Feature_Scores.csv")
+            self._per_feature_scores_to_file(per_feat_values=self.mutual_infos, out_file=out_file_path)
+            print("You can also access these results via the class attribute: 'mutual_infos'.")
 
     def calc_js_distances(self, kde_bandwidth: float = 0.02, save_result: bool = True):
         """
@@ -336,13 +323,12 @@ class ClassificationStatModel(_ProteinStatModel):
         """
         for class_name in self.class_names:
             # split observations into each class first.
-            per_class_dataset = self.scaled_dataset[(
-                self.scaled_dataset["Target"] == class_name)]
+            per_class_dataset = self.scaled_dataset[(self.scaled_dataset["Target"] == class_name)]
 
             # generate kdes for each class.
             self.x_values, self.kdes[class_name] = self._gen_kdes(
-                input_features=per_class_dataset,
-                kde_bandwidth=kde_bandwidth)
+                input_features=per_class_dataset, kde_bandwidth=kde_bandwidth
+            )
 
         # iterate through each feature and calc js dist.
         for feature in self.feature_list:
@@ -353,21 +339,15 @@ class ClassificationStatModel(_ProteinStatModel):
 
             self.js_distances.update({feature: js_dist})
 
-        self.js_distances = {k: v for k, v in sorted(
-            self.js_distances.items(), key=lambda item: item[1], reverse=True)}
+        self.js_distances = {k: v for k, v in sorted(self.js_distances.items(), key=lambda item: item[1], reverse=True)}
 
         print("Jensen-Shannon (JS) distances calculated.")
 
         if save_result:
-            out_file_path = Path(
-                self.out_dir, "Jensen_Shannon_Per_Feature_Scores.csv")
-            self._per_feature_scores_to_file(
-                per_feat_values=self.js_distances,
-                out_file=out_file_path
-            )
+            out_file_path = Path(self.out_dir, "Jensen_Shannon_Per_Feature_Scores.csv")
+            self._per_feature_scores_to_file(per_feat_values=self.js_distances, out_file=out_file_path)
 
-            print(
-                "You can also access these results via the class attribute: 'js_distances'.")
+            print("You can also access these results via the class attribute: 'js_distances'.")
 
 
 @dataclass
@@ -428,11 +408,9 @@ class RegressionStatModel(_ProteinStatModel):
         self.mutual_infos = {}
         self.linear_correlations = {}
 
-        if sorted(self.interaction_types_included) != sorted(
-                ["Hbond", "Hydrophobic", "Saltbr", "Other"]):
+        if sorted(self.interaction_types_included) != sorted(["Hbond", "Hydrophobic", "Saltbr", "Other"]):
             self.dataset = _filter_features_by_strings(
-                dataset=self.dataset,
-                strings_to_preserve=self.interaction_types_included
+                dataset=self.dataset, strings_to_preserve=self.interaction_types_included
             )
 
         self.feature_list = list(self.dataset.columns)
@@ -466,23 +444,16 @@ class RegressionStatModel(_ProteinStatModel):
         mutual_info_raw = mutual_info_regression(features_array, target_values)
         mutual_info_rescaled = np.around((np.exp(mutual_info_raw) - 1), 5)
 
-        self.mutual_infos = dict(
-            zip(df_features.columns, mutual_info_rescaled))
-        self.mutual_infos = {k: v for k, v in sorted(
-            self.mutual_infos.items(), key=lambda item: item[1], reverse=True)}
+        self.mutual_infos = dict(zip(df_features.columns, mutual_info_rescaled))
+        self.mutual_infos = {k: v for k, v in sorted(self.mutual_infos.items(), key=lambda item: item[1], reverse=True)}
 
         print("Mutual information scores calculated.")
 
         if save_result:
-            out_file_path = Path(
-                self.out_dir, "Mutual_Information_Per_Feature_Scores.csv")
-            self._per_feature_scores_to_file(
-                per_feat_values=self.mutual_infos,
-                out_file=out_file_path
-            )
+            out_file_path = Path(self.out_dir, "Mutual_Information_Per_Feature_Scores.csv")
+            self._per_feature_scores_to_file(per_feat_values=self.mutual_infos, out_file=out_file_path)
 
-            print(
-                "You can also access these results via the class attribute: 'mutual_infos'.")
+            print("You can also access these results via the class attribute: 'mutual_infos'.")
 
     def calc_linear_correl_to_target(self, save_result: bool = True) -> None:
         """
@@ -490,7 +461,7 @@ class RegressionStatModel(_ProteinStatModel):
 
         Parameters
         ----------
-        
+
         save_result : Optional[bool] = True
             Save result to disk or not.
             Optional, default is to save.
@@ -499,20 +470,13 @@ class RegressionStatModel(_ProteinStatModel):
         features = self.dataset.drop(["Target"], axis=1)
 
         correlations = features.corrwith(target).to_frame()
-        sorted_correlations = correlations.sort_values(
-            by=0, key=abs, ascending=False)
-        self.linear_correlations = sorted_correlations.to_dict(
-            orient='dict')[0]
+        sorted_correlations = correlations.sort_values(by=0, key=abs, ascending=False)
+        self.linear_correlations = sorted_correlations.to_dict(orient="dict")[0]
 
         print("Linear correlations calculated.")
 
         if save_result:
-            out_file_path = Path(
-                self.out_dir, "Linear_Correlations_Per_Feature_Scores.csv")
-            self._per_feature_scores_to_file(
-                per_feat_values=self.linear_correlations,
-                out_file=out_file_path
-            )
+            out_file_path = Path(self.out_dir, "Linear_Correlations_Per_Feature_Scores.csv")
+            self._per_feature_scores_to_file(per_feat_values=self.linear_correlations, out_file=out_file_path)
 
-            print(
-                "You can also access these results via the class attribute: 'linear_correlations'.")
+            print("You can also access these results via the class attribute: 'linear_correlations'.")

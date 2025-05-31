@@ -15,18 +15,17 @@ and "interaction type" is one of:
 "Hydrophobic" - VdW interaction between two hydrophobic residues.
 "VdW" - Unspecified VdW interaction.
 """
-from typing import Tuple, Optional, List
-import warnings
+
 import time
+import warnings
 from datetime import timedelta
+from typing import List, Optional, Tuple
 
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 from MDAnalysis import Universe
-from MDAnalysis.analysis.hydrogenbonds.hbond_analysis import HydrogenBondAnalysis as HBA
 from MDAnalysis.analysis import distances
-
+from MDAnalysis.analysis.hydrogenbonds.hbond_analysis import HydrogenBondAnalysis as HBA
 
 # Amino acid definitions - helps define interaction types.
 POSITIVE_SB_RESIDUES = ("LYS", "ARG")
@@ -39,9 +38,7 @@ MAX_HEAVY_DIST = 6  # Min heavy atom dist, otherwise contact score = 0.
 
 # From clarification on GitHub, this message can be safely ignored.
 # https://github.com/MDAnalysis/mdanalysis/issues/3889
-warnings.filterwarnings(
-    "ignore", message="DCDReader currently makes independent timesteps"
-)
+warnings.filterwarnings("ignore", message="DCDReader currently makes independent timesteps")
 
 
 def calculate_contacts(
@@ -65,7 +62,7 @@ def calculate_contacts(
         The file path to your topology file. All MDAnalysis allowed topologies can be used.
         Please do not use a PDB file for this, use something with charge information.
         This is important for the hydrogen bonding part of the calculation to work.
-        
+
     traj_file: str
         The file path to your trajectory file.
         All MDAnalysis allowed trajectory file types can be used.
@@ -183,9 +180,7 @@ def calculate_contacts(
             universe=universe,
         )
 
-        contact_label = (
-            str(res1) + res1_name + " " + str(res2) + res2_name + " " + interaction_type
-        )
+        contact_label = str(res1) + res1_name + " " + str(res2) + res2_name + " " + interaction_type
         contact_labels_scores.update({contact_label: contact_scores})
 
     # reorders column names, to be like the old format.
@@ -265,9 +260,7 @@ def _determine_hbond_pairs(universe: Universe) -> List[tuple]:
         donor_atom, acceptor_atom = observation[1], observation[3]
 
         donor_resid = _atom_num_to_res_info(atom_num=donor_atom, universe=universe)[1]
-        acceptor_resid = _atom_num_to_res_info(
-            atom_num=acceptor_atom, universe=universe
-        )[1]
+        acceptor_resid = _atom_num_to_res_info(atom_num=acceptor_atom, universe=universe)[1]
 
         if (donor_resid, acceptor_resid) not in hbond_pairs:
             hbond_pairs.append((donor_resid, acceptor_resid))

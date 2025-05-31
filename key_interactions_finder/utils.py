@@ -20,24 +20,27 @@ _filter_features_by_strings()
     Filter features to only include those that match one of the strings in the list provided.
 
 """
-import shutil
+
 import csv
-from typing import Optional
+import shutil
 from pathlib import Path
-import pandas as pd
-import numpy as np
-from MDAnalysis.analysis import distances
-import MDAnalysis as mda
+from typing import Optional
+
 import gdown
+import MDAnalysis as mda
+import numpy as np
+import pandas as pd
+from MDAnalysis.analysis import distances
 
 
-def per_residue_distance_to_site(pdb_file: str,
-                                 site_defintion: str,
-                                 first_residue: int,
-                                 last_residue: int,
-                                 side_chain_only: bool = False,
-                                 out_file: Optional[str] = None,
-                                 ) -> dict:
+def per_residue_distance_to_site(
+    pdb_file: str,
+    site_defintion: str,
+    first_residue: int,
+    last_residue: int,
+    side_chain_only: bool = False,
+    out_file: Optional[str] = None,
+) -> dict:
     """
     Calculate the closest heavy atom distance of each residue to an mdtraj defined
     selection of a site of interest. You can write the results to file if desired.
@@ -78,13 +81,11 @@ def per_residue_distance_to_site(pdb_file: str,
     min_dists = {}
 
     if side_chain_only:
-        for residue in range(first_residue, last_residue+1):
-            selection_str = "not backbone and not name H* and resid " + \
-                str(residue)
+        for residue in range(first_residue, last_residue + 1):
+            selection_str = "not backbone and not name H* and resid " + str(residue)
             group1 = universe.select_atoms(selection_str)
 
-            res_dist_arr = distances.distance_array(
-                group1.positions, group2.positions, box=universe.dimensions)
+            res_dist_arr = distances.distance_array(group1.positions, group2.positions, box=universe.dimensions)
 
             try:
                 min_res_dist = np.round(res_dist_arr.min(), 2)
@@ -95,20 +96,18 @@ def per_residue_distance_to_site(pdb_file: str,
                 selection_str = "name CA and resid " + str(residue)
                 group1 = universe.select_atoms(selection_str)
 
-                res_dist_arr = distances.distance_array(
-                    group1.positions, group2.positions, box=universe.dimensions)
+                res_dist_arr = distances.distance_array(group1.positions, group2.positions, box=universe.dimensions)
 
                 min_res_dist = np.round(res_dist_arr.min(), 2)
 
             min_dists.update({residue: min_res_dist})
 
     else:  # both side and main chain route.
-        for residue in range(first_residue, last_residue+1):
+        for residue in range(first_residue, last_residue + 1):
             selection_str = "not name H* and resid " + str(residue)
             group1 = universe.select_atoms(selection_str)
 
-            res_dist_arr = distances.distance_array(
-                group1.positions, group2.positions, box=universe.dimensions)
+            res_dist_arr = distances.distance_array(group1.positions, group2.positions, box=universe.dimensions)
 
             min_res_dist = np.round(res_dist_arr.min(), 2)
             min_dists.update({residue: min_res_dist})
@@ -146,12 +145,11 @@ def download_prep_tutorial_dataset(drive_url: str, save_dir: str) -> None:
         "https://drive.google.com/file/d/10DbX12ZNPKqRIAlqs55HC8I6zLXJnP_q/view?usp=share_link",
         "https://drive.google.com/file/d/1wPH4jOFOgIlpySLMN2ebk5PWzYgsrja2/view?usp=share_link",
         "https://drive.google.com/file/d/1G4n-CXoqtt_qZtDfDXbByJtMTpbeIA4l/view?usp=share_link",
-        "https://drive.google.com/file/d/1pqFUMMjt9gDYOxtkVpDmyXwKXiHp0wFi/view?usp=share_link"
+        "https://drive.google.com/file/d/1pqFUMMjt9gDYOxtkVpDmyXwKXiHp0wFi/view?usp=share_link",
     ]
 
     if drive_url not in accepted_links:
-        raise ValueError(
-            "You seem to be trying to download a non-tutorial file, stopping for safety.")
+        raise ValueError("You seem to be trying to download a non-tutorial file, stopping for safety.")
 
     # Prep the save_dir.
     if save_dir != "":
@@ -164,11 +162,9 @@ def download_prep_tutorial_dataset(drive_url: str, save_dir: str) -> None:
     zip_file_path = Path(save_dir_path, "tutorial_dataset.zip")
 
     # gdown does not accept Path objects.
-    gdown.download(
-        url=drive_url, output=str(zip_file_path), quiet=False, fuzzy=True)
+    gdown.download(url=drive_url, output=str(zip_file_path), quiet=False, fuzzy=True)
 
-    shutil.unpack_archive(
-        filename=zip_file_path, extract_dir=save_dir_path, format="zip")
+    shutil.unpack_archive(filename=zip_file_path, extract_dir=save_dir_path, format="zip")
 
     print("Tutorial files were successfully downloaded and unzipped.")
 
@@ -213,7 +209,7 @@ def _filter_features_by_strings(dataset: pd.DataFrame, strings_to_preserve: list
 
     Returns
     ----------
-    
+
     pd.DataFrame
         Dataframe with features filtered to only include those the user wants.
     """

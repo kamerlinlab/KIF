@@ -17,13 +17,16 @@ There are 2 classes for end user usage:
 These classes both inherit from the class "_FeatureData", which abstracts
 as much as their shared behaviour as possible.
 """
+
 from dataclasses import dataclass, field
+
 import pandas as pd
+
 from key_interactions_finder.utils import _filter_features_by_strings
 
 
 @dataclass
-class _FeatureData():
+class _FeatureData:
     """
     A parent class that unifies the handling of supervised + unsupervised datasets.
     Not to be called by an end user and has no __post_init__ method.
@@ -63,6 +66,7 @@ class _FeatureData():
         Reset the filtered dataframe back to its original form.
 
     """
+
     input_df: pd.DataFrame
     df_processed: pd.DataFrame = field(init=False)
     df_filtered: pd.DataFrame = field(init=False)
@@ -87,12 +91,10 @@ class _FeatureData():
         # Different paths for if filtering has/hasn't been performed yet.
         # (A try except block wouldn't work here, no error raised.)
         if len(self.df_filtered) == 0:
-            self.df_filtered = self.input_df.loc[:, (
-                self.input_df != 0).mean() > (min_occupancy/100)]
+            self.df_filtered = self.input_df.loc[:, (self.input_df != 0).mean() > (min_occupancy / 100)]
 
         else:
-            self.df_filtered = self.df_filtered.loc[:, (
-                self.df_filtered != 0).mean() > (min_occupancy/100)]
+            self.df_filtered = self.df_filtered.loc[:, (self.df_filtered != 0).mean() > (min_occupancy / 100)]
 
         return self.df_filtered
 
@@ -114,21 +116,17 @@ class _FeatureData():
         """
         try:
             self.df_filtered = _filter_features_by_strings(
-                dataset=self.df_filtered,
-                strings_to_preserve=interaction_types_included
+                dataset=self.df_filtered, strings_to_preserve=interaction_types_included
             )
 
         except KeyError:  # if no other filtering has been performed yet, follow this path.
             self.df_filtered = _filter_features_by_strings(
-                dataset=self.df_processed,
-                strings_to_preserve=interaction_types_included
+                dataset=self.df_processed, strings_to_preserve=interaction_types_included
             )
 
         return self.df_filtered
 
-    def filter_by_main_or_side_chain(self,
-                                     main_side_chain_types_included: list
-                                     ) -> pd.DataFrame:
+    def filter_by_main_or_side_chain(self, main_side_chain_types_included: list) -> pd.DataFrame:
         """
         Filter features to only certain combinations of main and side chain interactions.
 
@@ -155,14 +153,12 @@ class _FeatureData():
 
         try:
             self.df_filtered = _filter_features_by_strings(
-                dataset=self.df_filtered,
-                strings_to_preserve=main_side_chain_types_included
+                dataset=self.df_filtered, strings_to_preserve=main_side_chain_types_included
             )
 
         except KeyError:  # if no other filtering has been performed yet, follow this path.
             self.df_filtered = _filter_features_by_strings(
-                dataset=self.df_processed,
-                strings_to_preserve=main_side_chain_types_included
+                dataset=self.df_processed, strings_to_preserve=main_side_chain_types_included
             )
 
         return self.df_filtered
@@ -185,20 +181,16 @@ class _FeatureData():
         """
         try:
             df_just_features = self.df_filtered.drop("Target", axis=1)
-            df_features_filtered = df_just_features.loc[:, df_just_features.mean(
-            ) > average_strength_cut_off]
+            df_features_filtered = df_just_features.loc[:, df_just_features.mean() > average_strength_cut_off]
 
-            df_features_filtered.insert(
-                0, "Target", self.df_filtered["Target"])
+            df_features_filtered.insert(0, "Target", self.df_filtered["Target"])
             self.df_filtered = df_features_filtered
 
         except KeyError:  # if no other filtering has been performed yet, follow this path.
             df_just_features = self.df_processed.drop("Target", axis=1)
-            df_features_filtered = df_just_features.loc[:, df_just_features.mean(
-            ) > average_strength_cut_off]
+            df_features_filtered = df_just_features.loc[:, df_just_features.mean() > average_strength_cut_off]
 
-            df_features_filtered.insert(
-                0, "Target", self.df_processed["Target"])
+            df_features_filtered.insert(0, "Target", self.df_processed["Target"])
             self.df_filtered = df_features_filtered
 
         return self.df_filtered
@@ -263,6 +255,7 @@ class SupervisedFeatureData(_FeatureData):
         meaning only observations from 1 class have to meet the cut-off to keep the feature.
         Only avaible to datasets with a categorical target variable (classification).
     """
+
     # Others are defined in parent class.
     is_classification: bool
     target_file: str
@@ -280,12 +273,13 @@ class SupervisedFeatureData(_FeatureData):
         if len(df_class) == len(self.input_df):
             self.df_processed = pd.concat([df_class, self.input_df], axis=1)
         else:
-            exception_message = (f"Number of rows for target variables data: {len(df_class)} \n" +
-                                 f"Number of rows for PyContact data: {len(self.input_df)} \n" +
-                                 "The length of your target variables file doesn't match the " +
-                                 "length of your features file. If the difference is 1, " +
-                                 "check if you set the 'header_present' keyword correctly."
-                                 )
+            exception_message = (
+                f"Number of rows for target variables data: {len(df_class)} \n"
+                + f"Number of rows for PyContact data: {len(self.input_df)} \n"
+                + "The length of your target variables file doesn't match the "
+                + "length of your features file. If the difference is 1, "
+                + "check if you set the 'header_present' keyword correctly."
+            )
             raise ValueError(exception_message)
 
         # Empty for now until any filtering is performed
@@ -319,37 +313,32 @@ class SupervisedFeatureData(_FeatureData):
         """
         if not self.is_classification:
             error_message = (
-                "Only datasets with discrete data (i.e. for classification) can use this method. " +
-                "You specified your target data was continous (i.e. for regression)." +
-                "You are likely after the method: filter_by_occupancy(min_occupancy) instead.")
+                "Only datasets with discrete data (i.e. for classification) can use this method. "
+                + "You specified your target data was continous (i.e. for regression)."
+                + "You are likely after the method: filter_by_occupancy(min_occupancy) instead."
+            )
             raise TypeError(error_message)
 
         keep_cols = ["Target"]  # always want "Target" present...
         try:
             for class_label in list(self.df_filtered["Target"].unique()):
-                df_single_class = self.df_filtered[(
-                    self.df_filtered["Target"] == class_label)]
+                df_single_class = self.df_filtered[(self.df_filtered["Target"] == class_label)]
                 keep_cols_single_class = list(
-                    (df_single_class.loc[:, (df_single_class !=
-                                             0).mean() > (min_occupancy/100)]).columns
+                    (df_single_class.loc[:, (df_single_class != 0).mean() > (min_occupancy / 100)]).columns
                 )
                 keep_cols.extend(keep_cols_single_class)
 
-            self.df_filtered = self.df_filtered[list(
-                sorted(set(keep_cols), reverse=True))]
+            self.df_filtered = self.df_filtered[list(sorted(set(keep_cols), reverse=True))]
 
         except KeyError:  # if no other filtering has been performed yet, follow this path.
             for class_label in list(self.df_processed["Target"].unique()):
-                df_single_class = self.df_processed[(
-                    self.df_processed["Target"] == class_label)]
+                df_single_class = self.df_processed[(self.df_processed["Target"] == class_label)]
                 keep_cols_single_class = list(
-                    (df_single_class.loc[:, (df_single_class !=
-                                             0).mean() > (min_occupancy/100)]).columns
+                    (df_single_class.loc[:, (df_single_class != 0).mean() > (min_occupancy / 100)]).columns
                 )
                 keep_cols.extend(keep_cols_single_class)
 
-            self.df_filtered = self.df_processed[list(
-                sorted(set(keep_cols), reverse=True))]
+            self.df_filtered = self.df_processed[list(sorted(set(keep_cols), reverse=True))]
 
         return self.df_filtered
 
@@ -374,7 +363,7 @@ class UnsupervisedFeatureData(_FeatureData):
 
     Methods
     -------
-    
+
     filter_by_occupancy(min_occupancy)
         Filter features such that only features with %occupancy >= the min_occupancy are kept.
 

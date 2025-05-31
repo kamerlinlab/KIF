@@ -19,18 +19,20 @@ for each feature and each class (only available for binary classification).
 Whatever feature has the highest average score is chosen (warning, very approximate method).
 """
 
+import csv
+import pickle
+import warnings
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, Tuple, Union
-from abc import ABC, abstractmethod
-import warnings
-import csv
-import pickle
-import pandas as pd
+
 import numpy as np
-from key_interactions_finder.utils import _prep_out_dir
+import pandas as pd
+
 from key_interactions_finder.model_building import ClassificationModel, RegressionModel, UnsupervisedModel
 from key_interactions_finder.stat_modelling import ClassificationStatModel, RegressionStatModel
+from key_interactions_finder.utils import _prep_out_dir
 
 
 @dataclass
@@ -69,8 +71,7 @@ class PostProcessor(ABC):
         # absolute values required as want to be able to sum linear correlations.
         values = df_feat_import[1].abs()
 
-        per_res_import = pd.concat(
-            [res1, res2, values], axis=1, join="inner")
+        per_res_import = pd.concat([res1, res2, values], axis=1, join="inner")
         per_res_import.columns = ["Res1", "Res2", "Score"]
 
         return per_res_import
@@ -96,11 +97,12 @@ class PostProcessor(ABC):
         max_res = max(per_res_import[["Res1", "Res2"]].max())
         res_ids = []
         tot_scores = []
-        for i in range(1, max_res+1, 1):
+        for i in range(1, max_res + 1, 1):
             res_ids.append(i + 1)
             tot_scores.append(
-                per_res_import.loc[per_res_import["Res1"] == i, "Score"].sum() +
-                per_res_import.loc[per_res_import["Res2"] == i, "Score"].sum())
+                per_res_import.loc[per_res_import["Res1"] == i, "Score"].sum()
+                + per_res_import.loc[per_res_import["Res2"] == i, "Score"].sum()
+            )
 
         # Rescale scores so that new largest has size 1.0
         # (good for PyMOL sphere representation as well).
@@ -109,11 +111,9 @@ class PostProcessor(ABC):
         for i in range(1, max_res, 1):
             tot_scores_scaled.append(tot_scores[i] / max_ori_score)
 
-        spheres = dict(sorted(zip(
-            res_ids, tot_scores_scaled), key=lambda x: x[1], reverse=True))
+        spheres = dict(sorted(zip(res_ids, tot_scores_scaled), key=lambda x: x[1], reverse=True))
 
-        spheres = {keys: np.around(values, 5)
-                   for keys, values in spheres.items()}
+        spheres = {keys: np.around(values, 5) for keys, values in spheres.items()}
 
         return spheres
 
@@ -212,6 +212,7 @@ class SupervisedPostProcessor(PostProcessor):
     get_per_res_scores(save_result=True)
         Projects the per feature scores onto the per-residue level.
     """
+
     out_dir: str = ""
     feat_names: np.ndarray = field(init=False)
     best_models: dict = field(init=False)
@@ -228,9 +229,9 @@ class SupervisedPostProcessor(PostProcessor):
         self.all_per_feature_scores = {}
         self.all_per_residue_scores = {}
 
-    def load_models_from_instance(self,
-                                  supervised_model: Union[ClassificationModel, RegressionModel],
-                                  models_to_use: Union[str, list] = "all") -> None:
+    def load_models_from_instance(
+        self, supervised_model: Union[ClassificationModel, RegressionModel], models_to_use: Union[str, list] = "all"
+    ) -> None:
         """
         Gets the generated machine learning model data from an instance
         of either the ClassificationModel or RegressionModel class.
@@ -251,17 +252,17 @@ class SupervisedPostProcessor(PostProcessor):
 
         if models_to_use == "all":
             for model in supervised_model.ml_models.keys():
-                self.best_models[model] = (
-                    supervised_model.ml_models[model].best_estimator_)
+                self.best_models[model] = supervised_model.ml_models[model].best_estimator_
 
         elif isinstance(models_to_use, list):
             for model in models_to_use:
-                self.best_models[model] = (
-                    supervised_model.ml_models[model].best_estimator_)
+                self.best_models[model] = supervised_model.ml_models[model].best_estimator_
 
         else:
-            error_message = ("For the parameter 'models_to_use', you need to choose either 'all' " +
-                             "or provide a list of models you wish to use.")
+            error_message = (
+                "For the parameter 'models_to_use', you need to choose either 'all' "
+                + "or provide a list of models you wish to use."
+            )
             raise ValueError(error_message)
 
     def load_models_from_disk(self, models_to_use: list) -> None:
@@ -287,14 +288,16 @@ class SupervisedPostProcessor(PostProcessor):
                 model_file_name = str(model_name) + "_Model.pickle"
                 model_in_path = Path(temp_folder, model_file_name)
 
-                model = pickle.load(open(model_in_path, 'rb'))
+                model = pickle.load(open(model_in_path, "rb"))
                 self.best_models.update({model_name: model})
 
         except FileNotFoundError:
-            error_message = "I cannot find the files you generated from a prior " + \
-                "machine learning run, if you have already run the machine learning, " + \
-                "make sure you are inside the right working directory. You " + \
-                "should see a folder named: 'temporary_files' if you are."
+            error_message = (
+                "I cannot find the files you generated from a prior "
+                + "machine learning run, if you have already run the machine learning, "
+                + "make sure you are inside the right working directory. You "
+                + "should see a folder named: 'temporary_files' if you are."
+            )
             raise FileNotFoundError(error_message)
 
     def get_per_feature_scores(self, save_result: bool = True) -> None:
@@ -312,21 +315,16 @@ class SupervisedPostProcessor(PostProcessor):
         for model_name, model in self.best_models.items():
             raw_scores = list(np.around(model.feature_importances_, 8))
             feat_scores = zip(self.feat_names, raw_scores)
-            sort_feat_scores = dict(sorted(
-                feat_scores, key=lambda x: x[1], reverse=True))
+            sort_feat_scores = dict(sorted(feat_scores, key=lambda x: x[1], reverse=True))
 
             if save_result:
                 model_file_name = str(model_name) + "_Feature_Scores.csv"
                 out_file_path = Path(self.out_dir, model_file_name)
 
-                self._per_feature_scores_to_file(
-                    feature_scores=sort_feat_scores,
-                    out_file=out_file_path
-                )
+                self._per_feature_scores_to_file(feature_scores=sort_feat_scores, out_file=out_file_path)
 
             # Add to the class.
-            self.all_per_feature_scores.update(
-                {model_name: sort_feat_scores})
+            self.all_per_feature_scores.update({model_name: sort_feat_scores})
 
         print("All per feature scores have now been saved to disk.")
 
@@ -347,19 +345,14 @@ class SupervisedPostProcessor(PostProcessor):
 
         self.all_per_residue_scores = {}
         for model_name, feat_scores in self.all_per_feature_scores.items():
-            per_res_import = (
-                self._dict_to_df_feat_scores(feat_scores))
+            per_res_import = self._dict_to_df_feat_scores(feat_scores)
             spheres = self._per_res_scores(per_res_import)
 
             if save_result:
-                model_file_name = str(model_name) + \
-                    "_Per_Residue_Scores.csv"
+                model_file_name = str(model_name) + "_Per_Residue_Scores.csv"
                 out_file_path = Path(self.out_dir, model_file_name)
 
-                self._per_res_scores_to_file(
-                    per_res_values=spheres,
-                    out_file=out_file_path
-                )
+                self._per_res_scores_to_file(per_res_values=spheres, out_file=out_file_path)
 
             # Save to Class.
             self.all_per_residue_scores.update({model_name: spheres})
@@ -406,6 +399,7 @@ class UnsupervisedPostProcessor(PostProcessor):
     get_per_res_scores(save_result=True)
         Projects the per feature scores onto the per-residue level.
     """
+
     unsupervised_model: Optional[UnsupervisedModel]
     out_dir: str = ""
     all_per_feature_scores: dict = field(init=False)
@@ -417,9 +411,7 @@ class UnsupervisedPostProcessor(PostProcessor):
         self.out_dir = _prep_out_dir(self.out_dir)
         self.all_per_residue_scores = {}
 
-    def get_per_feature_scores(self,
-                               variance_explained_cutoff: float = 0.95,
-                               save_result: bool = True) -> None:
+    def get_per_feature_scores(self, variance_explained_cutoff: float = 0.95, save_result: bool = True) -> None:
         """
         Gets the per feature scores and saves them to disk.
 
@@ -436,20 +428,16 @@ class UnsupervisedPostProcessor(PostProcessor):
         """
         self.all_per_feature_scores = {}
 
-        self.all_per_feature_scores["PCA"] = (
-            self._get_pca_per_feat_scores(variance_explained_cutoff))
+        self.all_per_feature_scores["PCA"] = self._get_pca_per_feat_scores(variance_explained_cutoff)
 
         # If more models are to be added beyond PCA, append here.
 
         if save_result:
             for model_name, feat_scores in self.all_per_feature_scores.items():
-
                 model_file_name = str(model_name) + "_Per_Feature_Scores.csv"
                 out_file_path = Path(self.out_dir, model_file_name)
 
-                self._per_feature_scores_to_file(
-                    feature_scores=feat_scores,
-                    out_file=out_file_path)
+                self._per_feature_scores_to_file(feature_scores=feat_scores, out_file=out_file_path)
 
             print("All per feature scores have now been saved to disk.")
 
@@ -470,19 +458,14 @@ class UnsupervisedPostProcessor(PostProcessor):
 
         self.all_per_residue_scores = {}
         for model_name, feat_scores in self.all_per_feature_scores.items():
-            per_res_import = (
-                self._dict_to_df_feat_scores(feat_scores))
+            per_res_import = self._dict_to_df_feat_scores(feat_scores)
             spheres = self._per_res_scores(per_res_import)
 
             if save_result:
-                model_file_name = str(model_name) + \
-                    "_Per_Residue_Scores.csv"
+                model_file_name = str(model_name) + "_Per_Residue_Scores.csv"
                 out_file_path = Path(self.out_dir, model_file_name)
 
-                self._per_res_scores_to_file(
-                    per_res_values=spheres,
-                    out_file=out_file_path
-                )
+                self._per_res_scores_to_file(per_res_values=spheres, out_file=out_file_path)
 
             # Save to Class
             self.all_per_residue_scores.update({model_name: spheres})
@@ -534,20 +517,18 @@ class UnsupervisedPostProcessor(PostProcessor):
         eigenvalue_sums = []
         for idx, _ in enumerate(components_keep):
             eigenvalues = [eigenvalues[idx] for eigenvalues in components_keep]
-            eigenvalues_reweighted = [(eigenvalue * variances[idx])
-                                      for idx, eigenvalue in enumerate(eigenvalues)]
+            eigenvalues_reweighted = [(eigenvalue * variances[idx]) for idx, eigenvalue in enumerate(eigenvalues)]
 
             eigenvalue_sums.append(np.sum(np.absolute(eigenvalues_reweighted)))
 
         eigenvalues_scaled = self._scale_eigenvalues(eigenvalue_sums)
 
-        pca_per_feat_scores = dict(
-            zip(self.unsupervised_model.feat_names, eigenvalues_scaled))
+        pca_per_feat_scores = dict(zip(self.unsupervised_model.feat_names, eigenvalues_scaled))
 
         print(
-            "The total variance described by the principal components (PCs) used " +
-            f"for per feature score analysis is: {variance_described:.1f}%. This was \n" +
-            f"determined from the first {idx_position} PCs from a total of {len(variances)} PCs."
+            "The total variance described by the principal components (PCs) used "
+            + f"for per feature score analysis is: {variance_described:.1f}%. This was \n"
+            + f"determined from the first {idx_position} PCs from a total of {len(variances)} PCs."
         )
 
         return pca_per_feat_scores
@@ -625,6 +606,7 @@ class StatClassificationPostProcessor(PostProcessor):
         score for each feature for each class. Whatever feature has the highest
         average score.
     """
+
     stat_model: ClassificationStatModel
     out_dir: str = ""
 
@@ -665,43 +647,31 @@ class StatClassificationPostProcessor(PostProcessor):
             Dictionary of each residue and it's relative score.
         """
         if stat_method == "mutual_information":
-            per_res_import = (self._dict_to_df_feat_scores(
-                self.stat_model.mutual_infos))
-            self.per_residue_mutual_infos = (
-                self._per_res_scores(per_res_import))
+            per_res_import = self._dict_to_df_feat_scores(self.stat_model.mutual_infos)
+            self.per_residue_mutual_infos = self._per_res_scores(per_res_import)
 
             if save_result:
                 model_file_name = "Mutual_Information_Scores_Per_Residue.csv"
                 out_file_path = Path(self.out_dir, model_file_name)
-                self._per_res_scores_to_file(
-                    per_res_values=self.per_residue_mutual_infos,
-                    out_file=out_file_path
-                )
+                self._per_res_scores_to_file(per_res_values=self.per_residue_mutual_infos, out_file=out_file_path)
 
             return self.per_residue_mutual_infos
 
         if stat_method == "jensen_shannon":
-            per_res_import = (self._dict_to_df_feat_scores(
-                self.stat_model.js_distances))
-            self.per_residue_js_distances = (
-                self._per_res_scores(per_res_import))
+            per_res_import = self._dict_to_df_feat_scores(self.stat_model.js_distances)
+            self.per_residue_js_distances = self._per_res_scores(per_res_import)
 
             if save_result:
                 model_file_name = "Jensen_Shannon_Distance_Scores_Per_Residue.csv"
                 out_file_path = Path(self.out_dir, model_file_name)
-                self._per_res_scores_to_file(
-                    per_res_values=self.per_residue_js_distances,
-                    out_file=out_file_path
-                )
+                self._per_res_scores_to_file(per_res_values=self.per_residue_js_distances, out_file=out_file_path)
 
             return self.per_residue_js_distances
 
         raise ValueError("""You did not select one of either 'jensen_shannon'
         or 'mutual_information' for the 'stat_method' parameter.""")
 
-    def get_kdes(self,
-                 number_features: Union[int, str]
-                 ) -> Tuple[np.ndarray, dict]:
+    def get_kdes(self, number_features: Union[int, str]) -> Tuple[np.ndarray, dict]:
         """
         Gets the kernel density estimations made for each feature.
         If you don't ask for all features then the features returned will be the top X
@@ -738,8 +708,7 @@ class StatClassificationPostProcessor(PostProcessor):
 
         if number_features < tot_numb_features:
             # first have to decide which kdes to ouput by JS distances
-            features_to_output = list(self.stat_model.js_distances.keys())[
-                0:number_features]
+            features_to_output = list(self.stat_model.js_distances.keys())[0:number_features]
 
             selected_prob_distribs = {}
             for class_name in self.stat_model.class_names:
@@ -752,8 +721,7 @@ class StatClassificationPostProcessor(PostProcessor):
 
             return self.stat_model.x_values, selected_prob_distribs
 
-        error_message = ("You need to choose either an integer value or 'all' " +
-                         "for the parameter: 'number_features'.")
+        error_message = "You need to choose either an integer value or 'all' " + "for the parameter: 'number_features'."
         raise ValueError(error_message)
 
     def estimate_feature_directions(self) -> None:
@@ -766,18 +734,19 @@ class StatClassificationPostProcessor(PostProcessor):
         so user will be given a warning when they use this method.
         """
         warning_message = (
-            "Warning, this method is very simplistic and just calculates the average " +
-            "contact score/strength for all features for both classes to determine the " +
-            "direction each feature appears to favour. " +
-            "You should therefore interpret these results with care..."
+            "Warning, this method is very simplistic and just calculates the average "
+            + "contact score/strength for all features for both classes to determine the "
+            + "direction each feature appears to favour. "
+            + "You should therefore interpret these results with care..."
         )
         warnings.warn(warning_message)
 
         per_class_datasets = {}
         for class_name in self.stat_model.class_names:
-            single_class_dataset = self.stat_model.scaled_dataset[(
-                self.stat_model.scaled_dataset["Target"] == class_name)]
-            per_class_datasets[class_name] = single_class_dataset.drop(columns=["Target"]) 
+            single_class_dataset = self.stat_model.scaled_dataset[
+                (self.stat_model.scaled_dataset["Target"] == class_name)
+            ]
+            per_class_datasets[class_name] = single_class_dataset.drop(columns=["Target"])
 
         avg_contact_scores = {}
         self.feature_directions = {}
@@ -798,18 +767,13 @@ class StatClassificationPostProcessor(PostProcessor):
         out_file_path = Path(self.out_dir, "Feature_Direction_Estimates.csv")
 
         self._save_feature_residue_direction(
-            dict_to_save=self.feature_directions,
-            feature_or_residue="features",
-            out_file=out_file_path
+            dict_to_save=self.feature_directions, feature_or_residue="features", out_file=out_file_path
         )
 
         print("You can access these predictions through the 'feature_directions' class attribute.")
 
     @staticmethod
-    def _save_feature_residue_direction(
-            dict_to_save: dict,
-            feature_or_residue: str,
-            out_file: Path) -> None:
+    def _save_feature_residue_direction(dict_to_save: dict, feature_or_residue: str, out_file: Path) -> None:
         """
         Save the estimated per feature or per residue "directions" to file.
 
@@ -833,9 +797,7 @@ class StatClassificationPostProcessor(PostProcessor):
             elif feature_or_residue == "residues":
                 csv_out.writerow(["Residue Number", "Predicted Direction"])
             else:
-                raise ValueError(
-                    "Only 'features' or 'residues' allowed for parameter 'feature_or_residue'."
-                )
+                raise ValueError("Only 'features' or 'residues' allowed for parameter 'feature_or_residue'.")
 
             csv_out.writerows(dict_to_save.items())
         print(f"{out_file} written to disk.")
@@ -875,6 +837,7 @@ class StatRegressorPostProcessor(PostProcessor):
         Projects the per feature scores onto the per-residue level for a single user selected
         statistical method.
     """
+
     stat_model: RegressionStatModel
     out_dir: str = ""
 
@@ -908,40 +871,31 @@ class StatRegressorPostProcessor(PostProcessor):
 
         Returns
         ----------
-        
+
         dict
             Dictionary of each residue and it's relative score.
         """
         if stat_method == "mutual_information":
-            per_res_import = (self._dict_to_df_feat_scores(
-                self.stat_model.mutual_infos))
-            self.per_residue_mutual_infos = (
-                self._per_res_scores(per_res_import))
+            per_res_import = self._dict_to_df_feat_scores(self.stat_model.mutual_infos)
+            self.per_residue_mutual_infos = self._per_res_scores(per_res_import)
 
             if save_result:
-                out_file_path = Path(
-                    self.out_dir, "Mutual_Information_Scores_Per_Residue.csv")
-                self._per_res_scores_to_file(
-                    per_res_values=self.per_residue_mutual_infos,
-                    out_file=out_file_path
-                )
+                out_file_path = Path(self.out_dir, "Mutual_Information_Scores_Per_Residue.csv")
+                self._per_res_scores_to_file(per_res_values=self.per_residue_mutual_infos, out_file=out_file_path)
             return self.per_residue_mutual_infos
 
         if stat_method == "linear_correlation":
-            per_res_import = (self._dict_to_df_feat_scores(
-                self.stat_model.linear_correlations))
-            self.per_residue_linear_correlations = (
-                self._per_res_scores(per_res_import))
+            per_res_import = self._dict_to_df_feat_scores(self.stat_model.linear_correlations)
+            self.per_residue_linear_correlations = self._per_res_scores(per_res_import)
 
             if save_result:
-                out_file_path = Path(
-                    self.out_dir, "Linear_Correlation_Scores_Per_Residue.csv")
+                out_file_path = Path(self.out_dir, "Linear_Correlation_Scores_Per_Residue.csv")
                 self._per_res_scores_to_file(
-                    per_res_values=self.per_residue_linear_correlations,
-                    out_file=out_file_path
+                    per_res_values=self.per_residue_linear_correlations, out_file=out_file_path
                 )
             return self.per_residue_linear_correlations
 
         raise ValueError(
             """You did not select one of either 'mutual_information' or
-            'linear_correlation' for the 'stat_method' parameter.""")
+            'linear_correlation' for the 'stat_method' parameter."""
+        )

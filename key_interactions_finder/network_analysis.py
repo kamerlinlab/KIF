@@ -6,12 +6,14 @@ based analyses tools in different programs.
 There is only a single class in this module (CorrelationNetwork) as this module
 does not require a target variable and if you have one it does not need it.
 """
+
+import re
 from dataclasses import dataclass, field
 from typing import Optional
-import re
-import pandas as pd
-import numpy as np
+
 import MDAnalysis as mda
+import numpy as np
+import pandas as pd
 from MDAnalysis.analysis import distances
 
 
@@ -293,9 +295,7 @@ def heavy_atom_contact_map_from_pdb(
             res2 = group2.select_atoms(group2_selection)
 
             # Determine all heavy atom distance between residue pairs.
-            dist_arr = distances.distance_array(
-                res1.positions, res2.positions, box=universe.dimensions
-            )
+            dist_arr = distances.distance_array(res1.positions, res2.positions, box=universe.dimensions)
 
             # Replace matrix pos with 1 if min_dist less than cutoff.
             min_dist = dist_arr.min()
@@ -348,31 +348,19 @@ def heavy_atom_contact_map_from_multiple_pdbs(
 
     all_universes = [mda.Universe(pdb) for pdb in pdb_files]
 
-    all_group1s = [
-        all_universes[idx].select_atoms(res_selection)
-        for idx, _ in enumerate(all_universes)
-    ]
-    all_group2s = [
-        all_universes[idx].select_atoms(res_selection)
-        for idx, _ in enumerate(all_universes)
-    ]
+    all_group1s = [all_universes[idx].select_atoms(res_selection) for idx, _ in enumerate(all_universes)]
+    all_group2s = [all_universes[idx].select_atoms(res_selection) for idx, _ in enumerate(all_universes)]
 
     matrix_size = (last_res - first_res) + 1
     per_res_contact_map = np.zeros((matrix_size, matrix_size), dtype=int)
 
     for group1_idx in range(first_res, last_res + 1):
         group1_selection = "resid " + str(group1_idx)
-        residue_1s = [
-            all_group1s[idx].select_atoms(group1_selection)
-            for idx, _ in enumerate(all_group1s)
-        ]
+        residue_1s = [all_group1s[idx].select_atoms(group1_selection) for idx, _ in enumerate(all_group1s)]
 
         for group2_idx in range(group1_idx, last_res + 1):
             group2_selection = "resid " + str(group2_idx)
-            residue_2s = [
-                all_group1s[idx].select_atoms(group2_selection)
-                for idx, _ in enumerate(all_group2s)
-            ]
+            residue_2s = [all_group1s[idx].select_atoms(group2_selection) for idx, _ in enumerate(all_group2s)]
 
             # Find the smallest distance between the residue pairs across all pdbs
             min_dist_all_pdbs = 999  # always going to be above cut-off.
