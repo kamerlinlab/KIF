@@ -95,24 +95,23 @@ class PostProcessor(ABC):
             Keys are each residue, values are the residue's relative score.
         """
         max_res = max(per_res_import[["Res1", "Res2"]].max())
-        res_ids = []
-        tot_scores = []
+        per_res_scores = {}
         for i in range(1, max_res + 1, 1):
-            res_ids.append(i + 1)
-            tot_scores.append(
+            total_score = (
                 per_res_import.loc[per_res_import["Res1"] == i, "Score"].sum()
                 + per_res_import.loc[per_res_import["Res2"] == i, "Score"].sum()
             )
+            per_res_scores[i + 1] = total_score
 
         # Rescale scores so that new largest has size 1.0
         # (good for PyMOL sphere representation as well).
-        max_ori_score = max(tot_scores)
-        tot_scores_scaled = []
-        for i in range(1, max_res, 1):
-            tot_scores_scaled.append(tot_scores[i] / max_ori_score)
+        max_ori_score = max(per_res_scores.values())
+        scaled_scores = {}
+        for residue, score in per_res_scores.items():
+            scaled_scores[residue] = score / max_ori_score
 
-        spheres = dict(sorted(zip(res_ids, tot_scores_scaled, strict=True), key=lambda x: x[1], reverse=True))
-
+        # clean up presentation/ordering when outputted.
+        spheres = dict(sorted(scaled_scores.items(), key=lambda x: x[1], reverse=True))
         spheres = {keys: np.around(values, 5) for keys, values in spheres.items()}
 
         return spheres
