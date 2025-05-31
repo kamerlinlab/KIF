@@ -5,16 +5,17 @@ WISP calculation performed with Bio3D (generated with R).
 Bio3D can already make a VMD compatible visulisation file with the following command:
 "vmd.cnapath()"
 """
+
 from typing import Tuple
 
 # 3 Adjustable arguments below - UPDATE THESE.
 
 # Inputs.
 VMD_FILE = "WISP_Results/PathGlu200Site.vmd"
-PATHS_FILE = "WISP_Results/PathGlu200Site_all_paths.txt"
+PATHS_FILE = "WISP_Results/PathGlu200Site_All_Paths.txt"
 
 # Output.
-OUT_FILE = "WISP_Results/PathGlu200Site_pymol.py"
+OUT_FILE = "WISP_Results/PathGlu200Site_pymol.pymol"
 
 
 def parse_vmd_file(vmd_file: str) -> list:
@@ -97,12 +98,10 @@ def prep_res_counts(all_paths_concat: list) -> dict:
     """
 
     # Generate a dict of each residue and its frequenecy of occurence.
-    res_counts = dict((x, all_paths_concat.count(x))
-                      for x in set(all_paths_concat))
+    res_counts = dict((x, all_paths_concat.count(x)) for x in set(all_paths_concat))
     # scale items in dict so max value = 1
     max_val = max(res_counts.values())
-    res_counts.update((k, round(v / max_val, 4))
-                      for k, v in res_counts.items())
+    res_counts.update((k, round(v / max_val, 4)) for k, v in res_counts.items())
 
     return res_counts
 
@@ -145,8 +144,9 @@ def prep_res_res_connections(all_paths: list) -> dict:
 
     # scale items in dict so max value = 0.5
     max_interactions = max(interacting_pairs.values())
-    interacting_pairs.update((k, round(v / (max_interactions*2), 4))
-                             for k, v in interacting_pairs.items())
+    interacting_pairs.update(
+        (k, round(v / (max_interactions * 2), 4)) for k, v in interacting_pairs.items()
+    )
 
     return interacting_pairs
 
@@ -161,10 +161,17 @@ def main():
 
     # Write the pymol file.
     pymol_out_text = ""
-    pymol_out_text += "# To run this script you will need to get a copy of 'draw_links.py' \n"
+    pymol_out_text += (
+        "# To run this script you will need to get a copy of 'draw_links.py' \n"
+    )
     pymol_out_text += "# You can find it freely available here: \n"
-    pymol_out_text += "# http://pldserver1.biochem.queensu.ca/~rlc/work/pymol/draw_links.py \n"
+    pymol_out_text += (
+        "# http://pldserver1.biochem.queensu.ca/~rlc/work/pymol/draw_links.py \n"
+    )
     pymol_out_text += "# Place the 'draw_links.py' file in your working directory. \n"
+    pymol_out_text += "# Then run this script in PyMOL with the command: \n"
+    pymol_out_text += "# @PathGlu200Site_pymol.pymol \n"
+    pymol_out_text += "# script begins now. \n"
     pymol_out_text += "run draw_links.py\n"
 
     # sticks for all path residues
@@ -177,16 +184,19 @@ def main():
     # spheres for all network residues, with sizes scaled by frequency.
     for res_numb, sphere_size in res_counts.items():
         pymol_out_text += f"show spheres, resi {res_numb} and name CA\n"
-        pymol_out_text += f"set sphere_scale, {sphere_size:.4f}, resi {res_numb} and name CA\n"
+        pymol_out_text += (
+            f"set sphere_scale, {sphere_size:.4f}, resi {res_numb} and name CA\n"
+        )
 
     for res_combo, cylider_size in interacting_pairs.items():
         residues = res_combo.split()
 
-        pymol_out_text += (f"draw_links selection1=resi {residues[0]}, " +
-                           f"selection2=resi {residues[1]}, " +
-                           "color=grey, " +
-                           f"radius={cylider_size} \n"
-                           )
+        pymol_out_text += (
+            f"draw_links selection1=resi {residues[0]}, "
+            + f"selection2=resi {residues[1]}, "
+            + "color=grey, "
+            + f"radius={cylider_size} \n"
+        )
     pymol_out_text += "group Paths, link*"
 
     # Finally save.

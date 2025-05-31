@@ -1,0 +1,148 @@
+# To run this script you will need to get a copy of 'draw_links.py' 
+# You can find it freely available here: 
+# http://pldserver1.biochem.queensu.ca/~rlc/work/pymol/draw_links.py 
+# Place the 'draw_links.py' file in your working directory. 
+# Then run this script in PyMOL with the command: 
+# @PathGlu200Site_pymol.pymol 
+# script begins now. 
+run draw_links.py
+sele path_residues, resi 199+287+192+190+220+180+189+265+182+179+178+195+186+183+151+181+184+114+109+196+223+262+111+294+268+ 
+show sticks, path_residues 
+show spheres, resi 262 and name CA
+set sphere_scale, 0.0300, resi 262 and name CA
+show spheres, resi 265 and name CA
+set sphere_scale, 0.4467, resi 265 and name CA
+show spheres, resi 268 and name CA
+set sphere_scale, 0.0033, resi 268 and name CA
+show spheres, resi 151 and name CA
+set sphere_scale, 0.0233, resi 151 and name CA
+show spheres, resi 287 and name CA
+set sphere_scale, 0.8467, resi 287 and name CA
+show spheres, resi 294 and name CA
+set sphere_scale, 0.0033, resi 294 and name CA
+show spheres, resi 178 and name CA
+set sphere_scale, 0.3900, resi 178 and name CA
+show spheres, resi 179 and name CA
+set sphere_scale, 0.3800, resi 179 and name CA
+show spheres, resi 180 and name CA
+set sphere_scale, 1.0000, resi 180 and name CA
+show spheres, resi 181 and name CA
+set sphere_scale, 0.1267, resi 181 and name CA
+show spheres, resi 182 and name CA
+set sphere_scale, 0.4867, resi 182 and name CA
+show spheres, resi 183 and name CA
+set sphere_scale, 0.1200, resi 183 and name CA
+show spheres, resi 184 and name CA
+set sphere_scale, 0.0700, resi 184 and name CA
+show spheres, resi 186 and name CA
+set sphere_scale, 0.1967, resi 186 and name CA
+show spheres, resi 189 and name CA
+set sphere_scale, 0.4400, resi 189 and name CA
+show spheres, resi 190 and name CA
+set sphere_scale, 0.8800, resi 190 and name CA
+show spheres, resi 192 and name CA
+set sphere_scale, 1.0000, resi 192 and name CA
+show spheres, resi 195 and name CA
+set sphere_scale, 0.1567, resi 195 and name CA
+show spheres, resi 196 and name CA
+set sphere_scale, 0.0200, resi 196 and name CA
+show spheres, resi 199 and name CA
+set sphere_scale, 1.0000, resi 199 and name CA
+show spheres, resi 220 and name CA
+set sphere_scale, 0.6333, resi 220 and name CA
+show spheres, resi 223 and name CA
+set sphere_scale, 0.0233, resi 223 and name CA
+show spheres, resi 109 and name CA
+set sphere_scale, 0.0367, resi 109 and name CA
+show spheres, resi 111 and name CA
+set sphere_scale, 0.0067, resi 111 and name CA
+show spheres, resi 114 and name CA
+set sphere_scale, 0.0067, resi 114 and name CA
+draw_links selection1=resi 199, selection2=resi 287, color=grey, radius=0.5 
+draw_links selection1=resi 287, selection2=resi 192, color=grey, radius=0.4901 
+draw_links selection1=resi 192, selection2=resi 190, color=grey, radius=0.3241 
+draw_links selection1=resi 190, selection2=resi 220, color=grey, radius=0.2628 
+draw_links selection1=resi 220, selection2=resi 180, color=grey, radius=0.0889 
+draw_links selection1=resi 192, selection2=resi 189, color=grey, radius=0.253 
+draw_links selection1=resi 189, selection2=resi 190, color=grey, radius=0.1522 
+draw_links selection1=resi 220, selection2=resi 265, color=grey, radius=0.081 
+draw_links selection1=resi 265, selection2=resi 180, color=grey, radius=0.1403 
+draw_links selection1=resi 220, selection2=resi 182, color=grey, radius=0.081 
+draw_links selection1=resi 182, selection2=resi 180, color=grey, radius=0.1522 
+draw_links selection1=resi 220, selection2=resi 179, color=grey, radius=0.0692 
+draw_links selection1=resi 179, selection2=resi 180, color=grey, radius=0.1225 
+draw_links selection1=resi 190, selection2=resi 178, color=grey, radius=0.1719 
+draw_links selection1=resi 178, selection2=resi 180, color=grey, radius=0.0455 
+draw_links selection1=resi 199, selection2=resi 195, color=grey, radius=0.0929 
+draw_links selection1=resi 195, selection2=resi 192, color=grey, radius=0.0909 
+draw_links selection1=resi 189, selection2=resi 186, color=grey, radius=0.087 
+draw_links selection1=resi 186, selection2=resi 190, color=grey, radius=0.0435 
+draw_links selection1=resi 178, selection2=resi 265, color=grey, radius=0.0514 
+draw_links selection1=resi 178, selection2=resi 182, color=grey, radius=0.0514 
+draw_links selection1=resi 265, selection2=resi 179, color=grey, radius=0.0356 
+draw_links selection1=resi 182, selection2=resi 179, color=grey, radius=0.0395 
+draw_links selection1=resi 179, selection2=resi 265, color=grey, radius=0.0375 
+draw_links selection1=resi 179, selection2=resi 182, color=grey, radius=0.0375 
+draw_links selection1=resi 265, selection2=resi 182, color=grey, radius=0.0375 
+draw_links selection1=resi 182, selection2=resi 265, color=grey, radius=0.0415 
+draw_links selection1=resi 178, selection2=resi 220, color=grey, radius=0.0395 
+draw_links selection1=resi 178, selection2=resi 179, color=grey, radius=0.0395 
+draw_links selection1=resi 220, selection2=resi 178, color=grey, radius=0.0198 
+draw_links selection1=resi 186, selection2=resi 183, color=grey, radius=0.0672 
+draw_links selection1=resi 183, selection2=resi 182, color=grey, radius=0.0257 
+draw_links selection1=resi 192, selection2=resi 151, color=grey, radius=0.0138 
+draw_links selection1=resi 151, selection2=resi 178, color=grey, radius=0.0119 
+draw_links selection1=resi 183, selection2=resi 265, color=grey, radius=0.0237 
+draw_links selection1=resi 220, selection2=resi 181, color=grey, radius=0.0277 
+draw_links selection1=resi 181, selection2=resi 180, color=grey, radius=0.0356 
+draw_links selection1=resi 189, selection2=resi 184, color=grey, radius=0.0217 
+draw_links selection1=resi 184, selection2=resi 182, color=grey, radius=0.0257 
+draw_links selection1=resi 265, selection2=resi 220, color=grey, radius=0.0198 
+draw_links selection1=resi 182, selection2=resi 220, color=grey, radius=0.0237 
+draw_links selection1=resi 190, selection2=resi 186, color=grey, radius=0.0296 
+draw_links selection1=resi 265, selection2=resi 181, color=grey, radius=0.0178 
+draw_links selection1=resi 182, selection2=resi 181, color=grey, radius=0.0178 
+draw_links selection1=resi 181, selection2=resi 265, color=grey, radius=0.0158 
+draw_links selection1=resi 181, selection2=resi 182, color=grey, radius=0.0158 
+draw_links selection1=resi 220, selection2=resi 114, color=grey, radius=0.004 
+draw_links selection1=resi 114, selection2=resi 180, color=grey, radius=0.004 
+draw_links selection1=resi 190, selection2=resi 109, color=grey, radius=0.0217 
+draw_links selection1=resi 109, selection2=resi 220, color=grey, radius=0.0099 
+draw_links selection1=resi 287, selection2=resi 196, color=grey, radius=0.0119 
+draw_links selection1=resi 196, selection2=resi 192, color=grey, radius=0.0119 
+draw_links selection1=resi 179, selection2=resi 220, color=grey, radius=0.0178 
+draw_links selection1=resi 109, selection2=resi 179, color=grey, radius=0.0099 
+draw_links selection1=resi 190, selection2=resi 184, color=grey, radius=0.0138 
+draw_links selection1=resi 190, selection2=resi 223, color=grey, radius=0.0138 
+draw_links selection1=resi 223, selection2=resi 265, color=grey, radius=0.0059 
+draw_links selection1=resi 223, selection2=resi 182, color=grey, radius=0.0059 
+draw_links selection1=resi 183, selection2=resi 179, color=grey, radius=0.0119 
+draw_links selection1=resi 265, selection2=resi 262, color=grey, radius=0.0079 
+draw_links selection1=resi 262, selection2=resi 182, color=grey, radius=0.0079 
+draw_links selection1=resi 182, selection2=resi 262, color=grey, radius=0.0079 
+draw_links selection1=resi 262, selection2=resi 265, color=grey, radius=0.0059 
+draw_links selection1=resi 220, selection2=resi 111, color=grey, radius=0.004 
+draw_links selection1=resi 111, selection2=resi 180, color=grey, radius=0.004 
+draw_links selection1=resi 184, selection2=resi 179, color=grey, radius=0.0138 
+draw_links selection1=resi 265, selection2=resi 178, color=grey, radius=0.0059 
+draw_links selection1=resi 182, selection2=resi 178, color=grey, radius=0.0059 
+draw_links selection1=resi 183, selection2=resi 178, color=grey, radius=0.0079 
+draw_links selection1=resi 151, selection2=resi 190, color=grey, radius=0.002 
+draw_links selection1=resi 179, selection2=resi 178, color=grey, radius=0.004 
+draw_links selection1=resi 192, selection2=resi 294, color=grey, radius=0.002 
+draw_links selection1=resi 294, selection2=resi 189, color=grey, radius=0.002 
+draw_links selection1=resi 186, selection2=resi 184, color=grey, radius=0.0059 
+draw_links selection1=resi 178, selection2=resi 183, color=grey, radius=0.004 
+draw_links selection1=resi 181, selection2=resi 179, color=grey, radius=0.0059 
+draw_links selection1=resi 179, selection2=resi 181, color=grey, radius=0.0059 
+draw_links selection1=resi 190, selection2=resi 268, color=grey, radius=0.002 
+draw_links selection1=resi 268, selection2=resi 265, color=grey, radius=0.002 
+draw_links selection1=resi 190, selection2=resi 189, color=grey, radius=0.0059 
+draw_links selection1=resi 223, selection2=resi 220, color=grey, radius=0.002 
+draw_links selection1=resi 109, selection2=resi 178, color=grey, radius=0.002 
+draw_links selection1=resi 184, selection2=resi 178, color=grey, radius=0.002 
+draw_links selection1=resi 195, selection2=resi 287, color=grey, radius=0.002 
+draw_links selection1=resi 183, selection2=resi 181, color=grey, radius=0.002 
+draw_links selection1=resi 262, selection2=resi 181, color=grey, radius=0.004 
+draw_links selection1=resi 181, selection2=resi 262, color=grey, radius=0.002 
+group Paths, link*
