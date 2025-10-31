@@ -48,6 +48,7 @@ def calculate_contacts(
     first_res: Optional[int] = None,
     last_res: Optional[int] = None,
     report_timings: bool = True,
+    sum_scores: bool = True,
 ) -> None:
     """
 
@@ -81,6 +82,10 @@ def calculate_contacts(
     report_timings: bool = True
         Choose whether to print to the console how long the job took to run.
         Optional, default is True.
+
+    sum_scores: bool = True
+        Sum scores across contacting atom pairs within a residue pair.
+        If False, do max() instead of sum().
 
     Returns
     -------
@@ -154,7 +159,7 @@ def calculate_contacts(
                 if res_res_dists.min() > MAX_HEAVY_DIST:
                     continue
 
-                contact_score = _score_residue_contact(res_res_dists)
+                contact_score = _score_residue_contact(res_res_dists, sum_scores = sum_scores)
                 if (res1, res2) not in all_contact_scores:
                     # create empty array of size trajectory for it...
                     all_contact_scores[(res1, res2)] = trajectory_of_zeros.copy()
@@ -319,7 +324,7 @@ def _determine_interaction_type(
     return "Other"
 
 
-def _score_residue_contact(res_res_dists: np.ndarray, dist_cut: float = 6.0) -> float:
+def _score_residue_contact(res_res_dists: np.ndarray, dist_cut: float = 6.0, sum_scores: bool = True) -> float:
     """
     Score the "strength" of a pair of residues based on their atomic distances.
     Same implementation as in pycontact: https://github.com/maxscheurer/pycontact
@@ -334,6 +339,10 @@ def _score_residue_contact(res_res_dists: np.ndarray, dist_cut: float = 6.0) -> 
         Max distance before atom-atom contact not included in scoring.
         Values much larger don't notably affect the score.
 
+    sum_scores: bool = True
+        Sum scores across contacting atom pairs within a residue pair.
+        If False, do max instad of sum.
+
     Returns
     -------
     float
@@ -342,6 +351,9 @@ def _score_residue_contact(res_res_dists: np.ndarray, dist_cut: float = 6.0) -> 
     contact_score = 0
     for dist in res_res_dists.flatten():
         if dist <= dist_cut:
-            contact_score += 1.0 / (1.0 + np.exp(5.0 * (dist - 4.0)))
+            if sum_scores:
+                contact_score += 1.0 / (1.0 + np.exp(5.0 * (dist - 4.0)))
+            else:
+                contact_score = max(contact_score, 1.0 / (1.0 + np.exp(5.0 * (dist - 4.0))))
 
     return round(contact_score, 4)
