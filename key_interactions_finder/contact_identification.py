@@ -48,6 +48,7 @@ def calculate_contacts(
     first_res: Optional[int] = None,
     last_res: Optional[int] = None,
     report_timings: bool = True,
+    do_type: bool = True,
     sum_scores: bool = True,
 ) -> None:
     """
@@ -82,6 +83,9 @@ def calculate_contacts(
     report_timings: bool = True
         Choose whether to print to the console how long the job took to run.
         Optional, default is True.
+
+    do_type: bool = True
+        Determine interaction types.
 
     sum_scores: bool = True
         Sum scores across contacting atom pairs within a residue pair.
@@ -137,7 +141,8 @@ def calculate_contacts(
         residue_ranges[res_numb] = residue_range
 
     print("setup complete, analysing contacts now...")
-    hbond_pairs = _determine_hbond_pairs(universe=universe)
+    if do_type:
+        hbond_pairs = _determine_hbond_pairs(universe=universe)
 
     # Now go through each frame.
     all_contact_scores = {}
@@ -183,7 +188,7 @@ def calculate_contacts(
             res2_id=res2,
             hbond_pairs=hbond_pairs,
             universe=universe,
-        )
+        ) if do_type else ""
 
         contact_label = str(res1) + res1_name + " " + str(res2) + res2_name + " " + interaction_type
         contact_labels_scores.update({contact_label: contact_scores})
