@@ -50,6 +50,8 @@ def calculate_contacts(
     report_timings: bool = True,
     do_type: bool = True,
     sum_scores: bool = True,
+    # bool to include the neighboring residues in the contact calulations
+    neighboring_residues: bool = False,
 ) -> None:
     """
 
@@ -90,6 +92,10 @@ def calculate_contacts(
     sum_scores: bool = True
         Sum scores across contacting atom pairs within a residue pair.
         If False, do max() instead of sum().
+    
+    neighboring_residues: bool = False 
+        Whether to include neighboring residues in the contact calculations.
+        Default is False, as neighboring residues are often not interesting for interaction analysis.
 
     Returns
     -------
@@ -143,6 +149,9 @@ def calculate_contacts(
     print("setup complete, analysing contacts now...")
     if do_type:
         hbond_pairs = _determine_hbond_pairs(universe=universe)
+    
+    # Sequence offset between res1 and res2.
+    res_offset = 1 if neighboring_residues else 3
 
     # Now go through each frame.
     all_contact_scores = {}
@@ -156,8 +165,8 @@ def calculate_contacts(
         for res1 in range(first_res, last_res + 1):
             res_dists = heavy_atom_dists[residue_ranges[res1]]
 
-            # +3 here as neighbouring residues not interesting.
-            for res2 in range(res1 + 3, biggest_res + 1):
+            # +res_offset here as neighbouring residues not interesting.
+            for res2 in range(res1 + res_offset, biggest_res + 1):
                 res_res_dists = res_dists[:, residue_ranges[res2]]
 
                 # score would be 0 if true.
