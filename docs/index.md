@@ -100,5 +100,5 @@ DOI: 10.1063/5.0140882
 
 ## Issues/Questions/Contributions
 All welcome. Please feel free to open an issue or submit a pull request as necessary. Feature requests are welcome too.
-You can also reach me at: rory.crean [at] kemi.uu.se
+You can also reach me at: rory.crean [at] icm.uu.se
 
