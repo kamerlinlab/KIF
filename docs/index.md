@@ -28,14 +28,17 @@ There are also tutorials available (discussed below).
 
 ## Dependencies and Install
 - Python 3.12, 3.13 or 3.14 is required.
+- Python 3.15 is not supported as catboost and MDAnalysis (dependencies of KIF) do not yet support Python 3.15.
+
 
 **Option 1: Install from PyPI**
 ```bash
-pip install KIF
+pip install --upgrade KIF
 ```
 
 If you prefer [uv](https://docs.astral.sh/uv/):
 ```bash
+uv venv --python 3.14
 uv add KIF
 ```
 
