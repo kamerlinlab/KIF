@@ -1,5 +1,17 @@
 ## Change Log
 
+0.5.0 (15/11/2026)
+
+---
+
+#### Changed:
+
+- Added a test suite and a GitHub Actions workflow that runs it on PR to main and push to main.
+- Minor bug fixes and code updates to work with newer versions of dependencies.
+- Used hatchling to build the package. 
+- Supported Python versions are now 3.12 to 3.14.
+- The packages only needed for the tutorials are now an optional extra: `pip install "KIF[tutorials]"`.
+
 0.4.2 (31/05/2025)
 
 ---

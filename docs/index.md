@@ -26,20 +26,38 @@ There are also tutorials available (discussed below).
 
 *The previous implementation of KIF used [PyContact](https://github.com/maxscheurer/pycontact) (note that this program is not made by us), to determine all the non-covalent interactions in your trajectory. You can still use this approach if desired, see the legacy tutorials section below.
 
-
 ## Dependencies and Install
-- Python 3.7 or higher is required as this package uses dataclasses. We recommend python 3.10 as 3.7 is rather old.
+- Python 3.12, 3.13 or 3.14 is required.
 
-**Option 1: Install with pip**
-```
+**Option 1: Install from PyPI**
+```bash
 pip install KIF
 ```
 
-**Option 2: Clone/Download Repo first and then run setup.py :**
-
+If you prefer [uv](https://docs.astral.sh/uv/):
+```bash
+uv add KIF
 ```
-cd KIF-main
-python setup.py install
+
+To install the extra packages needed to run the tutorials, use:
+```bash
+pip install "KIF[tutorials]"
+```
+
+**Option 2: Install from source**
+
+```bash
+git clone https://github.com/kamerlinlab/KIF.git
+cd KIF
+pip install .
+```
+
+** Option 3: Install for Local development of KIF (we use [uv](https://docs.astral.sh/uv/))** 
+
+```bash
+git clone https://github.com/kamerlinlab/KIF.git
+cd KIF
+uv sync --dev
 ```
 
 Note that in prior versions of KIF (less than 0.2.0) you would have needed to also install [PyContact (see the repo for how to do this)](https://github.com/maxscheurer/pycontact). This is no longer the case.
@@ -100,5 +118,5 @@ DOI: 10.1063/5.0140882
 
 ## Issues/Questions/Contributions
 All welcome. Please feel free to open an issue or submit a pull request as necessary. Feature requests are welcome too.
-You can also reach me at: rory.crean [at] icm.uu.se
+You can also reach me at: rory.crean [at] igp.uu.se
 

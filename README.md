@@ -1,16 +1,11 @@
 # KIF - Key Interactions Finder
  A python package to identify the key molecular interactions that regulate any conformational change.
 
-### New in Version 0.4.0 - (30/05/2024)
-
-Now KIF results can be projected onto a given 3D structure using [ChimeraX](https://www.cgl.ucsf.edu/chimerax/). Previously only [PyMOL](https://pymol.org/) was possible. Thanks to @darianyang for adding this functionality. 
-
-Check out the tutorial to see it in action: 
-
-
-In order to make use of this you'll need to update your install of KIF to at least 0.4.0 or greater:
-```
+```bash
+# supports python versions between: 3.12-3.14
 pip install --upgrade KIF
+# or with uv
+uv add KIF
 ```
 
 **Keep in mind** that your trajectory(s) must be [imaged](http://ambermd.org/Questions/periodic2.html) before using KIF, to remove periodic effects. 
@@ -43,18 +38,37 @@ There are also tutorials available (discussed below).
 
 
 ## Dependencies and Install
-- Python 3.7 or higher is required as this package uses dataclasses. We recommend python 3.10 as 3.7 is rather old.
+- Python 3.12, 3.13 or 3.14 is required.
 
-**Option 1: Install with pip**
-```
+**Option 1: Install from PyPI**
+```bash
 pip install KIF
 ```
 
-**Option 2: Clone/Download Repo first and then run setup.py :**
-
+If you prefer [uv](https://docs.astral.sh/uv/):
+```bash
+uv add KIF
 ```
-cd KIF-main
-python setup.py install
+
+To install the extra packages needed to run the tutorials, use:
+```bash
+pip install "KIF[tutorials]"
+```
+
+**Option 2: Install from source**
+
+```bash
+git clone https://github.com/kamerlinlab/KIF.git
+cd KIF
+pip install .
+```
+
+** Option 3: Install for Local development of KIF (we use [uv](https://docs.astral.sh/uv/))** 
+
+```bash
+git clone https://github.com/kamerlinlab/KIF.git
+cd KIF
+uv sync --dev
 ```
 
 Note that in prior versions of KIF (less than 0.2.0) you would have needed to also install [PyContact (see the repo for how to do this)](https://github.com/maxscheurer/pycontact). This is no longer the case.
@@ -103,7 +117,6 @@ This software is published under a GNU General Public License v2.0.
 As the principal investigator behind this software is employed by Georgia Tech University we must also clarify: “The software is provided “as is.” Neither the Georgia Institute of Technology nor any of its units or its employees, nor the software developers of KIF or any other person affiliated with the creation, implementation, and upkeep of the software’s code base, knowledge base, and servers (collectively, the “Entities”) shall be held liable for your use of the platform or any data that you enter. The Entities do not warrant or make any representations of any kind or nature with respect to the System, and the Entities do not assume or have any responsibility or liability for any claims, damages, or losses resulting from your use of the platform. None of the Entities shall have any liability to you for use charges related to any device that you use to access the platform or use and receive the platform, including, without limitation, charges for Internet data packages and Personal Computers. THE ENTITIES DISCLAIM ALL WARRANTIES WITH REGARD TO THE SERVICE,INCLUDING WARRANTIES OF MERCHANTABILITY, NON-INFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE TO THE FULLEST EXTENT ALLOWED BY LAW.”
 
 
-
 ## Citing this work
 If you make use of this package [please cite our manuscript:](https://aip.scitation.org/doi/10.1063/5.0140882).
 
@@ -115,4 +128,4 @@ DOI: 10.1063/5.0140882
 
 ## Issues/Questions/Contributions
 All welcome. Please feel free to open an issue or submit a pull request as necessary. Feature requests are welcome too.
-You can also reach me at: rory.crean [at] icm.uu.se
+You can also reach me at: rory.crean [at] igp.uu.se 

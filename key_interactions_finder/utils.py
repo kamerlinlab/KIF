@@ -26,11 +26,16 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
-import gdown
 import MDAnalysis as mda
 import numpy as np
 import pandas as pd
 from MDAnalysis.analysis import distances
+
+# gdown is an optional dependency, only needed to download the tutorial datasets.
+try:
+    import gdown
+except ImportError:
+    gdown = None
 
 
 def per_residue_distance_to_site(
@@ -151,6 +156,12 @@ def download_prep_tutorial_dataset(drive_url: str, save_dir: str) -> None:
     if drive_url not in accepted_links:
         raise ValueError("You seem to be trying to download a non-tutorial file, stopping for safety.")
 
+    if gdown is None:
+        raise ImportError(
+            "Downloading the tutorial datasets needs the 'gdown' package. "
+            + 'Install it with: pip install "KIF[tutorials]" (or: pip install gdown).'
+        )
+
     # Prep the save_dir.
     if save_dir != "":
         save_dir_path = Path(save_dir)
@@ -162,7 +173,7 @@ def download_prep_tutorial_dataset(drive_url: str, save_dir: str) -> None:
     zip_file_path = Path(save_dir_path, "tutorial_dataset.zip")
 
     # gdown does not accept Path objects.
-    gdown.download(url=drive_url, output=str(zip_file_path), quiet=False, fuzzy=True)
+    gdown.download(url=drive_url, output=str(zip_file_path), quiet=False)
 
     shutil.unpack_archive(filename=zip_file_path, extract_dir=save_dir_path, format="zip")
 
