@@ -1349,11 +1349,11 @@ requires-dist = [
     { name = "kaleido", marker = "extra == 'tutorials'", specifier = ">=1.5.1" },
     { name = "mdanalysis", specifier = ">=2.11.0" },
     { name = "mdanalysistests", marker = "extra == 'tutorials'", specifier = ">=2.11.0" },
-    { name = "numpy", specifier = ">=2.5.4" },
-    { name = "pandas", specifier = ">=3.1.1" },
+    { name = "numpy", specifier = ">=2.2.5" },
+    { name = "pandas", specifier = ">=2.2.3" },
     { name = "plotly", marker = "extra == 'tutorials'", specifier = ">=7.1.0" },
-    { name = "scikit-learn", specifier = ">=1.9.1" },
-    { name = "scipy", specifier = ">=1.18.1" },
+    { name = "scikit-learn", specifier = ">=1.6.1" },
+    { name = "scipy", specifier = ">=1.15.2" },
     { name = "xgboost", specifier = ">=3.4.1" },
 ]
 provides-extras = ["tutorials"]

@@ -23,10 +23,10 @@ authors = [
 dependencies = [
     "catboost>=1.2.10",
     "mdanalysis>=2.11.0",
-    "numpy>=2.5.4",
-    "pandas>=3.1.1",
-    "scikit-learn>=1.9.1",
-    "scipy>=1.18.1",
+    "numpy>=2.2.5",
+    "pandas>=2.2.3",
+    "scikit-learn>=1.6.1",
+    "scipy>=1.15.2",
     "xgboost>=3.4.1",
 ]
 
