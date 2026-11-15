@@ -6,7 +6,7 @@ function used by PyContact.
 
 Output will be a csv file with each column an interaction pair.
 Each column has the following format:
-[residue1] [residue2] [interaction type]
+`[residue1] [residue2] [interaction type]`
 
 Where "residue1" and "residue2" are the names and residue numbers of the pair.
 and "interaction type" is one of:
@@ -53,7 +53,7 @@ def calculate_contacts(
 
     Identify all non-covalent interactions present in the simulation and save the output.
     Output has each non-covalent interaction as a column
-    each column has the following information: [residue1] [residue2] [interaction type]
+    each column has the following information: `[residue1] [residue2] [interaction type]`
 
     Parameters
     ----------

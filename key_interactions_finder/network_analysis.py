@@ -322,7 +322,7 @@ def heavy_atom_contact_map_from_multiple_pdbs(
     Parameters
     ----------
 
-    pdb_file: list
+    pdb_files : list
         Paths to PDB files to generate the contact map from.
 
     first_res : int
