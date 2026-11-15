@@ -71,6 +71,27 @@ class _FeatureData:
     df_processed: pd.DataFrame = field(init=False)
     df_filtered: pd.DataFrame = field(init=False)
 
+    @property
+    def _current_df(self) -> pd.DataFrame:
+        """The dataframe the next filter should act on (filtered if any filtering done)."""
+        if len(self.df_filtered.columns) == 0:
+            return self.df_processed
+        return self.df_filtered
+
+    @staticmethod
+    def _split_target(dataset: pd.DataFrame) -> tuple:
+        """Split a dataframe into its (optional) "Target" column and its feature columns."""
+        if "Target" in dataset.columns:
+            return dataset[["Target"]], dataset.drop("Target", axis=1)
+        return None, dataset
+
+    @staticmethod
+    def _rejoin_target(target, features: pd.DataFrame) -> pd.DataFrame:
+        """Re-attach the "Target" column (if present) as the first column."""
+        if target is None:
+            return features
+        return pd.concat([target, features], axis=1)
+
     def filter_by_occupancy(self, min_occupancy: float) -> pd.DataFrame:
         """
         Filter features such that only features with %occupancy >= the min_occupancy are included.
@@ -88,14 +109,9 @@ class _FeatureData:
         pd.DataFrame
             Filtered dataframe.
         """
-        # Different paths for if filtering has/hasn't been performed yet.
-        # (A try except block wouldn't work here, no error raised.)
-        if len(self.df_filtered) == 0:
-            self.df_filtered = self.input_df.loc[:, (self.input_df != 0).mean() > (min_occupancy / 100)]
-
-        else:
-            self.df_filtered = self.df_filtered.loc[:, (self.df_filtered != 0).mean() > (min_occupancy / 100)]
-
+        target, features = self._split_target(self._current_df)
+        features = features.loc[:, (features != 0).mean() > (min_occupancy / 100)]
+        self.df_filtered = self._rejoin_target(target, features)
         return self.df_filtered
 
     def filter_by_interaction_type(self, interaction_types_included: list) -> pd.DataFrame:
@@ -114,16 +130,9 @@ class _FeatureData:
         pd.DataFrame
             Filtered dataframe.
         """
-        try:
-            self.df_filtered = _filter_features_by_strings(
-                dataset=self.df_filtered, strings_to_preserve=interaction_types_included
-            )
-
-        except KeyError:  # if no other filtering has been performed yet, follow this path.
-            self.df_filtered = _filter_features_by_strings(
-                dataset=self.df_processed, strings_to_preserve=interaction_types_included
-            )
-
+        self.df_filtered = _filter_features_by_strings(
+            dataset=self._current_df, strings_to_preserve=interaction_types_included
+        )
         return self.df_filtered
 
     def filter_by_main_or_side_chain(self, main_side_chain_types_included: list) -> pd.DataFrame:
@@ -144,23 +153,16 @@ class _FeatureData:
         """
         # Test contact data has information about "bb-bb", "sc-sc", "bb-sc", "sc-bb" included.
         # Optional to have this information, but method can only be used if present...
-        example_column = self.df_processed.columns[1]
+        example_column = self._split_target(self.df_processed)[1].columns[0]
         if len(example_column.split(" ")) < 4:
             error_message = """You're trying to filter interactions based on if they are
             primarily from the side or main chain but your columns don't seem to contain
             this information."""
             raise ValueError(error_message)
 
-        try:
-            self.df_filtered = _filter_features_by_strings(
-                dataset=self.df_filtered, strings_to_preserve=main_side_chain_types_included
-            )
-
-        except KeyError:  # if no other filtering has been performed yet, follow this path.
-            self.df_filtered = _filter_features_by_strings(
-                dataset=self.df_processed, strings_to_preserve=main_side_chain_types_included
-            )
-
+        self.df_filtered = _filter_features_by_strings(
+            dataset=self._current_df, strings_to_preserve=main_side_chain_types_included
+        )
         return self.df_filtered
 
     def filter_by_avg_strength(self, average_strength_cut_off: float) -> pd.DataFrame:
@@ -179,20 +181,9 @@ class _FeatureData:
         pd.DataFrame
             Filtered dataframe.
         """
-        try:
-            df_just_features = self.df_filtered.drop("Target", axis=1)
-            df_features_filtered = df_just_features.loc[:, df_just_features.mean() > average_strength_cut_off]
-
-            df_features_filtered.insert(0, "Target", self.df_filtered["Target"])
-            self.df_filtered = df_features_filtered
-
-        except KeyError:  # if no other filtering has been performed yet, follow this path.
-            df_just_features = self.df_processed.drop("Target", axis=1)
-            df_features_filtered = df_just_features.loc[:, df_just_features.mean() > average_strength_cut_off]
-
-            df_features_filtered.insert(0, "Target", self.df_processed["Target"])
-            self.df_filtered = df_features_filtered
-
+        target, features = self._split_target(self._current_df)
+        features = features.loc[:, features.mean() > average_strength_cut_off]
+        self.df_filtered = self._rejoin_target(target, features)
         return self.df_filtered
 
     def reset_filtering(self):
@@ -319,26 +310,16 @@ class SupervisedFeatureData(_FeatureData):
             )
             raise TypeError(error_message)
 
+        current_df = self._current_df
         keep_cols = ["Target"]  # always want "Target" present...
-        try:
-            for class_label in list(self.df_filtered["Target"].unique()):
-                df_single_class = self.df_filtered[(self.df_filtered["Target"] == class_label)]
-                keep_cols_single_class = list(
-                    (df_single_class.loc[:, (df_single_class != 0).mean() > (min_occupancy / 100)]).columns
-                )
-                keep_cols.extend(keep_cols_single_class)
+        for class_label in list(current_df["Target"].unique()):
+            df_single_class = current_df[(current_df["Target"] == class_label)].drop("Target", axis=1)
+            keep_cols_single_class = list(
+                (df_single_class.loc[:, (df_single_class != 0).mean() > (min_occupancy / 100)]).columns
+            )
+            keep_cols.extend(keep_cols_single_class)
 
-            self.df_filtered = self.df_filtered[list(sorted(set(keep_cols), reverse=True))]
-
-        except KeyError:  # if no other filtering has been performed yet, follow this path.
-            for class_label in list(self.df_processed["Target"].unique()):
-                df_single_class = self.df_processed[(self.df_processed["Target"] == class_label)]
-                keep_cols_single_class = list(
-                    (df_single_class.loc[:, (df_single_class != 0).mean() > (min_occupancy / 100)]).columns
-                )
-                keep_cols.extend(keep_cols_single_class)
-
-            self.df_filtered = self.df_processed[list(sorted(set(keep_cols), reverse=True))]
+        self.df_filtered = current_df[list(sorted(set(keep_cols), reverse=True))]
 
         return self.df_filtered
 

@@ -1,28 +1,49 @@
 [project]
 name = "KIF"
-version = "0.4.2"
+version = "0.5.0"
 description = "Python package for MD simulation analysis"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
 authors = [
-    { name = "Rory Crean", email = "rory.crean@icm.uu.se" }
+    { name = "Rory Crean", email = "rory.crean@igp.uu.se" }
 ]
 dependencies = [
-    "catboost>=1.2.8",
-    "gdown>=5.2.0",
-    "ipykernel>=6.29.5",
-    "jupyter>=1.1.1",
-    "mdanalysis>=2.9.0",
-    "mdanalysistests>=2.9.0",
-    "numpy>=2.2.5",
-    "pandas>=2.2.3",
-    "scikit-learn>=1.6.1",
-    "scipy>=1.15.2",
-    "xgboost>=3.0.0",
+    "catboost>=1.2.10",
+    "mdanalysis>=2.11.0",
+    "numpy>=2.5.4",
+    "pandas>=3.1.1",
+    "scikit-learn>=1.9.1",
+    "scipy>=1.18.1",
+    "xgboost>=3.4.1",
+]
+
+[project.optional-dependencies]
+# Only needed to run the tutorials: pip install "KIF[tutorials]"
+tutorials = [
+    "gdown>=6.5.1",
+    "kaleido>=1.5.1",
+    "mdanalysistests>=2.11.0",
+    "plotly>=7.1.0",
 ]
 
 [dependency-groups]
 dev = [
+    "kif[tutorials]",
+    "ipykernel>=7.4.0",
+    "jupyter>=1.1.1",
     "mkdocs-material>=9.6.14",
     "mkdocstrings[python]>=0.29.1",
     "pytest>=8.3.5",
@@ -33,10 +54,23 @@ dev = [
 homepage = "https://github.com/kamerlinlab/KIF"
 docs = "https://kamerlinlab.github.io/KIF/"
 
-[tool.setuptools.packages.find]
-include = ["key_interactions_finder", "key_interactions_finder.*"]
-
-[tool.setuptools.package-data]
-"key_interactions_finder" = ["model_params/*.json"]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 
+[tool.hatch.build.targets.wheel]
+packages = ["key_interactions_finder"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/key_interactions_finder", "/README.md", "/LICENSE.md", "/Changelog.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers"]
+markers = ["slow: slow tests in tests/slow/, only run with --run-slow."]
+filterwarnings = [
+    "ignore:DCDReader currently makes independent timesteps:DeprecationWarning",
+    "ignore:No dimensions set for current frame:UserWarning",
+    "ignore:Element information is missing:UserWarning",
+]

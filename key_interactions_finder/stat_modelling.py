@@ -150,7 +150,7 @@ class _ProteinStatModel:
         feature_values_scaled = scaler.transform(feature_values)
 
         scaled_dataset = pd.DataFrame.from_records(feature_values_scaled, columns=self.feature_list)
-        scaled_dataset.insert(0, "Target", self.dataset["Target"])
+        scaled_dataset.insert(0, "Target", self.dataset["Target"].to_numpy())
 
         return scaled_dataset
 

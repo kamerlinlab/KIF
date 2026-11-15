@@ -140,7 +140,7 @@ class CorrelationNetwork:
         per_res_contact_matrix = np.zeros((last_residue, last_residue), dtype=int)
 
         contact_pairs = self._get_contact_pairs()
-        for res1, res2 in contact_pairs.items():
+        for res1, res2 in contact_pairs:
             per_res_contact_matrix[(res1 - 1), (res2 - 1)] = 1
             per_res_contact_matrix[(res2 - 1), (res1 - 1)] = 1
 
@@ -194,7 +194,7 @@ class CorrelationNetwork:
         max_res2 = df_cols["Res2"].max(axis=0)
         return max(max_res1, max_res2)
 
-    def _get_contact_pairs(self) -> dict:
+    def _get_contact_pairs(self) -> list:
         """
         Given a dataframe (self.dataset) containing only PyContact features,
         extract the pairs of residue in contact with one another.
@@ -203,12 +203,13 @@ class CorrelationNetwork:
         Returns
         ----------
 
-        dict
-            Dictionary of all interacting residue pairs.
+        list
+            List of (res1, res2) tuples, one per interacting residue pair.
+            A residue can appear in multiple pairs.
         """
         df_cols = pd.DataFrame()
         df_cols[["Res1", "Res2"]] = self._get_residue_lists()
-        contact_pairs = dict(zip(df_cols["Res1"], df_cols["Res2"], strict=True))
+        contact_pairs = list(zip(df_cols["Res1"], df_cols["Res2"], strict=True))
         return contact_pairs
 
     @staticmethod
@@ -298,8 +299,8 @@ def heavy_atom_contact_map_from_pdb(
             # Replace matrix pos with 1 if min_dist less than cutoff.
             min_dist = dist_arr.min()
             if min_dist <= d_cut:
-                per_res_contact_map[(group1_idx - 1), (group2_idx - 1)] = 1
-                per_res_contact_map[(group2_idx - 1), (group1_idx - 1)] = 1
+                per_res_contact_map[(group1_idx - first_res), (group2_idx - first_res)] = 1
+                per_res_contact_map[(group2_idx - first_res), (group1_idx - first_res)] = 1
 
     if out_file is not None:
         np.savetxt(out_file, per_res_contact_map, delimiter=" ", fmt="%.1f")
@@ -375,8 +376,8 @@ def heavy_atom_contact_map_from_multiple_pdbs(
 
             # Replace matrix pos with 1 if min_dist_all_pdbs less than cutoff.
             if min_dist_all_pdbs <= d_cut:
-                per_res_contact_map[(group1_idx - 1), (group2_idx - 1)] = 1
-                per_res_contact_map[(group2_idx - 1), (group1_idx - 1)] = 1
+                per_res_contact_map[(group1_idx - first_res), (group2_idx - first_res)] = 1
+                per_res_contact_map[(group2_idx - first_res), (group1_idx - first_res)] = 1
 
     if out_file is not None:
         np.savetxt(out_file, per_res_contact_map, delimiter=" ", fmt="%.1f")

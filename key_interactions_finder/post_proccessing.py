@@ -101,7 +101,7 @@ class PostProcessor(ABC):
                 per_res_import.loc[per_res_import["Res1"] == i, "Score"].sum()
                 + per_res_import.loc[per_res_import["Res2"] == i, "Score"].sum()
             )
-            per_res_scores[i + 1] = total_score
+            per_res_scores[i] = total_score
 
         # Rescale scores so that new largest has size 1.0
         # (good for PyMOL sphere representation as well).

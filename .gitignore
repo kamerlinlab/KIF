@@ -78,7 +78,6 @@ profile_default/
 ipython_config.py
 
 # pyenv
-.python-version
 
 # celery beat schedule file
 celerybeat-schedule
@@ -115,9 +114,12 @@ dmypy.json
 .vscode/settings.json
 
 # project specific stuff
-.tutorials/catboost_info
-.tutorials/temporary_files
-.tutorials/synthetic_data_test/KIF_Results
-.tutorials/synthetic_data_test/Raw
+tutorials/catboost_info
+tutorials/temporary_files
+tutorials/synthetic_data_test/KIF_Results
+tutorials/synthetic_data_test/Raw
 tutorials/tutorial_datasets
 tutorials/network_analysis_tutorial/tutorial_datasets/
+
+# Per-Python test venvs made by scripts/test_python_versions.sh
+.venvs/

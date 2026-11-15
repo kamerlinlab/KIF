@@ -13,7 +13,7 @@ and "interaction type" is one of:
 "Hbond" - Hydrogen bond
 "Saltbr" - Salt Bridge
 "Hydrophobic" - VdW interaction between two hydrophobic residues.
-"VdW" - Unspecified VdW interaction.
+"Other" - Unspecified VdW interaction.
 """
 
 import time
@@ -30,7 +30,7 @@ from MDAnalysis.analysis.hydrogenbonds.hbond_analysis import HydrogenBondAnalysi
 # Amino acid definitions - helps define interaction types.
 POSITIVE_SB_RESIDUES = ("LYS", "ARG")
 NEGATIVE_SB_RESIDUES = ("GLU", "ASP")
-HYDROPHOBIC_RESIDUES = ("ALA", "VAL", "LEU", "ILE", "PRO", "PHE", "Cys")
+HYDROPHOBIC_RESIDUES = ("ALA", "VAL", "LEU", "ILE", "PRO", "PHE", "CYS")
 
 # Used to prefilter residue pairs.
 MAX_CA_DIST = 20
@@ -162,7 +162,7 @@ def calculate_contacts(
                 all_contact_scores[(res1, res2)][idx] = contact_score
 
     contact_labels_scores = {}
-    for res_pair, contact_scores in all_contact_scores.items():
+    for res_pair, contact_scores in sorted(all_contact_scores.items()):
         # save contact only if non-negligible interaction present
         avg_contact_score = sum(contact_scores) / trajectory_length
         if avg_contact_score < 0.1:
@@ -183,15 +183,7 @@ def calculate_contacts(
         contact_label = str(res1) + res1_name + " " + str(res2) + res2_name + " " + interaction_type
         contact_labels_scores.update({contact_label: contact_scores})
 
-    # reorders column names, to be like the old format.
-    sorted_dict = dict(
-        sorted(
-            contact_labels_scores.items(),
-            key=lambda item: (int("".join(filter(str.isdigit, item[0].split(":")[0])))),
-        )
-    )
-
-    df_contact_scores = pd.DataFrame(sorted_dict)
+    df_contact_scores = pd.DataFrame(contact_labels_scores)
     df_contact_scores.to_csv(out_file, index=False)
 
     if report_timings:

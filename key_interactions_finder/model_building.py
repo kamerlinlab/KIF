@@ -527,11 +527,9 @@ class ClassificationModel(_SupervisedRunner):
             weights = compute_class_weight(class_weight="balanced", classes=classes, y=y_train)
             class_weights = dict(zip(classes, weights, strict=True))
 
-            # For XGBClassifier, I need the total number of examples in the majority class
-            # divided by the total number of examples in the minority class.
-            majority = self.dataset["Target"].value_counts()[0]
-            minority = self.dataset["Target"].value_counts()[1]
-            scaled_weight = round((majority / minority), 2)
+            # For XGBClassifier, scale_pos_weight is the number of negative (encoded as 0)
+            # divided by the number of positive (encoded as 1) training examples.
+            scaled_weight = round(np.sum(y_train == 0) / np.sum(y_train == 1), 2)
 
             self.available_models = {
                 "CatBoost": {
